@@ -1,9 +1,9 @@
 JNI Construction Benchmark
 ==========================
 
-We provide the code for a small benchmark to compare costs of JNI object creation and then present the [results](#results).
+We provide the code for a small benchmark to compare the costs of JNI object creation, and then present the [results](#results).
 
-The code contrast three different approaches to construction a Java Object that wraps a C++ object (which it has to construct). Such a scenario is common when writing Java API wrappers for existing C++ projects.
+The code contrasts three different approaches to constructing a Java Object that wraps a C++ object (which it has to construct). Such a scenario is common when writing a Java API wrapper for an existing C++ project.
 
 Scenario 1 - By Call
 --------------------
