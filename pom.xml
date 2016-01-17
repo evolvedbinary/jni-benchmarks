@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.evolvedbinary.jni</groupId>
+    <artifactId>jni-construction-benchmark</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>nar</packaging>
+
+    <scm>
+        <connection>scm:git:https://github.com/adamretter/jni-construction-benchmark.git</connection>
+        <developerConnection>scm:git:https://github.com/adamretter/jni-construction-benchmark.git</developerConnection>
+        <url>scm:git:https://github.com/adamretter/jni-construction-benchmark.git</url>
+    </scm>
+
+    <description>A small benchmark to compare costs of JNI object construction</description>
+    <url>https://github.com/adamretter/jni-construction-benchmark</url>
+    <inceptionYear>2016</inceptionYear>
+
+    <organization>
+        <name>Evolved Binary Ltd</name>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Adam Retter</name>
+            <organization>Evolved Binary Ltd</organization>
+            <timezone>GMT</timezone>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>The BSD 3-Clause License</name>
+            <url>http://www.opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.maven-nar</groupId>
+                <artifactId>nar-maven-plugin</artifactId>
+                <version>3.2.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <libraries>
+                        <library>
+                            <type>jni</type>
+                            <narSystemPackage>com.evolvedbinary.jni.consbench</narSystemPackage>
+                        </library>
+                    </libraries>
+                    <cpp>
+                        <options>
+                            <option>-std=c++11</option>
+                        </options>
+                    </cpp>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.11</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <header>com/mycila/maven/plugin/license/templates/BSD-3.txt</header>
+                    <failIfMissing>true</failIfMissing>
+                    <aggregate>true</aggregate>
+                    <strictCheck>true</strictCheck>
+                    <excludes>
+                        <exclude>LICENSE</exclude>
+                        <exclude>**/pom.xml</exclude>
+                        <exclude>src/main/assembly/*</exclude>
+                    </excludes>
+                    <properties>
+                        <owner>${project.organization.name}</owner>
+                    </properties>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.10</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>assemble</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <licenseHeaderFile>LICENSE</licenseHeaderFile>
+                    <includeConfigurationDirectoryInClasspath>false</includeConfigurationDirectoryInClasspath>
+                    <repositoryLayout>flat</repositoryLayout>
+                    <repositoryName>lib</repositoryName>
+                    <programs>
+                        <program>
+                            <id>benchmark</id>
+                            <mainClass>com.evolvedbinary.jni.consbench.Benchmark</mainClass>
+                            <jvmSettings>
+                                <extraArguments>
+                                    <extraArgument>-Djava.library.path=$REPO</extraArgument>
+                                </extraArguments>
+                            </jvmSettings>
+                        </program>
+                    </programs>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/appassembler-output.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
