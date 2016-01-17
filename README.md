@@ -141,3 +141,14 @@ The `com.evolvedbinary.jni.consbench.Benchmark` class already calls each scenari
 Conclusion
 ----------
 Scenario 2 - By Call, Static, appears to have the lowest JNI overhead for constructing C++ objects from Java.
+
+
+Reproducing
+-----------
+If you want to run the code yourself, you need to have Java 8, Maven 3, and a C++ compiler that supports the C++ 11 standard. You can then simply run:
+
+```bash
+$ mvn clean compile package
+```
+
+In the `target/` sub-directory, you will then find both a `jni-construction-benchmark-1.0-SNAPSHOT-application` folder and a `jni-construction-benchmark-1.0-SNAPSHOT-application.zip` file, you can use either of these. They both contain bash scripts in their `bin/` sub-folders for Mac, Linux, Unix and batch scripts for Windows.
