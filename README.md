@@ -125,7 +125,7 @@ class FooByCallInvokeJni : public FooJniClass<consbench::Foo*, FooByCallInvokeJn
 
 Results
 -------
-Test machine: MacBook Pro Retina Mid-2015: 2.8 GHz Intel Core i7 / 16 GB 1600 MHz DDR3.
+Test machine: MacBook Pro Retina Mid-2015: 2.8 GHz Intel Core i7 / 16 GB 1600 MHz DDR3. OS X 10.10.5 / Oracle JDK 8.
 ```bash
 $ java -version
 java version "1.8.0_51"
