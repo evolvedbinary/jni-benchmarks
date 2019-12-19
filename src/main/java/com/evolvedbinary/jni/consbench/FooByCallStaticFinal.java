@@ -43,5 +43,5 @@ public final class FooByCallStaticFinal extends NativeBackedObject {
     }
 
     private static native long newFoo();
-    private native void disposeInternal(final long handle);
+    private static native void disposeInternal(final long handle);
 }
