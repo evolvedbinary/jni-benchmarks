@@ -36,10 +36,12 @@ package com.evolvedbinary.jni.consbench;
 public class Benchmark {
     private final static int DEFAULT_ITERATIONS = 1_000_000;
 
-    public final static void main(final String args[]) {
+    public static final void main(final String args[]) {
 
         int iterations = DEFAULT_ITERATIONS;
         boolean outputAsCSV = false;
+        boolean inNs = false;
+        boolean close = false;
 
         if (args != null && args.length > 0) {
             for (String arg : args) {
@@ -48,65 +50,173 @@ public class Benchmark {
                     iterations = Integer.parseInt(arg);
                 } else if (arg.equals("--csv")) {
                     outputAsCSV = true;
+                } else if (arg.equals("--ns")) {
+                    inNs = true;
+                } else if (arg.equals("--close")) {
+                    close = true;
+                } else if (arg.equals("--help") || arg.equals("-h") || arg.equals("/?")) {
+                    System.out.println();
+                    System.out.println("Benchmark");
+                    System.out.println("--iterations=n    set the number of iterations");
+                    System.out.println("--csv             output results in CSV format");
+                    System.out.println("--ns              compute times in ns as opposed to ms");
+                    System.out.println("--close           native objects should be closed (disposed) after use");
+                    System.out.println();
                 }
             }
         }
 
         NarSystem.loadLibrary();
 
+        if (close) {
+            testWithClose(iterations, outputAsCSV, inNs);
+        } else {
+            testWithoutClose(iterations, outputAsCSV, inNs);
+        }
+    }
+
+    private static final void testWithClose(final int iterations, final boolean outputAsCSV, final boolean inNs) {
         //TEST1 - Foo By Call
-        final long start1 = System.nanoTime();
+        final long start1 = time(inNs);
+        for(int i = 0; i < iterations; i++) {
+            final FooByCall fooByCall = new FooByCall();
+            fooByCall.close();
+        }
+        final long end1 = time(inNs);
+
+        //TEST2 - Foo By Call Static
+        final long start2 = time(inNs);
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallStatic fooByCallStatic = new FooByCallStatic();
+            fooByCallStatic.close();
+        }
+        final long end2 = time(inNs);
+
+        //TEST3 - Foo By Call Invoke
+        final long start3 = time(inNs);
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallInvoke fooByCallStatic = new FooByCallInvoke();
+            fooByCallStatic.close();
+        }
+        final long end3 = time(inNs);
+
+        //TEST4 - Foo By Call Final
+        final long start4 = time(inNs);
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallFinal fooByCallFinal = new FooByCallFinal();
+            fooByCallFinal.close();
+        }
+        final long end4 = time(inNs);
+
+
+        //TEST5 - Foo By Call Static Final
+        final long start5 = time(inNs);
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallStaticFinal fooByCallStaticFinal = new FooByCallStaticFinal();
+            fooByCallStaticFinal.close();
+        }
+        final long end5 = time(inNs);
+
+        //TEST6 - Foo By Call Invoke Final
+        final long start6 = time(inNs);
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallInvokeFinal fooByCallInvokeFinal = new FooByCallInvokeFinal();
+            fooByCallInvokeFinal.close();
+        }
+        final long end6 = time(inNs);
+
+        outputResults(outputAsCSV, inNs,
+                end1 - start1,
+                end2 - start2,
+                end3 - start3,
+                end4 - start4,
+                end5 - start5,
+                end6 - start6
+        );
+    }
+
+    private static final void testWithoutClose(final int iterations, final boolean outputAsCSV, final boolean inNs) {
+        //TEST1 - Foo By Call
+        final long start1 = time(inNs);
         for(int i = 0; i < iterations; i++) {
             final FooByCall fooByCall = new FooByCall();
         }
-        final long end1 = System.nanoTime();
-
+        final long end1 = time(inNs);
 
         //TEST2 - Foo By Call Static
-        final long start2 = System.nanoTime();
+        final long start2 = time(inNs);
         for(int i = 0; i < iterations; i++) {
             final FooByCallStatic fooByCallStatic = new FooByCallStatic();
         }
-        final long end2 = System.nanoTime();
+        final long end2 = time(inNs);
 
         //TEST3 - Foo By Call Invoke
-        final long start3 = System.nanoTime();
+        final long start3 = time(inNs);
         for(int i = 0; i < iterations; i++) {
             final FooByCallInvoke fooByCallInvoke = new FooByCallInvoke();
         }
-        final long end3 = System.nanoTime();
+        final long end3 = time(inNs);
 
         //TEST4 - Foo By Call Final
-        final long start4 = System.nanoTime();
+        final long start4 = time(inNs);
         for(int i = 0; i < iterations; i++) {
             final FooByCallFinal fooByCallFinal = new FooByCallFinal();
         }
-        final long end4 = System.nanoTime();
+        final long end4 = time(inNs);
 
 
-        //TEST5 - Foo By Call Static
-        final long start5 = System.nanoTime();
+        //TEST5 - Foo By Call Static Final
+        final long start5 = time(inNs);
         for(int i = 0; i < iterations; i++) {
             final FooByCallStaticFinal fooByCallStaticFinal = new FooByCallStaticFinal();
         }
-        final long end5 = System.nanoTime();
+        final long end5 = time(inNs);
 
-        //TEST3 - Foo By Call Invoke
-        final long start6 = System.nanoTime();
+        //TEST6 - Foo By Call Invoke Final
+        final long start6 = time(inNs);
         for(int i = 0; i < iterations; i++) {
             final FooByCallInvokeFinal fooByCallInvokeFinal = new FooByCallInvokeFinal();
         }
-        final long end6 = System.nanoTime();
+        final long end6 = time(inNs);
 
+        outputResults(outputAsCSV, inNs,
+                end1 - start1,
+                end2 - start2,
+                end3 - start3,
+                end4 - start4,
+                end5 - start5,
+                end6 - start6
+        );
+    }
+
+    private static final void outputResults(final boolean outputAsCSV, final boolean inNs,
+            final long res1, final long res2, final long res3, final long res4, final long res5, final long res6) {
         if (outputAsCSV) {
-            System.out.println(String.format("%d,%d,%d,%d,%d,%d", (end1 - start1), (end2 - start2), (end3 - start3), (end4 - start4), (end5 - start5), (end6 - start6)));
+            System.out.println(String.format("%d,%d,%d,%d,%d,%d", res1, res2, res3, res4, res5, res6));
         } else {
-            System.out.println("FooByCall: " + (end1 - start1) + "ns");
-            System.out.println("FooByCallStatic: " + (end2 - start2) + "ns");
-            System.out.println("FooByCallInvoke: " + (end3 - start3) + "ns");
-            System.out.println("FooByCallFinal: " + (end4 - start4) + "ns");
-            System.out.println("FooByCallStaticFinal: " + (end5 - start5) + "ns");
-            System.out.println("FooByCallInvokeFinal: " + (end6 - start6) + "ns");
+            final String timeUnits = timeUnits(inNs);
+            System.out.println("FooByCall: " + res1 + timeUnits);
+            System.out.println("FooByCallStatic: " + res2 + timeUnits);
+            System.out.println("FooByCallInvoke: " + res3 + timeUnits);
+            System.out.println("FooByCallFinal: " + res4 + timeUnits);
+            System.out.println("FooByCallStaticFinal: " + res5 + timeUnits);
+            System.out.println("FooByCallInvokeFinal: " + res6 + timeUnits);
+        }
+    }
+
+    private static final long time(final boolean inNs) {
+        if (inNs) {
+            return System.nanoTime();
+        } else {
+            return System.currentTimeMillis();
+        }
+    }
+
+    private static final String timeUnits(final boolean inNs) {
+        if (inNs) {
+            return "ns";
+        } else {
+            return "ms";
         }
     }
 }
