@@ -122,15 +122,26 @@ class FooByCallInvokeJni : public FooJniClass<consbench::Foo*, FooByCallInvokeJn
 
 ```
 
+Scenario 4, 5, and 6 
+--------------------
+Scenarios 4, 5, and 6 are similar to 1, 2, and 3 respectively, except that the Java classes have been marked as `final`.
+
 
 Results
 -------
-Test machine: MacBook Pro Retina Mid-2015: 2.8 GHz Intel Core i7 / 16 GB 1600 MHz DDR3. OS X 10.10.5 / Oracle JDK 8.
+Test machine: MacBook Pro 15-inch 2019: 2.4 GHz 8-Core Intel Core i9 / 32 GB 2400 MHz DDR4. OS X 10.15.2 / Oracle JDK 8.
 ```bash
 $ java -version
-java version "1.8.0_51"
-Java(TM) SE Runtime Environment (build 1.8.0_51-b16)
-Java HotSpot(TM) 64-Bit Server VM (build 25.51-b03, mixed mode)
+java version "1.8.0_221"
+Java(TM) SE Runtime Environment (build 1.8.0_221-b11)
+Java HotSpot(TM) 64-Bit Server VM (build 25.221-b11, mixed mode)
+```
+
+```
+$ clang --version
+Apple clang version 11.0.0 (clang-1100.0.33.16)
+Target: x86_64-apple-darwin19.2.0
+Thread model: posix
 ```
 
 The `com.evolvedbinary.jni.consbench.Benchmark` class already calls each scenario 1,000,000 times, so for the benchmark we repeated this 100 times and plotted the results.
@@ -140,7 +151,10 @@ The `com.evolvedbinary.jni.consbench.Benchmark` class already calls each scenari
 
 Conclusion
 ----------
-Scenario 2 - By Call, Static, appears to have the lowest JNI overhead for constructing C++ objects from Java.
+The difference between the non-final (Scenarios 1 - 3) and the final (Scenarios 4 - 6) class versions is so small that
+it could easily be accounted for by system noise.
+
+Scenario 2 and 5 - By Call, Static, appear to have the lowest JNI overhead for constructing C++ objects from Java.
 
 
 Reproducing
@@ -151,4 +165,10 @@ If you want to run the code yourself, you need to have Java 8, Maven 3, and a C+
 $ mvn clean compile package
 ```
 
-In the `target/` sub-directory, you will then find both a `jni-construction-benchmark-1.0-SNAPSHOT-application` folder and a `jni-construction-benchmark-1.0-SNAPSHOT-application.zip` file, you can use either of these. They both contain bash scripts in their `bin/` sub-folders for Mac, Linux, Unix and batch scripts for Windows.
+In the `target/` sub-directory, you will then find both a `jni-construction-benchmark-1.0-SNAPSHOT-application` folder
+and a `jni-construction-benchmark-1.0-SNAPSHOT-application.zip` file, you can use either of these.
+They both contain bash scripts in their `bin/` sub-folders for Mac, Linux, Unix and batch scripts for Windows.
+These scripts will run a single iteration of the benchmark.
+
+If you want to run multiple iterations and get a CSV file of the results, you can use `benchmark-100.sh`
+and/or `benchmark-100-with-close.sh`. 
