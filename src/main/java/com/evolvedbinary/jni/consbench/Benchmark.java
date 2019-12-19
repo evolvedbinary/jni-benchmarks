@@ -34,36 +34,54 @@ package com.evolvedbinary.jni.consbench;
  * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
 public class Benchmark {
-
-    private final static int ITERATIONS = 1000000;
+    private final static int DEFAULT_ITERATIONS = 1_000_000;
 
     public final static void main(final String args[]) {
+
+        int iterations = DEFAULT_ITERATIONS;
+        boolean outputAsCSV = false;
+
+        if (args != null && args.length > 0) {
+            for (String arg : args) {
+                if (arg.startsWith("--iterations=")) {
+                    arg = arg.substring("--iterations=".length());
+                    iterations = Integer.parseInt(arg);
+                } else if (arg.equals("--csv")) {
+                    outputAsCSV = true;
+                }
+            }
+        }
 
         NarSystem.loadLibrary();
 
         //TEST1 - Foo By Call
         final long start1 = System.currentTimeMillis();
-        for(int i = 0; i < ITERATIONS; i++) {
+        for(int i = 0; i < iterations; i++) {
             final FooByCall fooByCall = new FooByCall();
         }
         final long end1 = System.currentTimeMillis();
-        System.out.println("FooByCall: " + (end1 - start1) + "ms");
 
 
         //TEST2 - Foo By Call Static
         final long start2 = System.currentTimeMillis();
-        for(int i = 0; i < ITERATIONS; i++) {
+        for(int i = 0; i < iterations; i++) {
             final FooByCallStatic fooByCallStatic = new FooByCallStatic();
         }
         final long end2 = System.currentTimeMillis();
-        System.out.println("FooByCallStatic: " + (end2 - start2) + "ms");
 
         //TEST3 - Foo By Call Invoke
         final long start3 = System.currentTimeMillis();
-        for(int i = 0; i < ITERATIONS; i++) {
+        for(int i = 0; i < iterations; i++) {
             final FooByCallInvoke fooByCallInvoke = new FooByCallInvoke();
         }
         final long end3 = System.currentTimeMillis();
-        System.out.println("FooByCallInvoke: " + (end3 - start3) + "ms");
+
+        if (outputAsCSV) {
+            System.out.println(String.format("%d,%d,%d", (end1 - start1), (end2 - start2), (end3 - start3)));
+        } else {
+            System.out.println("FooByCall: " + (end1 - start1) + "ms");
+            System.out.println("FooByCallStatic: " + (end2 - start2) + "ms");
+            System.out.println("FooByCallInvoke: " + (end3 - start3) + "ms");
+        }
     }
 }
