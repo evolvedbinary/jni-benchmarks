@@ -26,6 +26,11 @@
  */
 package com.evolvedbinary.jni.consbench;
 
+/**
+ * A Java Object which is backed by a C++ object.
+ *
+ * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
+ */
 public abstract class NativeBackedObject implements AutoCloseable {
 
     protected long _nativeHandle;
@@ -38,13 +43,13 @@ public abstract class NativeBackedObject implements AutoCloseable {
 
     @Override
     public void close() {
-        synchronized(this) {
+//        synchronized(this) {
             if(_nativeOwner && _nativeHandle != 0) {
                 disposeInternal();
                 _nativeHandle = 0;
                 _nativeOwner = false;
             }
-        }
+//        }
     }
 
     protected abstract void disposeInternal();

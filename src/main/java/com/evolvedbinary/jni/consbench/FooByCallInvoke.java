@@ -28,7 +28,9 @@ package com.evolvedbinary.jni.consbench;
 
 /**
  * Follows <i>9.2.7 Pattern 4: Call-Invoke</i> from Java Platform Performance by Steve Wilson
- * for setting up the handle to the native object
+ * for setting up the handle to the native object.
+ *
+ * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
 public class FooByCallInvoke extends NativeBackedObject {
     public FooByCallInvoke() {

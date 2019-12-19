@@ -28,7 +28,9 @@ package com.evolvedbinary.jni.consbench;
 
 /**
  * Follows <i>9.2.3 Pattern 1: Call</i> from Java Platform Performance by Steve Wilson
- * for setting up the handle to the native object
+ * for setting up the handle to the native object.
+ *
+ * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
 public class FooByCallStatic extends NativeBackedObject {
     public FooByCallStatic() {

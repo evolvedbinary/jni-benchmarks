@@ -24,17 +24,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * */
 package com.evolvedbinary.jni.consbench;
 
 /**
- *
  * A small JNI Benchmark to show the difference
  * in cost between various models of Object Construction
  * for a Java API that wraps a C++ API using JNI
  *
- * @author Adam Retter <adam.retter@googlemail.com>
+ * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
 public class Benchmark {
 

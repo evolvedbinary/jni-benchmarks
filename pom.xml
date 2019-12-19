@@ -46,9 +46,20 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>com.github.maven-nar</groupId>
                 <artifactId>nar-maven-plugin</artifactId>
-                <version>3.2.3</version>
+                <version>3.9.1</version>
                 <extensions>true</extensions>
                 <configuration>
                     <libraries>
@@ -68,7 +79,7 @@
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>2.11</version>
+                <version>3.0</version>
                 <inherited>true</inherited>
                 <configuration>
                     <header>com/mycila/maven/plugin/license/templates/BSD-3.txt</header>
@@ -90,7 +101,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.10</version>
+                <version>2.1.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -119,7 +130,9 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
