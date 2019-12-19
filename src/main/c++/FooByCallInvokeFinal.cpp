@@ -25,24 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <jni.h>
-#include "com_evolvedbinary_jni_consbench_FooByCallStatic.h"
+#include "com_evolvedbinary_jni_consbench_FooByCallInvokeFinal.h"
 #include "Foo.h"
+#include "Portal.h"
 
 /*
- * Class:     com_evolvedbinary_jni_consbench_FooByCallStatic
+ * Class:     com_evolvedbinary_jni_consbench_FooByCallInvokeFinal
  * Method:    newFoo
  * Signature: ()J
  */
-jlong Java_com_evolvedbinary_jni_consbench_FooByCallStatic_newFoo(JNIEnv* env, jclass jcls) {
+void Java_com_evolvedbinary_jni_consbench_FooByCallInvokeFinal_newFoo(JNIEnv* env, jobject jobj) {
   consbench::Foo* foo = new consbench::Foo();
-  return reinterpret_cast<jlong>(foo);
+
+  //set the _nativeHandle in Java
+  consbench::FooByCallInvokeFinalJni::setHandle(env, jobj, foo);
 }
 
 /*
- * Class:     com_evolvedbinary_jni_consbench_FooByCallStatic
+ * Class:     com_evolvedbinary_jni_consbench_FooByCallInvoke
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_com_evolvedbinary_jni_consbench_FooByCallStatic_disposeInternal(JNIEnv* env, jclass jcls, jlong handle) {
+void Java_com_evolvedbinary_jni_consbench_FooByCallInvokeFinal_disposeInternal(JNIEnv* env, jobject jobj, jlong handle) {
     delete reinterpret_cast<consbench::Foo*>(handle);
 }

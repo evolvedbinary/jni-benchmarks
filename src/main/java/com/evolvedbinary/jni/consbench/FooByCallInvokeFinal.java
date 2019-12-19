@@ -24,25 +24,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <jni.h>
-#include "com_evolvedbinary_jni_consbench_FooByCallStatic.h"
-#include "Foo.h"
+package com.evolvedbinary.jni.consbench;
 
-/*
- * Class:     com_evolvedbinary_jni_consbench_FooByCallStatic
- * Method:    newFoo
- * Signature: ()J
+/**
+ * Similar to {@link FooByCallInvoke} but this class is marked final.
+ *
+ * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
-jlong Java_com_evolvedbinary_jni_consbench_FooByCallStatic_newFoo(JNIEnv* env, jclass jcls) {
-  consbench::Foo* foo = new consbench::Foo();
-  return reinterpret_cast<jlong>(foo);
-}
+public final class FooByCallInvokeFinal extends NativeBackedObject {
+    public FooByCallInvokeFinal() {
+        super();
+        newFoo();   //the native method, will find _nativeHandle from the class and set it directly
+    }
 
-/*
- * Class:     com_evolvedbinary_jni_consbench_FooByCallStatic
- * Method:    disposeInternal
- * Signature: (J)V
- */
-void Java_com_evolvedbinary_jni_consbench_FooByCallStatic_disposeInternal(JNIEnv* env, jclass jcls, jlong handle) {
-    delete reinterpret_cast<consbench::Foo*>(handle);
+    @Override
+    protected void disposeInternal() {
+        disposeInternal(_nativeHandle);
+    }
+
+    private native void newFoo();
+    private native void disposeInternal(final long handle);
 }

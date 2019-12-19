@@ -25,24 +25,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <jni.h>
-#include "com_evolvedbinary_jni_consbench_FooByCallStatic.h"
+#include "com_evolvedbinary_jni_consbench_FooByCallStaticFinal.h"
 #include "Foo.h"
 
 /*
- * Class:     com_evolvedbinary_jni_consbench_FooByCallStatic
+ * Class:     com_evolvedbinary_jni_consbench_FooByCallStaticFinal
  * Method:    newFoo
  * Signature: ()J
  */
-jlong Java_com_evolvedbinary_jni_consbench_FooByCallStatic_newFoo(JNIEnv* env, jclass jcls) {
+jlong Java_com_evolvedbinary_jni_consbench_FooByCallStaticFinal_newFoo(JNIEnv* env, jclass jcls) {
   consbench::Foo* foo = new consbench::Foo();
   return reinterpret_cast<jlong>(foo);
 }
 
 /*
- * Class:     com_evolvedbinary_jni_consbench_FooByCallStatic
+ * Class:     com_evolvedbinary_jni_consbench_FooByCallStaticFinal
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_com_evolvedbinary_jni_consbench_FooByCallStatic_disposeInternal(JNIEnv* env, jclass jcls, jlong handle) {
+void Java_com_evolvedbinary_jni_consbench_FooByCallStaticFinal_disposeInternal(JNIEnv* env, jclass jcls, jlong handle) {
     delete reinterpret_cast<consbench::Foo*>(handle);
 }

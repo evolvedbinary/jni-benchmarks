@@ -55,33 +55,58 @@ public class Benchmark {
         NarSystem.loadLibrary();
 
         //TEST1 - Foo By Call
-        final long start1 = System.currentTimeMillis();
+        final long start1 = System.nanoTime();
         for(int i = 0; i < iterations; i++) {
             final FooByCall fooByCall = new FooByCall();
         }
-        final long end1 = System.currentTimeMillis();
+        final long end1 = System.nanoTime();
 
 
         //TEST2 - Foo By Call Static
-        final long start2 = System.currentTimeMillis();
+        final long start2 = System.nanoTime();
         for(int i = 0; i < iterations; i++) {
             final FooByCallStatic fooByCallStatic = new FooByCallStatic();
         }
-        final long end2 = System.currentTimeMillis();
+        final long end2 = System.nanoTime();
 
         //TEST3 - Foo By Call Invoke
-        final long start3 = System.currentTimeMillis();
+        final long start3 = System.nanoTime();
         for(int i = 0; i < iterations; i++) {
             final FooByCallInvoke fooByCallInvoke = new FooByCallInvoke();
         }
-        final long end3 = System.currentTimeMillis();
+        final long end3 = System.nanoTime();
+
+        //TEST4 - Foo By Call Final
+        final long start4 = System.nanoTime();
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallFinal fooByCallFinal = new FooByCallFinal();
+        }
+        final long end4 = System.nanoTime();
+
+
+        //TEST5 - Foo By Call Static
+        final long start5 = System.nanoTime();
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallStaticFinal fooByCallStaticFinal = new FooByCallStaticFinal();
+        }
+        final long end5 = System.nanoTime();
+
+        //TEST3 - Foo By Call Invoke
+        final long start6 = System.nanoTime();
+        for(int i = 0; i < iterations; i++) {
+            final FooByCallInvokeFinal fooByCallInvokeFinal = new FooByCallInvokeFinal();
+        }
+        final long end6 = System.nanoTime();
 
         if (outputAsCSV) {
-            System.out.println(String.format("%d,%d,%d", (end1 - start1), (end2 - start2), (end3 - start3)));
+            System.out.println(String.format("%d,%d,%d,%d,%d,%d", (end1 - start1), (end2 - start2), (end3 - start3), (end4 - start4), (end5 - start5), (end6 - start6)));
         } else {
-            System.out.println("FooByCall: " + (end1 - start1) + "ms");
-            System.out.println("FooByCallStatic: " + (end2 - start2) + "ms");
-            System.out.println("FooByCallInvoke: " + (end3 - start3) + "ms");
+            System.out.println("FooByCall: " + (end1 - start1) + "ns");
+            System.out.println("FooByCallStatic: " + (end2 - start2) + "ns");
+            System.out.println("FooByCallInvoke: " + (end3 - start3) + "ns");
+            System.out.println("FooByCallFinal: " + (end4 - start4) + "ns");
+            System.out.println("FooByCallStaticFinal: " + (end5 - start5) + "ns");
+            System.out.println("FooByCallInvokeFinal: " + (end6 - start6) + "ns");
         }
     }
 }

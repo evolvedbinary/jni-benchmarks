@@ -71,4 +71,13 @@ class FooByCallInvokeJni : public FooJniClass<consbench::Foo*, FooByCallInvokeJn
   }
 };
 
+// The portal class for com.evolvedbinary.jni.consbench.FooByCallInvokeFinal
+class FooByCallInvokeFinalJni : public FooJniClass<consbench::Foo*, FooByCallInvokeFinalJni> {
+ public:
+  static jclass getJClass(JNIEnv* env) {
+    return FooJniClass::getJClass(env,
+        "com/evolvedbinary/jni/consbench/FooByCallInvokeFinal");
+  }
+};
+
 } //end namespace
