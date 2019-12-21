@@ -26,7 +26,7 @@
  */
 #include <assert.h>
 
-namespace consbench {
+namespace jnibench {
 
 // Native class template
 template<class PTR, class DERIVED> class FooJniClass {
@@ -62,22 +62,22 @@ template<class PTR, class DERIVED> class FooJniClass {
 };
 
 
-// The portal class for com.evolvedbinary.jni.consbench.FooByCallInvoke
-class FooByCallInvokeJni : public FooJniClass<consbench::Foo*, FooByCallInvokeJni> {
+// The portal class for com.evolvedbinary.jnibench.common.FooByCallInvoke
+class FooByCallInvokeJni : public FooJniClass<jnibench::Foo*, FooByCallInvokeJni> {
  public:
   static jclass getJClass(JNIEnv* env) {
     return FooJniClass::getJClass(env,
-        "com/evolvedbinary/jni/consbench/FooByCallInvoke");
+        "com/evolvedbinary/jnibench/common/FooByCallInvoke");
   }
 };
 
-// The portal class for com.evolvedbinary.jni.consbench.FooByCallInvokeFinal
-class FooByCallInvokeFinalJni : public FooJniClass<consbench::Foo*, FooByCallInvokeFinalJni> {
+// The portal class for com.evolvedbinary.jnibench.common.FooByCallInvokeFinal
+class FooByCallInvokeFinalJni : public FooJniClass<jnibench::Foo*, FooByCallInvokeFinalJni> {
  public:
   static jclass getJClass(JNIEnv* env) {
     return FooJniClass::getJClass(env,
-        "com/evolvedbinary/jni/consbench/FooByCallInvokeFinal");
+        "com/evolvedbinary/jnibench/common/FooByCallInvokeFinal");
   }
 };
 
-} //end namespace
+}  //end namespace jnibench

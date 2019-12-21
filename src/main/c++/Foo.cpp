@@ -26,10 +26,10 @@
  */
 #include "Foo.h"
 
-namespace consbench {
+namespace jnibench {
 Foo::Foo() {
 }
 
 Foo::~Foo() {
 }
-}
+}  //end namespace jnibench

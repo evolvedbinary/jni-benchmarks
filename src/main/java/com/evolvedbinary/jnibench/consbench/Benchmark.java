@@ -24,7 +24,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jni.consbench;
+package com.evolvedbinary.jnibench.consbench;
+
+import com.evolvedbinary.jnibench.common.*;
 
 /**
  * A small JNI Benchmark to show the difference

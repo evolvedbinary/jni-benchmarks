@@ -27,12 +27,12 @@
 #ifndef FOO_H_
 #define FOO_H_
 
-namespace consbench{
+namespace jnibench {
 class Foo {
  public:
   Foo();
   ~Foo();
 };
-} //end namspace consbench
+}  //end namespace jnibench
 
 #endif  // FOO

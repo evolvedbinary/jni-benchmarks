@@ -24,33 +24,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jni.consbench;
+package com.evolvedbinary.jnibench.common;
 
 /**
- * A Java Object which is backed by a C++ object.
+ * Similar to {@link FooByCall} but this class is marked final.
  *
  * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
-public abstract class NativeBackedObject implements AutoCloseable {
-
-    protected long _nativeHandle;
-    protected boolean _nativeOwner;
-
-    protected NativeBackedObject() {
-        this._nativeHandle = 0;
-        this._nativeOwner = true;
+public final class FooByCallFinal extends NativeBackedObject {
+    public FooByCallFinal() {
+        super();
+        this._nativeHandle = newFoo();
     }
 
     @Override
-    public void close() {
-//        synchronized(this) {
-            if(_nativeOwner && _nativeHandle != 0) {
-                disposeInternal();
-                _nativeHandle = 0;
-                _nativeOwner = false;
-            }
-//        }
+    protected void disposeInternal() {
+        disposeInternal(_nativeHandle);
     }
 
-    protected abstract void disposeInternal();
+    private native long newFoo();
+    private native void disposeInternal(final long handle);
 }

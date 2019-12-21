@@ -24,25 +24,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jni.consbench;
+package com.evolvedbinary.jnibench.common;
 
 /**
- * Follows <i>9.2.3 Pattern 1: Call</i> from Java Platform Performance by Steve Wilson
- * for setting up the handle to the native object.
+ * A Java Object which is backed by a C++ object.
  *
  * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
-public class FooByCallStatic extends NativeBackedObject {
-    public FooByCallStatic() {
-        super();
-        this._nativeHandle = newFoo();
+public abstract class NativeBackedObject implements AutoCloseable {
+
+    protected long _nativeHandle;
+    protected boolean _nativeOwner;
+
+    protected NativeBackedObject() {
+        this._nativeHandle = 0;
+        this._nativeOwner = true;
     }
 
     @Override
-    protected void disposeInternal() {
-        disposeInternal(_nativeHandle);
+    public void close() {
+//        synchronized(this) {
+            if(_nativeOwner && _nativeHandle != 0) {
+                disposeInternal();
+                _nativeHandle = 0;
+                _nativeOwner = false;
+            }
+//        }
     }
 
-    private static native long newFoo();
-    private static native void disposeInternal(final long handle);
+    protected abstract void disposeInternal();
 }

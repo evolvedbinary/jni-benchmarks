@@ -40,8 +40,27 @@
     </licenses>
 
     <properties>
+        <java.source.version>1.7</java.source.version>
+        <java.target.version>1.7</java.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <jmh.version>1.22</jmh.version>
+        <uberjar.name>benchmarks</uberjar.name>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -50,9 +69,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                    <encoding>UTF-8</encoding>
+                    <source>${java.source.version}</source>
+                    <target>${java.target.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
 
@@ -65,12 +84,13 @@
                     <libraries>
                         <library>
                             <type>jni</type>
-                            <narSystemPackage>com.evolvedbinary.jni.consbench</narSystemPackage>
+                            <narSystemPackage>com.evolvedbinary.jnibench.consbench</narSystemPackage>
                         </library>
                     </libraries>
                     <cpp>
                         <options>
                             <option>-std=c++11</option>
+                            <option>-O3</option>
                         </options>
                     </cpp>
                 </configuration>
@@ -118,7 +138,7 @@
                     <programs>
                         <program>
                             <id>benchmark</id>
-                            <mainClass>com.evolvedbinary.jni.consbench.Benchmark</mainClass>
+                            <mainClass>com.evolvedbinary.jnibench.consbench.Benchmark</mainClass>
                             <jvmSettings>
                                 <extraArguments>
                                     <extraArgument>-Djava.library.path=$REPO</extraArgument>
@@ -146,6 +166,48 @@
                         <descriptor>src/main/assembly/appassembler-output.xml</descriptor>
                     </descriptors>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>${project.artifactId}-${project.version}-${uberjar.name}</finalName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.openjdk.jmh.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <!--
+                                        Shading signed JARs will fail without this.
+                                        http://stackoverflow.com/questions/999489/invalid-signature-file-when-attempting-to-run-a-jar
+                                    -->
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <!-- exclude our simple console Benchmark Main class -->
+                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
+                                    <excludes>
+                                        <exclude>com/evolvedbinary/jnibench/consbench/Benchmark.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>
