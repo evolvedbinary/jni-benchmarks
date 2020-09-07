@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <jni.h>
-#include "com_evolvedbinary_jnibench_common_FooByCallStatic.h"
+#include "com_evolvedbinary_jnibench_common_call_FooByCallStatic.h"
 #include "Foo.h"
 
 /*
@@ -33,7 +33,7 @@
  * Method:    newFoo
  * Signature: ()J
  */
-jlong Java_com_evolvedbinary_jnibench_common_FooByCallStatic_newFoo(JNIEnv* env, jclass jcls) {
+jlong Java_com_evolvedbinary_jnibench_common_call_FooByCallStatic_newFoo(JNIEnv* env, jclass jcls) {
   jnibench::Foo* foo = new jnibench::Foo();
   return reinterpret_cast<jlong>(foo);
 }
@@ -43,6 +43,6 @@ jlong Java_com_evolvedbinary_jnibench_common_FooByCallStatic_newFoo(JNIEnv* env,
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_com_evolvedbinary_jnibench_common_FooByCallStatic_disposeInternal(JNIEnv* env, jclass jcls, jlong handle) {
+void Java_com_evolvedbinary_jnibench_common_call_FooByCallStatic_disposeInternal(JNIEnv* env, jclass jcls, jlong handle) {
     delete reinterpret_cast<jnibench::Foo*>(handle);
 }

@@ -24,15 +24,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common;
+package com.evolvedbinary.jnibench.common.call;
+
+import com.evolvedbinary.jnibench.common.NativeBackedObject;
 
 /**
- * Similar to {@link FooByCall} but this class is marked final.
+ * Similar to {@link FooByCallStatic} but this class is marked final.
  *
  * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
-public final class FooByCallFinal extends NativeBackedObject {
-    public FooByCallFinal() {
+public final class FooByCallStaticFinal extends NativeBackedObject {
+    public FooByCallStaticFinal() {
         super();
         this._nativeHandle = newFoo();
     }
@@ -42,6 +44,6 @@ public final class FooByCallFinal extends NativeBackedObject {
         disposeInternal(_nativeHandle);
     }
 
-    private native long newFoo();
-    private native void disposeInternal(final long handle);
+    private static native long newFoo();
+    private static native void disposeInternal(final long handle);
 }

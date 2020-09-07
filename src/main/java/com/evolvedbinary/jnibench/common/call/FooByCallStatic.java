@@ -24,7 +24,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common;
+package com.evolvedbinary.jnibench.common.call;
+
+import com.evolvedbinary.jnibench.common.NativeBackedObject;
 
 /**
  * Follows <i>9.2.3 Pattern 1: Call</i> from Java Platform Performance by Steve Wilson

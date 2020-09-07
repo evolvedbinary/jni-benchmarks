@@ -26,7 +26,7 @@
  */
 package com.evolvedbinary.jnibench.consbench;
 
-import com.evolvedbinary.jnibench.common.*;
+import com.evolvedbinary.jnibench.common.call.*;
 
 /**
  * A small JNI Benchmark to show the difference

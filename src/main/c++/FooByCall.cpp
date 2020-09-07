@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <jni.h>
-#include "com_evolvedbinary_jnibench_common_FooByCall.h"
+#include "com_evolvedbinary_jnibench_common_call_FooByCall.h"
 #include "Foo.h"
 
 /*
@@ -33,7 +33,7 @@
  * Method:    newFoo
  * Signature: ()J
  */
-jlong Java_com_evolvedbinary_jnibench_common_FooByCall_newFoo(JNIEnv* env, jobject jobj) {
+jlong Java_com_evolvedbinary_jnibench_common_call_FooByCall_newFoo(JNIEnv* env, jobject jobj) {
   jnibench::Foo* foo = new jnibench::Foo();
   return reinterpret_cast<jlong>(foo);
 }
@@ -43,6 +43,6 @@ jlong Java_com_evolvedbinary_jnibench_common_FooByCall_newFoo(JNIEnv* env, jobje
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_com_evolvedbinary_jnibench_common_FooByCall_disposeInternal(JNIEnv* env, jobject jobj, jlong handle) {
+void Java_com_evolvedbinary_jnibench_common_call_FooByCall_disposeInternal(JNIEnv* env, jobject jobj, jlong handle) {
     delete reinterpret_cast<jnibench::Foo*>(handle);
 }

@@ -24,18 +24,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common;
+package com.evolvedbinary.jnibench.common.call;
+
+import com.evolvedbinary.jnibench.common.NativeBackedObject;
 
 /**
- * Follows <i>9.2.7 Pattern 4: Call-Invoke</i> from Java Platform Performance by Steve Wilson
+ * Follows <i>9.2.3 Pattern 1: Call</i> from Java Platform Performance by Steve Wilson
  * for setting up the handle to the native object.
  *
  * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
-public class FooByCallInvoke extends NativeBackedObject {
-    public FooByCallInvoke() {
+public class FooByCall extends NativeBackedObject {
+    public FooByCall() {
         super();
-        newFoo();   //the native method, will find _nativeHandle from the class and set it directly
+        this._nativeHandle = newFoo();
     }
 
     @Override
@@ -43,6 +45,6 @@ public class FooByCallInvoke extends NativeBackedObject {
         disposeInternal(_nativeHandle);
     }
 
-    private native void newFoo();
+    private native long newFoo();
     private native void disposeInternal(final long handle);
 }
