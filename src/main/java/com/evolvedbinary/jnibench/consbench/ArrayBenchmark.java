@@ -2,7 +2,7 @@ package com.evolvedbinary.jnibench.consbench;
 
 import com.evolvedbinary.jnibench.common.array.AllocateInJavaGetArray;
 import com.evolvedbinary.jnibench.common.array.FooObject;
-import com.evolvedbinary.jnibench.common.array.FooObjectArray;
+import com.evolvedbinary.jnibench.common.array.FooNativeObjectArray;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,14 +22,13 @@ public class ArrayBenchmark implements BenchmarkInterface {
   public void test(BenchmarkOptions benchmarkOptions) {
     int iterations = benchmarkOptions.getIterations();
 
-    FooObjectArray fooObjectArray = new FooObjectArray(
-        FOO_OBJECTS,
-        new AllocateInJavaGetArray());
+    FooNativeObjectArray fooObjectArray = new FooNativeObjectArray(FOO_OBJECTS);
+    AllocateInJavaGetArray allocateInJavaGetArray = new AllocateInJavaGetArray();
 
     //TEST1 - allocate in Java
     final long start1 = time(benchmarkOptions.isInNs());
     for (int i = 0; i < iterations; i++) {
-      fooObjectArray.getFooObjects();
+      allocateInJavaGetArray.getObjectList(fooObjectArray);
     }
     final long end1 = time(benchmarkOptions.isInNs());
 

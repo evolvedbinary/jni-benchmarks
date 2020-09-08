@@ -7,21 +7,21 @@ import java.util.List;
 public class AllocateInJavaGetArray implements JniListSupplier<FooObject> {
 
   @Override
-  public List<FooObject> getObjectList(long nativeObjectHandle) {
-    final int len = (int) getArraySize(nativeObjectHandle);
+  public List<FooObject> getObjectList(NativeObjectArray<FooObject> nativeObjectArray) {
+    final int len = (int) getArraySize(nativeObjectArray.get_nativeHandle());
     if (len == 0) {
       return Collections.emptyList();
     } else {
       final String names[] = new String[len];
       final long values[] = new long[len];
 
-      getArrays(nativeObjectHandle, names, values);
+      getArrays(nativeObjectArray.get_nativeHandle(), names, values);
 
-      final List<FooObject> objectArray = new ArrayList<>();
+      final List<FooObject> objectList = new ArrayList<>();
       for (int i = 0; i < len; i++) {
-        objectArray.add(new FooObject(names[i], values[i]));
+        objectList.add(new FooObject(names[i], values[i]));
       }
-      return objectArray;
+      return objectList;
     }
   }
 
