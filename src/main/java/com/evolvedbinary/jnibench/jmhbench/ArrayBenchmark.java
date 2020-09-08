@@ -3,6 +3,7 @@ package com.evolvedbinary.jnibench.jmhbench;
 import com.evolvedbinary.jnibench.common.array.AllocateInJavaGetArray;
 import com.evolvedbinary.jnibench.common.array.FooObject;
 import com.evolvedbinary.jnibench.common.array.FooNativeObjectArray;
+import com.evolvedbinary.jnibench.common.array.JniGetArray;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
 import org.openjdk.jmh.annotations.*;
 
@@ -25,17 +26,20 @@ public class ArrayBenchmark {
 
   @State(Scope.Benchmark)
   public static class BenchmarkState {
-    public FooNativeObjectArray fooObjectArray;
-    public AllocateInJavaGetArray allocateInJavaGetArray;
+    FooNativeObjectArray fooObjectArray;
+    AllocateInJavaGetArray allocateInJavaGetArray;
+    JniGetArray jniGetArray;
 
     public BenchmarkState() {
 
     }
 
     public BenchmarkState(FooNativeObjectArray fooObjectArray,
-                          AllocateInJavaGetArray allocateInJavaGetArray) {
+                          AllocateInJavaGetArray allocateInJavaGetArray,
+                          JniGetArray jniGetArray) {
       this.fooObjectArray = fooObjectArray;
       this.allocateInJavaGetArray = allocateInJavaGetArray;
+      this.jniGetArray = jniGetArray;
     }
 
     @Setup
@@ -43,6 +47,7 @@ public class ArrayBenchmark {
       fooObjectArray = new FooNativeObjectArray(
           FOO_OBJECTS);
       allocateInJavaGetArray = new AllocateInJavaGetArray();
+      jniGetArray = new JniGetArray();
     }
 
     @TearDown
@@ -54,5 +59,10 @@ public class ArrayBenchmark {
   @Benchmark
   public void allocateInJavaArray(BenchmarkState benchmarkState) {
     benchmarkState.allocateInJavaGetArray.getObjectList(benchmarkState.fooObjectArray);
+  }
+
+  @Benchmark
+  public void jniGetArray(BenchmarkState benchmarkState) {
+    benchmarkState.jniGetArray.getObjectList(benchmarkState.fooObjectArray);
   }
 }

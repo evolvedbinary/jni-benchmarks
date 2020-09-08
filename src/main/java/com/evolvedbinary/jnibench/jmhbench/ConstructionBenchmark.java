@@ -20,19 +20,19 @@ public class ConstructionBenchmark {
         NarSystem.loadLibrary();
     }
 
-    @Benchmark
+    //@Benchmark
     public void fooByCall(Blackhole blackhole) {
         final FooByCall fooByCall = new FooByCall();
         blackhole.consume(fooByCall);
     }
 
-    @Benchmark
+    //@Benchmark
     public void fooByCallStatic(Blackhole blackhole) {
         final FooByCallStatic fooByCallStatic = new FooByCallStatic();
         blackhole.consume(fooByCallStatic);
     }
 
-    @Benchmark
+    //@Benchmark
     public void fooByCallInvoke(Blackhole blackhole) {
         final FooByCallInvoke fooByCallInvoke = new FooByCallInvoke();
         blackhole.consume(fooByCallInvoke);
