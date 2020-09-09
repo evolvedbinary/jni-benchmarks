@@ -47,6 +47,124 @@ class JavaClass {
   }
 };
 
+class FooObjectJni : public JavaClass {
+ public:
+
+  /**
+   * Get the Java Class com.evolvedbinary.jnibench.common.array.FooObject
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return The Java Class or nullptr if one of the
+   *     ClassFormatError, ClassCircularityError, NoClassDefFoundError,
+   *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
+   */
+  static jclass getJClass(JNIEnv* env) {
+    return JavaClass::getJClass(env, "com/evolvedbinary/jnibench/common/array/FooObject");
+  }
+
+  static jmethodID getConstructor(JNIEnv* env, jclass jclazz) {
+      return env->GetMethodID(jclazz, "<init>", "(Ljava/lang/String;J)V");
+  }
+
+  /**
+   * Create a new Java com.evolvedbinary.jnibench.common.array.FooObject object
+   * with the same properties as * the provided C++ jnibench::FooObject object.
+   *
+   * @param jclazz
+   * @param env A pointer to the Java environment
+   * @param status The jnibench::FooObject object
+   *
+   * @return A reference to a com.evolvedbinary.jnibench.common.array.FooObject object,
+   *     or nullptr if an an exception occurs
+   */
+  static jobject construct(JNIEnv* env, jclass jclazz, const jnibench::FooObject& foo_object) {
+    jmethodID mid = getConstructor(env, jclazz);
+    if (mid == nullptr) {
+      // exception thrown: NoSuchMethodException or OutOfMemoryError
+      return nullptr;
+    }
+
+    jstring jname = env->NewStringUTF(foo_object.GetName().c_str());
+    if (env->ExceptionCheck()) {
+      if (jname != nullptr) {
+        env->DeleteLocalRef(jname);
+      }
+      return nullptr;
+    }
+
+    jobject jfoo_object = env->NewObject(jclazz, mid, jname, static_cast<jlong>(foo_object.GetValue()));
+
+    if (env->ExceptionCheck()) {
+      // exception occurred
+      if (jname != nullptr) {
+        env->DeleteLocalRef(jname);
+      }
+      return nullptr;
+    }
+
+    env->DeleteLocalRef(jname);
+
+    return jfoo_object;
+  }
+};
+
+class LongJni : public JavaClass {
+ public:
+
+  /**
+   * Get the Java Class java.lang.Long
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return The Java Class or nullptr if one of the
+   *     ClassFormatError, ClassCircularityError, NoClassDefFoundError,
+   *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
+   */
+  static jclass getJClass(JNIEnv* env) {
+    return JavaClass::getJClass(env, "java/lang/Long");
+  }
+
+  static jmethodID getConstructor(JNIEnv* env, jclass jclazz) {
+    return env->GetMethodID(jclazz, "<init>", "(J)V");
+  }
+
+  static jobject construct(JNIEnv* env, jclass jclazz, const int64_t& value) {
+    jmethodID mid = getConstructor(env, jclazz);
+    if (mid == nullptr) {
+      // exception thrown: NoSuchMethodException or OutOfMemoryError
+      return nullptr;
+    }
+
+    jobject jvalue = env->NewObject(jclazz, mid, static_cast<jlong>(value));
+    if (env->ExceptionCheck()) {
+      // exception occurred
+      if (jvalue != nullptr) {
+        env->DeleteLocalRef(jvalue);
+      }
+      return nullptr;
+    }
+
+    return jvalue;
+  }
+};
+
+class StringJni : public JavaClass {
+ public:
+  /**
+   * Get the Java Class java.lang.String
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return The Java Class or nullptr if one of the
+   *     ClassFormatError, ClassCircularityError, NoClassDefFoundError,
+   *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
+   */
+  static jclass getJClass(JNIEnv* env) {
+    return JavaClass::getJClass(env, "java/lang/String");
+  }
+};
+
 class ListJni : public JavaClass {
  public:
   /**

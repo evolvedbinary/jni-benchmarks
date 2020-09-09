@@ -39,11 +39,9 @@
 jobject Java_com_evolvedbinary_jnibench_common_array_JniGetArrayList_getArrayList
   (JNIEnv *env, jclass, jlong handle) {
 
-  //TODO(AR) move into Portal.h
-  const jclass clazz = env->FindClass("com/evolvedbinary/jnibench/common/array/FooObject");
-  const jmethodID ctor = env->GetMethodID(clazz, "<init>", "(Ljava/lang/String;J)V");
-  if (ctor == nullptr) {
-    // exception occurred accessing method
+  const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);
+  if (jfoo_obj_clazz == nullptr) {
+    // exception occurred accessing class
     return nullptr;
   }
 
@@ -75,25 +73,10 @@ jobject Java_com_evolvedbinary_jnibench_common_array_JniGetArrayList_getArrayLis
   }
 
   for (auto foo_obj : cpp_array) {
-    const jstring jname = env->NewStringUTF(foo_obj.GetName().c_str());
-    if (jname == nullptr) {
-      env->DeleteLocalRef(jlist);
-      return nullptr;
-    }
-
-    const jlong jvalue = static_cast<jlong>(foo_obj.GetValue());
-
     // create java FooObject
-    const jobject jfoo_obj = env->NewObject(clazz, ctor,
-            jname,
-            jvalue);
-    if (env->ExceptionCheck()) {
+    const jobject jfoo_obj = FooObjectJni::construct(env, jfoo_obj_clazz, foo_obj);
+    if (jfoo_obj == nullptr) {
       // exception occurred constructing object
-      env->DeleteLocalRef(jlist);
-      env->DeleteLocalRef(jname);
-      if (jfoo_obj != nullptr) {
-        env->DeleteLocalRef(jfoo_obj);
-      }
       return nullptr;
     }
 
@@ -102,7 +85,6 @@ jobject Java_com_evolvedbinary_jnibench_common_array_JniGetArrayList_getArrayLis
     if (env->ExceptionCheck() || rs == JNI_FALSE) {
       // exception occurred calling method, or could not add
       env->DeleteLocalRef(jlist);
-      env->DeleteLocalRef(jname);
       env->DeleteLocalRef(jfoo_obj);
       return nullptr;
     }

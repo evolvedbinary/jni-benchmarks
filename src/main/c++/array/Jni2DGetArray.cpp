@@ -29,32 +29,113 @@
 
 #include "com_evolvedbinary_jnibench_common_array_Jni2DGetArray.h"
 #include "FooObject.h"
+#include "Portal.h"
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_array_Jni2DGetArray
  * Method:    get2DArray
  * Signature: (J)[[Ljava/lang/Object;
  */
-jobjectArray Java_com_evolvedbinary_jnibench_common_array_Jni2DGetArray_get2DArray
-  (JNIEnv *env, jclass, jlong handle) {
+jobjectArray Java_com_evolvedbinary_jnibench_common_array_Jni2DGetArray_get2DArray(
+    JNIEnv *env, jclass, jlong handle) {
   const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
   jsize len = static_cast<jsize>(cpp_array.size());
-  jclass jlong_clazz = env->FindClass("java/lang/Long");
-  jmethodID jlong_ctor = env->GetMethodID(jlong_clazz, "<init>", "(J)V");
-  jobjectArray name_array = env->NewObjectArray(len, env->FindClass("java/lang/String"), nullptr);
-  jobjectArray value_array = env->NewObjectArray(len, jlong_clazz, nullptr);
+
+  const jclass jstring_clazz = StringJni::getJClass(env);
+  if (jstring_clazz == nullptr) {
+    // exception occurred accessing class
+    return nullptr;
+  }
+
+  const jclass jlong_clazz = LongJni::getJClass(env);
+  if (jlong_clazz == nullptr) {
+      // exception occurred accessing class
+      return nullptr;
+  }
+
+  jobjectArray jname_array = env->NewObjectArray(len, jstring_clazz, nullptr);
+  if (jname_array == nullptr) {
+    // exception thrown: OutOfMemoryError
+    return nullptr;
+  }
+  jobjectArray jvalue_array = env->NewObjectArray(len, jlong_clazz, nullptr);
+  if (jvalue_array == nullptr) {
+    // exception thrown: OutOfMemoryError
+    env->DeleteLocalRef(jname_array);
+    return nullptr;
+  }
 
   for (size_t i = 0; i < cpp_array.size(); ++i) {
     const jnibench::FooObject& foo_obj = cpp_array[i];
-    jstring name = env->NewStringUTF(foo_obj.GetName().c_str());
-    jobject value = env->NewObject(jlong_clazz, jlong_ctor, static_cast<jlong>(foo_obj.GetValue()));
-    env->SetObjectArrayElement(name_array, static_cast<jsize>(i), name);
-    env->SetObjectArrayElement(value_array, static_cast<jsize>(i), value);
+    jstring jname = env->NewStringUTF(foo_obj.GetName().c_str());
+    if (env->ExceptionCheck()) {
+      if (jname != nullptr) {
+        env->DeleteLocalRef(jname_array);
+        env->DeleteLocalRef(jvalue_array);
+        env->DeleteLocalRef(jname);
+      }
+      return nullptr;
+    }
+
+    jobject jvalue = LongJni::construct(env, jlong_clazz, foo_obj.GetValue());
+    if (jvalue == nullptr) {
+      env->DeleteLocalRef(jname_array);
+      env->DeleteLocalRef(jvalue_array);
+      env->DeleteLocalRef(jname);
+      return nullptr;
+    }
+
+    env->SetObjectArrayElement(jname_array, static_cast<jsize>(i), jname);
+    if (env->ExceptionCheck()) {
+      // exception thrown: ArrayIndexOutOfBoundsException
+      // or ArrayStoreException
+      env->DeleteLocalRef(jname_array);
+      env->DeleteLocalRef(jvalue_array);
+      env->DeleteLocalRef(jname);
+      env->DeleteLocalRef(jvalue);
+      return nullptr;
+    }
+    env->SetObjectArrayElement(jvalue_array, static_cast<jsize>(i), jvalue);
+    if (env->ExceptionCheck()) {
+      // exception thrown: ArrayIndexOutOfBoundsException
+      // or ArrayStoreException
+      env->DeleteLocalRef(jname_array);
+      env->DeleteLocalRef(jvalue_array);
+      env->DeleteLocalRef(jname);
+      env->DeleteLocalRef(jvalue);
+      return nullptr;
+    }
+
+    env->DeleteLocalRef(jname);
+    env->DeleteLocalRef(jvalue);
   }
 
-  jobjectArray obj_array = env->NewObjectArray(2, env->FindClass("java/lang/Object"), nullptr);
-  env->SetObjectArrayElement(obj_array, 0, name_array);
-  env->SetObjectArrayElement(obj_array, 1, value_array);
+  jobjectArray jobj_array = env->NewObjectArray(2, env->FindClass("java/lang/Object"), nullptr);
+  if (jobj_array == nullptr) {
+    // exception thrown: OutOfMemoryError
+    env->DeleteLocalRef(jname_array);
+    env->DeleteLocalRef(jvalue_array);
+    return nullptr;
+  }
 
-  return obj_array;
+  env->SetObjectArrayElement(jobj_array, 0, jname_array);
+  if (env->ExceptionCheck()) {
+    // exception thrown: ArrayIndexOutOfBoundsException
+    // or ArrayStoreException
+    env->DeleteLocalRef(jname_array);
+    env->DeleteLocalRef(jvalue_array);
+    env->DeleteLocalRef(jobj_array);
+    return nullptr;
+  }
+  env->SetObjectArrayElement(jobj_array, 1, jvalue_array);
+  if (env->ExceptionCheck()) {
+    // exception thrown: ArrayIndexOutOfBoundsException
+    // or ArrayStoreException
+    env->DeleteLocalRef(jname_array);
+    env->DeleteLocalRef(jvalue_array);
+    env->DeleteLocalRef(jobj_array);
+    return nullptr;
+  }
+
+  return jobj_array;
 }
