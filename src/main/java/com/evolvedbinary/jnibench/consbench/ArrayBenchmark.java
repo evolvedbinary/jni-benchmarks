@@ -1,8 +1,6 @@
 package com.evolvedbinary.jnibench.consbench;
 
-import com.evolvedbinary.jnibench.common.array.AllocateInJavaGetArray;
-import com.evolvedbinary.jnibench.common.array.FooObject;
-import com.evolvedbinary.jnibench.common.array.FooNativeObjectArray;
+import com.evolvedbinary.jnibench.common.array.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,11 +30,31 @@ public class ArrayBenchmark implements BenchmarkInterface {
     }
     final long end1 = time(benchmarkOptions.isInNs());
 
+    JniGetArray jniGetArray = new JniGetArray();
+    //TEST2 - create object array in JNI
+    final long start2 = time(benchmarkOptions.isInNs());
+    for (int i = 0; i < iterations; i++) {
+      jniGetArray.getObjectList(fooObjectArray);
+    }
+    final long end2 = time(benchmarkOptions.isInNs());
+
+    Jni2DGetArray jni2DGetArray = new Jni2DGetArray();
+    //TEST3 - create 2D object array in JNI
+    final long start3 = time(benchmarkOptions.isInNs());
+    for (int i = 0; i < iterations; i++) {
+      jni2DGetArray.getObjectList(fooObjectArray);
+    }
+    final long end3 = time(benchmarkOptions.isInNs());
+
     String names[] = {
-        "Allocate in Java"
+        "Allocate in Java",
+        "Create object array in JNI",
+        "Create 2D object array in JNI"
     };
-    Long results[] = {
-        end1 - start1
+    long results[] = {
+        end1 - start1,
+        end2 - start2,
+        end3 - start3
     };
     outputResults(benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs(), names, results);
   }

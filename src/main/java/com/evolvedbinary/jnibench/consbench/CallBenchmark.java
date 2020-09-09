@@ -73,7 +73,7 @@ public class CallBenchmark implements BenchmarkInterface {
         "FooByCallStaticFinal",
         "FooByCallInvokeFinal"
     };
-    Long[] results = {
+    long[] results = {
         end1 - start1,
         end2 - start2,
         end3 - start3,
@@ -136,7 +136,7 @@ public class CallBenchmark implements BenchmarkInterface {
         "FooByCallStaticFinal",
         "FooByCallInvokeFinal"
     };
-    Long[] results = {
+    long[] results = {
         end1 - start1,
         end2 - start2,
         end3 - start3,

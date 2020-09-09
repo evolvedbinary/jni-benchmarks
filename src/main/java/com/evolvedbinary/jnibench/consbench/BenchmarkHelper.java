@@ -2,7 +2,7 @@ package com.evolvedbinary.jnibench.consbench;
 
 public class BenchmarkHelper {
 
-  public static void outputResults(final boolean outputAsCSV, final boolean inNs, final String[] names, final Long[] results) {
+  public static void outputResults(final boolean outputAsCSV, final boolean inNs, final String[] names, final long[] results) {
     assert (names.length == results.length);
 
     if (outputAsCSV) {
