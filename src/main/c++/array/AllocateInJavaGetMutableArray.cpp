@@ -27,56 +27,84 @@
 #include <jni.h>
 #include <vector>
 
-#include "com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList.h"
+#include "com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray.h"
 #include "FooObject.h"
 #include "Portal.h"
 
 /*
- * Class:     com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList
- * Method:    getListSize
+ * Class:     com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray
+ * Method:    getArraySize
  * Signature: (J)J
  */
-jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList_getListSize(
+jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray_getArraySize(
     JNIEnv *, jclass, jlong handle) {
   const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
   return static_cast<jlong>(cpp_array.size());
 }
 
 /*
- * Class:     com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList
- * Method:    getArrays
- * Signature: (JLjava/util/List;)V
+ * Class:     com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray
+ * Method:    getArray
+ * Signature: (J[Lcom/evolvedbinary/jnibench/common/array/FooObject;)V
  */
-void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList_getList(
-    JNIEnv *env, jclass, jlong handle, jobject jlist) {
-
+void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray_getArray(
+    JNIEnv *env, jclass, jlong handle, jobjectArray jobject_array) {
   const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);
   if (jfoo_obj_clazz == nullptr) {
     // exception occurred accessing class
     return;
   }
 
-  const jmethodID add_mid = ListJni::getListAddMethodId(env);
-  if (add_mid == nullptr) {
-    // exception occurred accessing method
+  const jfieldID fid_name = FooObjectJni::getNameField(env, jfoo_obj_clazz);
+  if (fid_name == nullptr) {
+    // exception occurred accessing field
     return;
   }
 
-  const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
-  for (auto foo_obj : cpp_array) {
-    // create java FooObject
-    const jobject jfoo_obj = FooObjectJni::construct(env, jfoo_obj_clazz, foo_obj);
-    if (jfoo_obj == nullptr) {
-      // exception occurred constructing object
+  const jfieldID fid_value = FooObjectJni::getValueField(env, jfoo_obj_clazz);
+  if (fid_value == nullptr) {
+    // exception occurred accessing field
+    return;
+  }
+
+  auto* cpp_array = reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  for (jsize i = 0; i < env->GetArrayLength(jobject_array); i++) {
+    jnibench::FooObject foo_obj = (*cpp_array)[static_cast<size_t>(i)];
+
+    jobject jfoo_obj = env->GetObjectArrayElement(jobject_array, i);
+    if(env->ExceptionCheck()) {
+      // exception thrown: ArrayIndexOutOfBoundsException
+      // or ArrayStoreException
+      if (jfoo_obj != nullptr) {
+        env->DeleteLocalRef(jfoo_obj);
+      }
       return;
     }
 
-    // add to list
-    const jboolean rs = env->CallBooleanMethod(jlist, add_mid, jfoo_obj);
-    if (env->ExceptionCheck() || rs == JNI_FALSE) {
-      // exception occurred calling method, or could not add
+    // set name field
+    jstring jname = env->NewStringUTF(foo_obj.GetName().c_str());
+    if (env->ExceptionCheck()) {
+      if (jname != nullptr) {
+        env->DeleteLocalRef(jname);
+      }
       env->DeleteLocalRef(jfoo_obj);
       return;
     }
+    env->SetObjectField(jfoo_obj, fid_name, jname);
+    if (env->ExceptionCheck()) {
+          env->DeleteLocalRef(jname);
+          env->DeleteLocalRef(jfoo_obj);
+          return;
+    }
+    env->DeleteLocalRef(jname);
+
+    // set value field
+    env->SetLongField(jfoo_obj, fid_value, static_cast<jlong>(foo_obj.GetValue()));
+    if (env->ExceptionCheck()) {
+      env->DeleteLocalRef(jfoo_obj);
+      return;
+    }
+
+    env->DeleteLocalRef(jfoo_obj);
   }
 }

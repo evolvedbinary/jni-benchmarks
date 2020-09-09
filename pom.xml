@@ -40,8 +40,8 @@
     </licenses>
 
     <properties>
-        <java.source.version>1.7</java.source.version>
-        <java.target.version>1.7</java.target.version>
+        <java.source.version>1.8</java.source.version>
+        <java.target.version>1.8</java.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <jmh.version>1.25.2</jmh.version>

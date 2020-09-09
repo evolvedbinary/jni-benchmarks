@@ -50,74 +50,31 @@ public class ArrayBenchmark implements BenchmarkInterface {
 
   @Override
   public void test(final BenchmarkOptions benchmarkOptions) {
-    int iterations = benchmarkOptions.getIterations();
+    final int iterations = benchmarkOptions.getIterations();
+    final FooNativeObjectArray fooObjectArray = new FooNativeObjectArray(fooObjects);
 
-    FooNativeObjectArray fooObjectArray = new FooNativeObjectArray(fooObjects);
-
-    AllocateInJavaGet2DArray allocateInJavaGet2DArray = new AllocateInJavaGet2DArray();
-    //TEST1 - allocate array in Java
-    final long start1 = time(benchmarkOptions.isInNs());
-    for (int i = 0; i < iterations; i++) {
-      allocateInJavaGet2DArray.getObjectList(fooObjectArray);
-    }
-    final long end1 = time(benchmarkOptions.isInNs());
-
-    AllocateInCppGetArray allocateInCppGetArray = new AllocateInCppGetArray();
-    //TEST2 - create object array in JNI
-    final long start2 = time(benchmarkOptions.isInNs());
-    for (int i = 0; i < iterations; i++) {
-      allocateInCppGetArray.getObjectList(fooObjectArray);
-    }
-    final long end2 = time(benchmarkOptions.isInNs());
-
-    AllocateInCppGet2DArray allocateInCppGet2DArray = new AllocateInCppGet2DArray();
-    //TEST3 - create 2D object array in JNI
-    final long start3 = time(benchmarkOptions.isInNs());
-    for (int i = 0; i < iterations; i++) {
-      allocateInCppGet2DArray.getObjectList(fooObjectArray);
-    }
-    final long end3 = time(benchmarkOptions.isInNs());
-
-    final AllocateInCppGet2DArrayListWrapper jni2DGetArrayListWrapper = new AllocateInCppGet2DArrayListWrapper();
-    //TEST4 - create 2D object array in JNI and wrap result in java list
-    final long start4 = time(benchmarkOptions.isInNs());
-    for (int i = 0; i < iterations; i++) {
-      jni2DGetArrayListWrapper.getObjectList(fooObjectArray);
-    }
-    final long end4 = time(benchmarkOptions.isInNs());
-
-    final AllocateInJavaGetArrayList allocateInJavaGetArrayList = new AllocateInJavaGetArrayList();
-    //TEST5 - allocate array list in Java
-    final long start5 = time(benchmarkOptions.isInNs());
-    for (int i = 0; i < iterations; i++) {
-      allocateInJavaGetArrayList.getObjectList(fooObjectArray);
-    }
-    final long end5 = time(benchmarkOptions.isInNs());
-
-    final AllocateInCppGetArrayList allocateInCppGetArrayList = new AllocateInCppGetArrayList();
-    //TEST6 - create object array list in JNI
-    final long start6 = time(benchmarkOptions.isInNs());
-    for (int i = 0; i < iterations; i++) {
-      allocateInCppGetArrayList.getObjectList(fooObjectArray);
-    }
-    final long end6 = time(benchmarkOptions.isInNs());
-
-    String names[] = {
-        "Allocate array in Java",
-        "Create object array in JNI",
-        "Create 2D object array in JNI",
-        "Create 2D object array in JNI and wrap result in custom Java List",
-        "Allocate list in Java",
-        "Create object array list in JNI"
+    final ArrayBenchmarkFixture[] benchmarkFixtures = {
+            new ArrayBenchmarkFixture("Allocate array in Java", AllocateInJavaGetArray::new),
+            new ArrayBenchmarkFixture("Allocate array of mutable objects in Java", AllocateInJavaGetMutableArray::new),
+            new ArrayBenchmarkFixture("Allocate 2D array in Java", AllocateInJavaGet2DArray::new),
+            new ArrayBenchmarkFixture("Allocate array in CPP", AllocateInCppGetArray::new),
+            new ArrayBenchmarkFixture("Allocate 2D object array in CPP", AllocateInCppGet2DArray::new),
+            new ArrayBenchmarkFixture("Allocate 2D object array in CPP and wrap result in custom Java List", AllocateInCppGet2DArrayListWrapper::new),
+            new ArrayBenchmarkFixture("Allocate array list in Java", AllocateInJavaGetArrayList::new),
+            new ArrayBenchmarkFixture("Allocate array list in CPP", AllocateInCppGetArrayList::new)
     };
-    long results[] = {
-        end1 - start1,
-        end2 - start2,
-        end3 - start3,
-        end4 - start4,
-        end5 - start5,
-        end6 - start6,
-    };
-    outputResults(benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs(), names, results);
+
+    // run each benchmark fixture
+    for (final ArrayBenchmarkFixture benchmarkFixture : benchmarkFixtures) {
+      final JniListSupplier<FooObject> listSupplier = benchmarkFixture.listSupplierConstructor.get();
+      benchmarkFixture.start = time(benchmarkOptions.isInNs());
+      for (int i = 0; i < iterations; i++) {
+        listSupplier.getObjectList(fooObjectArray);
+      }
+      benchmarkFixture.end = time(benchmarkOptions.isInNs());
+    }
+
+    // output the results of the benchmarks
+    outputResults(benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs(), benchmarkFixtures);
   }
 }

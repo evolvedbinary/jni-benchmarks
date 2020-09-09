@@ -157,7 +157,7 @@ Scenario 2 and 5 - By Call, Static, appear to have the lowest JNI overhead for c
 
 ## JNI Array Passing Benchmarks
 
-The code contrasts six different approaches to passing an array of complex objects from C++ into Java. This can be done as either 2 independent arrays (one for each complex object property), or as an array of tuple objects holding the values. Allocation can be done in either C++ or Java. Such a scenario is common when writing a Java API wrapper for an existing C++ project.
+The code contrasts several different approaches to passing an array of complex objects from C++ into Java. This can be done as either 2 independent arrays (one for each complex object property), or as an array of tuple objects holding the values. Allocation can be done in either C++ or Java. Such a scenario is common when writing a Java API wrapper for an existing C++ project.
 NOTE: The C++ JNI code includes appropriate error checking, as the code has to be correct as well as performant! 
 
 The complex object in Java looks like:
@@ -190,7 +190,153 @@ class FooObject {
 
 The goal is to benchmark different approaches for returning Arrays/Lists of the C++ FooObject to Java.  
 
-### Scenario 1 - Allocate 2 arrays in Java, Fill in C++, copy to Complex Object Array in Java
+### Scenario 1 - Allocate Complex Object array in Java, Fill in C++
+We allocate a Java array in Java, and then in C++ we create Java complex objects and add them to the array. We then return to Java and wrap the array in an ArrayList.
+```java
+public class AllocateInJavaGetArray implements JniListSupplier<FooObject> {
+  public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
+    final int len = (int) getArraySize(nativeObjectArray.get_nativeHandle());
+    final FooObject objectList[] = new FooObject[len];
+    getArray(nativeObjectArray.get_nativeHandle(), objectList);
+    return Arrays.asList(objectList);
+  }
+
+  private static native long getArraySize(final long handle);
+  private static native void getArray(final long handle, final FooObject[] objectList);
+}
+```
+
+```C++
+jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArraySize(
+    JNIEnv *, jclass, jlong handle) {
+  const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  return static_cast<jlong>(cpp_array.size());
+}
+
+void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArray(
+    JNIEnv *env, jclass, jlong handle, jobjectArray jobject_array) {
+  const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);
+  if (jfoo_obj_clazz == nullptr) {
+    // exception occurred accessing class
+    return;
+  }
+
+  auto* cpp_array = reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  for (jsize i = 0; i < env->GetArrayLength(jobject_array); i++) {
+    jnibench::FooObject foo_obj = (*cpp_array)[static_cast<size_t>(i)];
+
+    jobject jfoo_obj = FooObjectJni::construct(env, jfoo_obj_clazz, foo_obj);
+    if (jfoo_obj == nullptr) {
+        // exception occurred
+        return;
+    }
+
+    env->SetObjectArrayElement(jobject_array, i, jfoo_obj);
+    if(env->ExceptionCheck()) {
+      // exception thrown: ArrayIndexOutOfBoundsException
+      // or ArrayStoreException
+      env->DeleteLocalRef(jfoo_obj);
+      return;
+    }
+
+    env->DeleteLocalRef(jfoo_obj);
+  }
+}
+```
+
+### Scenario 2 - Allocate Complex Object array and fill with mutable objects in Java, mutate the objects in C++
+We allocate a Java array in Java, and fill it with mutable complex java objects. In C++ we then update the mutable objects, then returning to Java, where we wrap the array in an ArrayList.
+
+```java
+public class AllocateInJavaGetMutableArray implements JniListSupplier<FooObject> {
+  public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
+    final int len = (int) getArraySize(nativeObjectArray.get_nativeHandle());
+    final FooObject objectList[] = new FooObject[len];
+    for (int i = 0; i < len; i++) {
+      objectList[i] = new FooObject();
+    }
+
+    getArray(nativeObjectArray.get_nativeHandle(), objectList);
+
+    return Arrays.asList(objectList);
+  }
+
+  private static native long getArraySize(final long handle);
+  private static native void getArray(final long handle, final FooObject[] objectList);
+}
+```
+
+```C++
+jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray_getArraySize(
+    JNIEnv *, jclass, jlong handle) {
+  const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  return static_cast<jlong>(cpp_array.size());
+}
+
+void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray_getArray(
+    JNIEnv *env, jclass, jlong handle, jobjectArray jobject_array) {
+  const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);
+  if (jfoo_obj_clazz == nullptr) {
+    // exception occurred accessing class
+    return;
+  }
+
+  const jfieldID fid_name = FooObjectJni::getNameField(env, jfoo_obj_clazz);
+  if (fid_name == nullptr) {
+    // exception occurred accessing field
+    return;
+  }
+
+  const jfieldID fid_value = FooObjectJni::getValueField(env, jfoo_obj_clazz);
+  if (fid_value == nullptr) {
+    // exception occurred accessing field
+    return;
+  }
+
+  auto* cpp_array = reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  for (jsize i = 0; i < env->GetArrayLength(jobject_array); i++) {
+    jnibench::FooObject foo_obj = (*cpp_array)[static_cast<size_t>(i)];
+
+    jobject jfoo_obj = env->GetObjectArrayElement(jobject_array, i);
+    if(env->ExceptionCheck()) {
+      // exception thrown: ArrayIndexOutOfBoundsException
+      // or ArrayStoreException
+      if (jfoo_obj != nullptr) {
+        env->DeleteLocalRef(jfoo_obj);
+      }
+      return;
+    }
+
+    // set name field
+    jstring jname = env->NewStringUTF(foo_obj.GetName().c_str());
+    if (env->ExceptionCheck()) {
+      if (jname != nullptr) {
+        env->DeleteLocalRef(jname);
+      }
+      env->DeleteLocalRef(jfoo_obj);
+      return;
+    }
+    env->SetObjectField(jfoo_obj, fid_name, jname);
+    if (env->ExceptionCheck()) {
+          env->DeleteLocalRef(jname);
+          env->DeleteLocalRef(jfoo_obj);
+          return;
+    }
+    env->DeleteLocalRef(jname);
+
+    // set value field
+    env->SetLongField(jfoo_obj, fid_value, static_cast<jlong>(foo_obj.GetValue()));
+    if (env->ExceptionCheck()) {
+      env->DeleteLocalRef(jfoo_obj);
+      return;
+    }
+
+    env->DeleteLocalRef(jfoo_obj);
+  }
+}
+```
+
+### Scenario 3 - Allocate 2 arrays in Java, Fill in C++, copy to Complex Object Array in Java
 In Java we allocate 2 arrays, one for each property of the complex object of which we ultimately want to return an array of.
 We then pass those 2 arrays to C++ via JNI. In C++ we populate those two arrays, and return them to Java. Back in Java we create
 an array of complex objects based on the values of those two arrays.
@@ -256,7 +402,7 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGet2DArray_getAr
   env->ReleaseLongArrayElements(value_array, value_array_ptr, JNI_COMMIT);
 }
 ```
-### Scenario 2 - Allocate Complex Object Array in C++, Fill in C++
+### Scenario 4 - Allocate Complex Object Array in C++, Fill in C++
 In C++ we allocate a Java array, and then we create Java complex objects and add them to the array. We then return to Java and wrap the array in an ArrayList.
 
 ```java
@@ -310,7 +456,7 @@ jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGetArray_
 }
 ```
 
-### Scenario 3 - Allocate 2 arrays in C++, Fill in C++, copy to Complex Object Array in Java
+### Scenario 5 - Allocate 2 arrays in C++, Fill in C++, copy to Complex Object Array in Java
 In C++ we allocate 2 Java arrays, one for each property of the complex object of which we ultimately want to return an array of.
 We then populate those 2 arrays, and return them to Java. Back in Java we create
 an array of complex objects based on the values of those two arrays.
@@ -438,17 +584,142 @@ jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGet2DArra
 }
 ```
 
-### Scenario 4 - Allocate 2 arrays in C++, Fill in C++, copy to custom List (backed by 2 arrays) in Java
-This is an extended version of Scenario 3, where the resultant 2 arrays are wrapped in a custom list. This scenario
+### Scenario 6 - Allocate 2 arrays in C++, Fill in C++, copy to custom List (backed by 2 arrays) in Java
+This is an extended version of Scenario 5, where the resultant 2 arrays are wrapped in a custom list. This scenario
 is concerned with reducing the number of data copies that are needed in Scenario 3. The C++ code is the same as that in Scenario 3, for the Java code see:
 [AllocateInJavaGetArrayList.java](https://github.com/evolvedbinary/jni-construction-benchmark/blob/master/src/main/java/com/evolvedbinary/jnibench/common/array/AllocateInCppGet2DArrayListWrapper.java).
 
 
-### Scenario 5 - Allocate ArrayList in Java, and fill with Complex Object in C++
-TODO - document scenarios
+### Scenario 7 - Allocate ArrayList in Java, and fill with Complex Object in C++
+This is similar to Scenario 1, but operates directly with a `java.util.ArrayList` instead of an array.
 
-### Scenario 6 - Allocate ArrayList in C++, and fill with Complex Object in C++
-TODO - document scenarios
+```java
+public class AllocateInJavaGetArrayList implements JniListSupplier<FooObject> {
+  @Override
+  public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
+      final List<FooObject> objectList = new ArrayList<>(len);
+      getList(nativeObjectArray.get_nativeHandle(), objectList);
+      return objectList;
+  }
+
+  private static native long getListSize(final long handle);
+  private static native void getList(final long handle, final List<FooObject> list);
+}
+```
+
+```C++
+jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList_getListSize(
+    JNIEnv *, jclass, jlong handle) {
+  const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  return static_cast<jlong>(cpp_array.size());
+}
+
+void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList_getList(
+    JNIEnv *env, jclass, jlong handle, jobject jlist) {
+
+  const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);
+  if (jfoo_obj_clazz == nullptr) {
+    // exception occurred accessing class
+    return;
+  }
+
+  const jmethodID add_mid = ListJni::getListAddMethodId(env);
+  if (add_mid == nullptr) {
+    // exception occurred accessing method
+    return;
+  }
+
+  const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  for (auto foo_obj : cpp_array) {
+    // create java FooObject
+    const jobject jfoo_obj = FooObjectJni::construct(env, jfoo_obj_clazz, foo_obj);
+    if (jfoo_obj == nullptr) {
+      // exception occurred constructing object
+      return;
+    }
+
+    // add to list
+    const jboolean rs = env->CallBooleanMethod(jlist, add_mid, jfoo_obj);
+    if (env->ExceptionCheck() || rs == JNI_FALSE) {
+      // exception occurred calling method, or could not add
+      env->DeleteLocalRef(jfoo_obj);
+      return;
+    }
+  }
+}
+``` 
+
+### Scenario 8 - Allocate ArrayList in C++, and fill with Complex Object in C++
+This is similar to Scenario 4, but operates directly with a `java.util.ArrayList` instead of an array.
+
+```java
+public class AllocateInCppGetArrayList implements JniListSupplier<FooObject> {
+    public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
+        return getArrayList(nativeObjectArray.get_nativeHandle());
+    }
+
+    private static native List<FooObject> getArrayList(final long handle);
+}
+```
+
+```C++
+jobject Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGetArrayList_getArrayList(
+    JNIEnv *env, jclass, jlong handle) {
+
+  const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);
+  if (jfoo_obj_clazz == nullptr) {
+    // exception occurred accessing class
+    return nullptr;
+  }
+
+  const jclass clazz_array_list = ListJni::getArrayListClass(env);
+  const jmethodID ctor_array_list = ListJni::getArrayListConstructorMethodId(env);
+  if (ctor_array_list == nullptr) {
+    // exception occurred accessing method
+    return nullptr;
+  }
+
+  const jmethodID add_mid = ListJni::getListAddMethodId(env);
+  if (add_mid == nullptr) {
+    // exception occurred accessing method
+    return nullptr;
+  }
+
+  const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
+  const jsize len = static_cast<jsize>(cpp_array.size());
+
+  // create new java.util.ArrayList
+  const jobject jlist = env->NewObject(clazz_array_list, ctor_array_list,
+              static_cast<jint>(len));
+  if (env->ExceptionCheck()) {
+    // exception occurred constructing object
+    if (jlist != nullptr) {
+      env->DeleteLocalRef(jlist);
+    }
+    return nullptr;
+  }
+
+  for (auto foo_obj : cpp_array) {
+    // create java FooObject
+    const jobject jfoo_obj = FooObjectJni::construct(env, jfoo_obj_clazz, foo_obj);
+    if (jfoo_obj == nullptr) {
+      // exception occurred constructing object
+      return nullptr;
+    }
+
+    // add to list
+    const jboolean rs = env->CallBooleanMethod(jlist, add_mid, jfoo_obj);
+    if (env->ExceptionCheck() || rs == JNI_FALSE) {
+      // exception occurred calling method, or could not add
+      env->DeleteLocalRef(jlist);
+      env->DeleteLocalRef(jfoo_obj);
+      return nullptr;
+    }
+  }
+
+  return jlist;
+}
+```
 
 ### Array Passing Results
 Test machine: MacBook Pro 15-inch 2019: 2.4 GHz 8-Core Intel Core i9 / 32 GB 2400 MHz DDR4. OS X 10.15.2 / Oracle JDK 8.
@@ -472,7 +743,10 @@ The `com.evolvedbinary.jnibench.consbench.Benchmark` class already calls each sc
 ![Image of JNI Array Passing Benchmark Results when size is 20](https://raw.githubusercontent.com/evolvedbinary/jni-construction-benchmark/master/jni-arrays-size-20.png)
 
 ### Array Passing Conclusions
-TODO
+The fastest approach appears to be by performing most of the allocations in Java, and then passing arrays of simple types between C++ and Java.
+For the array/list of complex objects to be returned from C++ to Java,
+allocating one array in Java for each of the complex objects property's,
+and then populating those arrays in C++ seems to be the most performant approach (see `AllocatedInJavaGet2DArray.java`).
 
 # Reproducing
 If you want to run the code yourself, you need to have Java 8, Maven 3, and a C++ compiler that supports the C++ 11 standard. You can then simply run:

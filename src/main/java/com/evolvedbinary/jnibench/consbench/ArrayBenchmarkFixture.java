@@ -24,35 +24,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common.array;
+package com.evolvedbinary.jnibench.consbench;
 
-public class FooObject {
-  String name;
-  long value;
+import com.evolvedbinary.jnibench.common.array.FooObject;
+import com.evolvedbinary.jnibench.common.array.JniListSupplier;
+import java.util.function.Supplier;
 
-  FooObject() {
-  }
+public class ArrayBenchmarkFixture implements BenchmarkFixture {
+    final String description;
+    final Supplier<JniListSupplier<FooObject>> listSupplierConstructor;
+    long start;
+    long end;
 
-  public FooObject(final String name, final long value) {
-    this.name = name;
-    this.value = value;
-  }
+    public ArrayBenchmarkFixture(final String description, final Supplier<JniListSupplier<FooObject>> listSupplierConstructor) {
+        this.description = description;
+        this.listSupplierConstructor = listSupplierConstructor;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    @Override
+    public String getDescription() {
+        return description;
+    }
 
-    FooObject fooObject = (FooObject) o;
-
-    if (value != fooObject.value) return false;
-    return name.equals(fooObject.name);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = name.hashCode();
-    result = 31 * result + (int) (value ^ (value >>> 32));
-    return result;
-  }
+    @Override
+    public long duration() {
+        return end - start;
+    }
 }

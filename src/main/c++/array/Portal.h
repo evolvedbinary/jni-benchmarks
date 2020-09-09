@@ -107,6 +107,36 @@ class FooObjectJni : public JavaClass {
 
     return jfoo_object;
   }
+
+  /**
+   * Get the Java Field: name
+   *
+   * @param env A pointer to the Java environment
+   * @param jclazz the class
+   *
+   * @return The Java Field ID or nullptr if the class or field id could not
+   *     be retrieved
+   */
+  static jfieldID getNameField(JNIEnv* env, jclass jclazz) {
+    static jfieldID fid = env->GetFieldID(jclazz, "name", "Ljava/lang/String;");
+    assert(fid != nullptr);
+    return fid;
+  }
+
+  /**
+   * Get the Java Field: name
+   *
+   * @param env A pointer to the Java environment
+   * @param jclazz the class
+   *
+   * @return The Java Field ID or nullptr if the class or field id could not
+   *     be retrieved
+   */
+  static jfieldID getValueField(JNIEnv* env, jclass jclazz) {
+    static jfieldID fid = env->GetFieldID(jclazz, "value", "J");
+    assert(fid != nullptr);
+    return fid;
+  }
 };
 
 class LongJni : public JavaClass {

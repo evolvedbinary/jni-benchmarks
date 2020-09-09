@@ -26,33 +26,30 @@
  */
 package com.evolvedbinary.jnibench.common.array;
 
-public class FooObject {
-  String name;
-  long value;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-  FooObject() {
-  }
-
-  public FooObject(final String name, final long value) {
-    this.name = name;
-    this.value = value;
-  }
+public class AllocateInJavaGetMutableArray implements JniListSupplier<FooObject> {
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+  public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
+    final int len = (int) getArraySize(nativeObjectArray.get_nativeHandle());
+    if (len == 0) {
+      return Collections.emptyList();
+    } else {
+      final FooObject objectList[] = new FooObject[len];
+      for (int i = 0; i < len; i++) {
+        objectList[i] = new FooObject();
+      }
 
-    FooObject fooObject = (FooObject) o;
+      getArray(nativeObjectArray.get_nativeHandle(), objectList);
 
-    if (value != fooObject.value) return false;
-    return name.equals(fooObject.name);
+      return Arrays.asList(objectList);
+    }
   }
 
-  @Override
-  public int hashCode() {
-    int result = name.hashCode();
-    result = 31 * result + (int) (value ^ (value >>> 32));
-    return result;
-  }
+  private static native long getArraySize(final long handle);
+
+  private static native void getArray(final long handle, final FooObject[] objectList);
 }

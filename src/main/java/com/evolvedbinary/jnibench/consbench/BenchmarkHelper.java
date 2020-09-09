@@ -28,21 +28,19 @@ package com.evolvedbinary.jnibench.consbench;
 
 public class BenchmarkHelper {
 
-  public static void outputResults(final boolean outputAsCSV, final boolean inNs, final String[] names, final long[] results) {
-    assert (names.length == results.length);
-
+  public static void outputResults(final boolean outputAsCSV, final boolean inNs, final BenchmarkFixture[] benchmarkFixtures) {
     if (outputAsCSV) {
-      StringBuilder stringBuilder = new StringBuilder();
-      for (Long res: results) {
-        stringBuilder.append(res);
+      final StringBuilder stringBuilder = new StringBuilder();
+      for (final BenchmarkFixture benchmarkFixture : benchmarkFixtures) {
+        stringBuilder.append(benchmarkFixture.duration());
         stringBuilder.append(',');
       }
       stringBuilder.deleteCharAt(stringBuilder.length() - 1);
       System.out.println(stringBuilder.toString());
     } else {
       final String timeUnits = timeUnits(inNs);
-      for (int i = 0; i < names.length; ++i) {
-        System.out.println(names[i] + ": " + results[i] + timeUnits);
+      for (final BenchmarkFixture benchmarkFixture : benchmarkFixtures) {
+        System.out.println(benchmarkFixture.getDescription() + ": " + benchmarkFixture.duration() + timeUnits);
       }
     }
   }
