@@ -1,15 +1,9 @@
 package com.evolvedbinary.jnibench.common.array;
 
-import java.util.Collection;
-
 public class FooNativeObjectArray extends NativeObjectArray<FooObject> {
 
-  public FooNativeObjectArray() {
-    super(new FooObject[0]);
-  }
-
-  public FooNativeObjectArray(final Collection<FooObject> fooObjects) {
-    super(fooObjects.toArray(new FooObject[0]));
+  public FooNativeObjectArray(final FooObject[] fooObjects) {
+    super(fooObjects);
   }
 
   @Override

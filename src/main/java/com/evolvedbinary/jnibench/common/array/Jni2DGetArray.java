@@ -16,5 +16,5 @@ public class Jni2DGetArray implements JniListSupplier<FooObject> {
     return objList;
   }
 
-  private static native Object[][] get2DArray(final long handle);
+  protected static native Object[][] get2DArray(final long handle);
 }
