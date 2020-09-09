@@ -7,7 +7,7 @@ import static com.evolvedbinary.jnibench.consbench.BenchmarkHelper.time;
 
 public class CallBenchmark implements BenchmarkInterface {
   @Override
-  public void test(BenchmarkOptions benchmarkOptions) {
+  public void test(final BenchmarkOptions benchmarkOptions) {
     if (benchmarkOptions.isClose()) {
       testWithClose(benchmarkOptions.getIterations(), benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs());
     } else {

@@ -30,10 +30,10 @@ public class ArrayBenchmark {
 
     }
 
-    public BenchmarkState(FooNativeObjectArray fooObjectArray,
-                          AllocateInJavaGetArray allocateInJavaGetArray,
-                          JniGetArray jniGetArray,
-                          Jni2DGetArray jni2DGetArray) {
+    public BenchmarkState(final FooNativeObjectArray fooObjectArray,
+                          final AllocateInJavaGetArray allocateInJavaGetArray,
+                          final JniGetArray jniGetArray,
+                          final Jni2DGetArray jni2DGetArray) {
       this.fooObjectArray = fooObjectArray;
       this.allocateInJavaGetArray = allocateInJavaGetArray;
       this.jniGetArray = jniGetArray;

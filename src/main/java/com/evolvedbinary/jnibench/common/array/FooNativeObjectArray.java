@@ -1,7 +1,6 @@
 package com.evolvedbinary.jnibench.common.array;
 
 import java.util.Collection;
-import java.util.Collections;
 
 public class FooNativeObjectArray extends NativeObjectArray<FooObject> {
 
@@ -9,12 +8,12 @@ public class FooNativeObjectArray extends NativeObjectArray<FooObject> {
     super(new FooObject[0]);
   }
 
-  public FooNativeObjectArray(Collection<FooObject> fooObjects) {
+  public FooNativeObjectArray(final Collection<FooObject> fooObjects) {
     super(fooObjects.toArray(new FooObject[0]));
   }
 
   @Override
-  protected long newObjectArray(FooObject[] objectArray) {
+  protected long newObjectArray(final FooObject[] objectArray) {
     return newFooObjectArray(objectArray);
   }
 
@@ -23,7 +22,7 @@ public class FooNativeObjectArray extends NativeObjectArray<FooObject> {
     disposeInternal(_nativeHandle);
   }
 
-  private static native long newFooObjectArray(Object[] fooObjects);
+  private static native long newFooObjectArray(final Object[] fooObjects);
 
   private native void disposeInternal(final long handle);
 }

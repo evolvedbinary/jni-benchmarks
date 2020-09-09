@@ -6,7 +6,7 @@ import java.util.List;
 public class JniGetArray implements JniListSupplier<FooObject> {
 
   @Override
-  public List<FooObject> getObjectList(NativeObjectArray<FooObject> nativeObjectArray) {
+  public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
     return Arrays.asList(getArray(nativeObjectArray.get_nativeHandle()));
   }
 

@@ -1,5 +1,5 @@
 package com.evolvedbinary.jnibench.consbench;
 
 public interface BenchmarkInterface {
-  void test(BenchmarkOptions benchmarkOptions);
+  void test(final BenchmarkOptions benchmarkOptions);
 }

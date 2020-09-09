@@ -7,7 +7,7 @@ import java.util.List;
 public class AllocateInJavaGetArray implements JniListSupplier<FooObject> {
 
   @Override
-  public List<FooObject> getObjectList(NativeObjectArray<FooObject> nativeObjectArray) {
+  public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
     final int len = (int) getArraySize(nativeObjectArray.get_nativeHandle());
     if (len == 0) {
       return Collections.emptyList();

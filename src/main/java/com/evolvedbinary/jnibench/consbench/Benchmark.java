@@ -71,7 +71,7 @@ public class Benchmark {
 
         NarSystem.loadLibrary();
 
-        BenchmarkOptions benchmarkOptions = new BenchmarkOptions(iterations, outputAsCSV, inNs, close);
+        final BenchmarkOptions benchmarkOptions = new BenchmarkOptions(iterations, outputAsCSV, inNs, close);
 
         try {
             Class<?> benchmarkClazz = Class.forName("com.evolvedbinary.jnibench.consbench." + benchmarkName);

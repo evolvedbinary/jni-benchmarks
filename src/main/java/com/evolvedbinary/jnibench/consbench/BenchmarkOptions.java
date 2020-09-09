@@ -6,7 +6,7 @@ public class BenchmarkOptions {
   private final boolean inNs;
   private final boolean close;
 
-  public BenchmarkOptions(int iterations, boolean outputAsCSV, boolean inNs, boolean close) {
+  public BenchmarkOptions(final int iterations, final boolean outputAsCSV, final boolean inNs, final boolean close) {
     this.iterations = iterations;
     this.outputAsCSV = outputAsCSV;
     this.inNs = inNs;

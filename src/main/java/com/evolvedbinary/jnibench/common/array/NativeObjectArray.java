@@ -7,5 +7,5 @@ public abstract class NativeObjectArray<T> extends NativeBackedObject {
     _nativeHandle = newObjectArray(objects);
   }
 
-  protected abstract long newObjectArray(T[] objectArray);
+  protected abstract long newObjectArray(final T[] objectArray);
 }

@@ -17,7 +17,7 @@ public class ArrayBenchmark implements BenchmarkInterface {
 
 
   @Override
-  public void test(BenchmarkOptions benchmarkOptions) {
+  public void test(final BenchmarkOptions benchmarkOptions) {
     int iterations = benchmarkOptions.getIterations();
 
     FooNativeObjectArray fooObjectArray = new FooNativeObjectArray(FOO_OBJECTS);
