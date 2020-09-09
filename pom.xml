@@ -104,12 +104,15 @@
                 <configuration>
                     <header>com/mycila/maven/plugin/license/templates/BSD-3.txt</header>
                     <failIfMissing>true</failIfMissing>
-                    <aggregate>true</aggregate>
                     <strictCheck>true</strictCheck>
                     <excludes>
                         <exclude>LICENSE</exclude>
+                        <exclude>.clabot</exclude>
+                        <exclude>.travis.yml</exclude>
+                        <exclude>*.sh</exclude>
                         <exclude>**/pom.xml</exclude>
                         <exclude>src/main/assembly/*</exclude>
+                        <exclude>*.csv</exclude>
                     </excludes>
                     <properties>
                         <owner>${project.organization.name}</owner>
