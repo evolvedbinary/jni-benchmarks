@@ -72,6 +72,8 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGet2DArray_getAr
       return;
     }
 
+    env->DeleteLocalRef(jname);
+
     value_array_ptr[static_cast<size_t>(i)] = static_cast<jlong>(foo_obj.GetValue());
   }
 
