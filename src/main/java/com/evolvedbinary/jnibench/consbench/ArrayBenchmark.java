@@ -54,31 +54,31 @@ public class ArrayBenchmark implements BenchmarkInterface {
 
     FooNativeObjectArray fooObjectArray = new FooNativeObjectArray(fooObjects);
 
-    AllocateInJavaGetArray allocateInJavaGetArray = new AllocateInJavaGetArray();
+    AllocateInJavaGet2DArray allocateInJavaGet2DArray = new AllocateInJavaGet2DArray();
     //TEST1 - allocate array in Java
     final long start1 = time(benchmarkOptions.isInNs());
     for (int i = 0; i < iterations; i++) {
-      allocateInJavaGetArray.getObjectList(fooObjectArray);
+      allocateInJavaGet2DArray.getObjectList(fooObjectArray);
     }
     final long end1 = time(benchmarkOptions.isInNs());
 
-    JniGetArray jniGetArray = new JniGetArray();
+    AllocateInCppGetArray allocateInCppGetArray = new AllocateInCppGetArray();
     //TEST2 - create object array in JNI
     final long start2 = time(benchmarkOptions.isInNs());
     for (int i = 0; i < iterations; i++) {
-      jniGetArray.getObjectList(fooObjectArray);
+      allocateInCppGetArray.getObjectList(fooObjectArray);
     }
     final long end2 = time(benchmarkOptions.isInNs());
 
-    Jni2DGetArray jni2DGetArray = new Jni2DGetArray();
+    AllocateInCppGet2DArray allocateInCppGet2DArray = new AllocateInCppGet2DArray();
     //TEST3 - create 2D object array in JNI
     final long start3 = time(benchmarkOptions.isInNs());
     for (int i = 0; i < iterations; i++) {
-      jni2DGetArray.getObjectList(fooObjectArray);
+      allocateInCppGet2DArray.getObjectList(fooObjectArray);
     }
     final long end3 = time(benchmarkOptions.isInNs());
 
-    final Jni2DGetArrayListWrapper jni2DGetArrayListWrapper = new Jni2DGetArrayListWrapper();
+    final AllocateInCppGet2DArrayListWrapper jni2DGetArrayListWrapper = new AllocateInCppGet2DArrayListWrapper();
     //TEST4 - create 2D object array in JNI and wrap result in java list
     final long start4 = time(benchmarkOptions.isInNs());
     for (int i = 0; i < iterations; i++) {
@@ -94,11 +94,11 @@ public class ArrayBenchmark implements BenchmarkInterface {
     }
     final long end5 = time(benchmarkOptions.isInNs());
 
-    final JniGetArrayList jniGetArrayList = new JniGetArrayList();
+    final AllocateInCppGetArrayList allocateInCppGetArrayList = new AllocateInCppGetArrayList();
     //TEST6 - create object array list in JNI
     final long start6 = time(benchmarkOptions.isInNs());
     for (int i = 0; i < iterations; i++) {
-      jniGetArrayList.getObjectList(fooObjectArray);
+      allocateInCppGetArrayList.getObjectList(fooObjectArray);
     }
     final long end6 = time(benchmarkOptions.isInNs());
 

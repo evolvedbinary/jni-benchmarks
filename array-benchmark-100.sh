@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "AllocateInJavaGetArray,JniGetArray,Jni2DGetArray,Jni2DGetArrayListWrapper,AllocateInJavaGetArrayList,JniGetArrayList" > array-benchmark.csv
+echo "AllocateInJavaGet2DArray,AllocateInCppGetArray,AllocateInCppGet2DArray,AllocateInCppGet2DArrayListWrapper,AllocateInJavaGetArrayList,AllocateInCppGetArrayList" > array-benchmark.csv
 for i in `seq 1 100`;
 do
   echo -en "\rArrayBenchmark run $i/100"

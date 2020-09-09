@@ -45,31 +45,31 @@ public class ArrayBenchmark {
   @State(Scope.Benchmark)
   public static class BenchmarkState {
     FooNativeObjectArray fooObjectArray;
-    AllocateInJavaGetArray allocateInJavaGetArray;
-    JniGetArray jniGetArray;
-    Jni2DGetArray jni2DGetArray;
-    Jni2DGetArrayListWrapper jni2DGetArrayListWrapper;
+    AllocateInJavaGet2DArray allocateInJavaGet2DArray;
+    AllocateInCppGetArray allocateInCppGetArray;
+    AllocateInCppGet2DArray allocateInCppGet2DArray;
+    AllocateInCppGet2DArrayListWrapper jni2DGetArrayListWrapper;
     AllocateInJavaGetArrayList allocateInJavaGetArrayList;
-    JniGetArrayList jniGetArrayList;
+    AllocateInCppGetArrayList allocateInCppGetArrayList;
 
     public BenchmarkState() {
 
     }
 
     public BenchmarkState(final FooNativeObjectArray fooObjectArray,
-                          final AllocateInJavaGetArray allocateInJavaGetArray,
-                          final JniGetArray jniGetArray,
-                          final Jni2DGetArray jni2DGetArray,
-                          final Jni2DGetArrayListWrapper jni2DGetArrayListWrapper,
+                          final AllocateInJavaGet2DArray allocateInJavaGet2DArray,
+                          final AllocateInCppGetArray allocateInCppGetArray,
+                          final AllocateInCppGet2DArray allocateInCppGet2DArray,
+                          final AllocateInCppGet2DArrayListWrapper jni2DGetArrayListWrapper,
                           final AllocateInJavaGetArrayList allocateInJavaGetArrayList,
-                          final JniGetArrayList jniGetArrayList) {
+                          final AllocateInCppGetArrayList allocateInCppGetArrayList) {
       this.fooObjectArray = fooObjectArray;
-      this.allocateInJavaGetArray = allocateInJavaGetArray;
-      this.jniGetArray = jniGetArray;
-      this.jni2DGetArray = jni2DGetArray;
+      this.allocateInJavaGet2DArray = allocateInJavaGet2DArray;
+      this.allocateInCppGetArray = allocateInCppGetArray;
+      this.allocateInCppGet2DArray = allocateInCppGet2DArray;
       this.jni2DGetArrayListWrapper = jni2DGetArrayListWrapper;
       this.allocateInJavaGetArrayList = allocateInJavaGetArrayList;
-      this.jniGetArrayList = jniGetArrayList;
+      this.allocateInCppGetArrayList = allocateInCppGetArrayList;
     }
 
     @Param({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"})
@@ -85,12 +85,12 @@ public class ArrayBenchmark {
       }
       fooObjectArray = new FooNativeObjectArray(
           fooObjects);
-      allocateInJavaGetArray = new AllocateInJavaGetArray();
-      jniGetArray = new JniGetArray();
-      jni2DGetArray = new Jni2DGetArray();
-      jni2DGetArrayListWrapper = new Jni2DGetArrayListWrapper();
+      allocateInJavaGet2DArray = new AllocateInJavaGet2DArray();
+      allocateInCppGetArray = new AllocateInCppGetArray();
+      allocateInCppGet2DArray = new AllocateInCppGet2DArray();
+      jni2DGetArrayListWrapper = new AllocateInCppGet2DArrayListWrapper();
       allocateInJavaGetArrayList = new AllocateInJavaGetArrayList();
-      jniGetArrayList = new JniGetArrayList();
+      allocateInCppGetArrayList = new AllocateInCppGetArrayList();
     }
 
     @TearDown
@@ -105,7 +105,7 @@ public class ArrayBenchmark {
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void allocateInJavaArray(BenchmarkState benchmarkState) {
-    benchmarkState.allocateInJavaGetArray.getObjectList(benchmarkState.fooObjectArray);
+    benchmarkState.allocateInJavaGet2DArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -114,7 +114,7 @@ public class ArrayBenchmark {
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void jniGetArray(BenchmarkState benchmarkState) {
-    benchmarkState.jniGetArray.getObjectList(benchmarkState.fooObjectArray);
+    benchmarkState.allocateInCppGetArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -123,7 +123,7 @@ public class ArrayBenchmark {
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void jni2DGetArray(BenchmarkState benchmarkState) {
-    benchmarkState.jni2DGetArray.getObjectList(benchmarkState.fooObjectArray);
+    benchmarkState.allocateInCppGet2DArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -149,7 +149,7 @@ public class ArrayBenchmark {
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void jniGetArrayList(BenchmarkState benchmarkState) {
-    benchmarkState.jniGetArrayList.getObjectList(benchmarkState.fooObjectArray);
+  public void allocateInCppGetArrayList(BenchmarkState benchmarkState) {
+    benchmarkState.allocateInCppGetArrayList.getObjectList(benchmarkState.fooObjectArray);
   }
 }

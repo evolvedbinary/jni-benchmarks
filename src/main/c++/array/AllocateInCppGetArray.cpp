@@ -27,53 +27,50 @@
 #include <jni.h>
 #include <vector>
 
-#include "com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray.h"
+#include "com_evolvedbinary_jnibench_common_array_AllocateInCppGetArray.h"
 #include "FooObject.h"
+#include "Portal.h"
 
 /*
- * Class:     com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray
- * Method:    getArraySize
- * Signature: (J)J
+ * Class:     com_evolvedbinary_jnibench_common_array_AllocateInCppGetArray
+ * Method:    getArray
+ * Signature: (J)[Lcom/evolvedbinary/jnibench/common/array/FooObject;
  */
-jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArraySize(
-    JNIEnv *, jclass, jlong handle) {
+jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGetArray_getArray(
+    JNIEnv *env, jclass, jlong handle) {
   const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
-  return static_cast<jlong>(cpp_array.size());
-}
+  jsize length = static_cast<jsize>(cpp_array.size());
 
-/*
- * Class:     com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray
- * Method:    getArrays
- * Signature: (J[Ljava/lang/String;[J)V
- */
-void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArrays(
-    JNIEnv *env, jclass, jlong handle, jobjectArray name_array, jlongArray value_array) {
-  jlong* value_array_ptr = env->GetLongArrayElements(value_array, nullptr);
-  if (value_array_ptr == nullptr) {
-    // exception thrown: OutOfMemoryError
-    return;
+  const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);
+  if (jfoo_obj_clazz == nullptr) {
+    // exception occurred accessing class
+    return nullptr;
   }
 
-  auto* cpp_array = reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
-  for (jsize i = 0; i < env->GetArrayLength(name_array); i++) {
-    jnibench::FooObject foo_obj = (*cpp_array)[static_cast<size_t>(i)];
-
-    jstring jname = env->NewStringUTF(foo_obj.GetName().c_str());
-    if (jname == nullptr) {
+  jobjectArray java_array = env->NewObjectArray(length, jfoo_obj_clazz, nullptr);
+  if (java_array == nullptr) {
       // exception thrown: OutOfMemoryError
-      env->ReleaseLongArrayElements(value_array, value_array_ptr, JNI_ABORT);
-      return;
+      return nullptr;
+  }
+
+  for (size_t i = 0; i < cpp_array.size(); ++i) {
+    const jnibench::FooObject& foo_obj = cpp_array[i];
+    jobject jfoo_obj = FooObjectJni::construct(env, jfoo_obj_clazz, foo_obj);
+    if (jfoo_obj == nullptr) {
+        // exception occurred
+        env->DeleteLocalRef(java_array);
+        return nullptr;
     }
-    env->SetObjectArrayElement(name_array, i, jname);
+    env->SetObjectArrayElement(java_array, static_cast<jsize>(i), jfoo_obj);
     if (env->ExceptionCheck()) {
       // exception thrown: ArrayIndexOutOfBoundsException
-      env->DeleteLocalRef(jname);
-      env->ReleaseLongArrayElements(value_array, value_array_ptr, JNI_ABORT);
-      return;
+      // or ArrayStoreException
+      env->DeleteLocalRef(jfoo_obj);
+      env->DeleteLocalRef(java_array);
+      return nullptr;
     }
 
-    value_array_ptr[static_cast<size_t>(i)] = static_cast<jlong>(foo_obj.GetValue());
+    env->DeleteLocalRef(jfoo_obj);
   }
-
-  env->ReleaseLongArrayElements(value_array, value_array_ptr, JNI_COMMIT);
+  return java_array;
 }

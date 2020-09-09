@@ -27,16 +27,16 @@
 #include <jni.h>
 #include <vector>
 
-#include "com_evolvedbinary_jnibench_common_array_JniGetArrayList.h"
+#include "com_evolvedbinary_jnibench_common_array_AllocateInCppGetArrayList.h"
 #include "FooObject.h"
 #include "Portal.h"
 
 /*
- * Class:     com_evolvedbinary_jnibench_common_array_JniGetArrayList
+ * Class:     com_evolvedbinary_jnibench_common_array_AllocateInCppGetArrayList
  * Method:    getArrayList
  * Signature: (J)Ljava/util/List;
  */
-jobject Java_com_evolvedbinary_jnibench_common_array_JniGetArrayList_getArrayList
+jobject Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGetArrayList_getArrayList
   (JNIEnv *env, jclass, jlong handle) {
 
   const jclass jfoo_obj_clazz = FooObjectJni::getJClass(env);

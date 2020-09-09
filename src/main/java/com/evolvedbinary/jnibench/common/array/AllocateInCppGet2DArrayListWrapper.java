@@ -28,7 +28,7 @@ package com.evolvedbinary.jnibench.common.array;
 
 import java.util.*;
 
-public class Jni2DGetArrayListWrapper extends Jni2DGetArray {
+public class AllocateInCppGet2DArrayListWrapper extends AllocateInCppGet2DArray {
 
   @Override
   public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {

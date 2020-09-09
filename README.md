@@ -196,7 +196,7 @@ We then pass those 2 arrays to C++ via JNI. In C++ we populate those two arrays,
 an array of complex objects based on the values of those two arrays.
 
 ```java
-public class AllocateInJavaGetArray implements JniListSupplier<FooObject> {
+public class AllocateInJavaGet2DArray implements JniListSupplier<FooObject> {
   public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
     final int len = (int) getArraySize(nativeObjectArray.get_nativeHandle());
     final String names[] = new String[len];
@@ -218,13 +218,13 @@ public class AllocateInJavaGetArray implements JniListSupplier<FooObject> {
 ````
 
 ```C++
-jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArraySize
+jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGet2DArray_getArraySize
   (JNIEnv *, jclass, jlong handle) {
   const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
   return static_cast<jlong>(cpp_array.size());
 }
 
-void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArrays(
+void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGet2DArray_getArrays(
     JNIEnv *env, jclass, jlong handle, jobjectArray name_array, jlongArray value_array) {
   jlong* value_array_ptr = env->GetLongArrayElements(value_array, nullptr);
   if (value_array_ptr == nullptr) {
@@ -260,7 +260,7 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArra
 In C++ we allocate a Java array, and then we create Java complex objects and add them to the array. We then return to Java and wrap the array in an ArrayList.
 
 ```java
-public class JniGetArray implements JniListSupplier<FooObject> {
+public class AllocateInCppGetArray implements JniListSupplier<FooObject> {
   public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
     return Arrays.asList(getArray(nativeObjectArray.get_nativeHandle()));
   }
@@ -270,7 +270,7 @@ public class JniGetArray implements JniListSupplier<FooObject> {
 ```
 
 ```C++
-jobjectArray Java_com_evolvedbinary_jnibench_common_array_JniGetArray_getArray(
+jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGetArray_getArray(
     JNIEnv *env, jclass, jlong handle) {
   const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
   jsize length = static_cast<jsize>(cpp_array.size());
@@ -316,7 +316,7 @@ We then populate those 2 arrays, and return them to Java. Back in Java we create
 an array of complex objects based on the values of those two arrays.
 
 ```java
-public class Jni2DGetArray implements JniListSupplier<FooObject> {
+public class AllocateInCppGet2DArray implements JniListSupplier<FooObject> {
   public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
     final Object[][] objArr = get2DArray(nativeObjectArray.get_nativeHandle());
     final String[] names = (String[]) objArr[0];
@@ -333,7 +333,7 @@ public class Jni2DGetArray implements JniListSupplier<FooObject> {
 ```
 
 ```C++
-jobjectArray Java_com_evolvedbinary_jnibench_common_array_Jni2DGetArray_get2DArray
+jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGet2DArray_get2DArray
   (JNIEnv *env, jclass, jlong handle) {
   const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
   jsize len = static_cast<jsize>(cpp_array.size());
@@ -441,7 +441,7 @@ jobjectArray Java_com_evolvedbinary_jnibench_common_array_Jni2DGetArray_get2DArr
 ### Scenario 4 - Allocate 2 arrays in C++, Fill in C++, copy to custom List (backed by 2 arrays) in Java
 This is an extended version of Scenario 3, where the resultant 2 arrays are wrapped in a custom list. This scenario
 is concerned with reducing the number of data copies that are needed in Scenario 3. The C++ code is the same as that in Scenario 3, for the Java code see:
-[AllocateInJavaGetArrayList.java](https://github.com/evolvedbinary/jni-construction-benchmark/blob/master/src/main/java/com/evolvedbinary/jnibench/common/array/AllocateInJavaGetArrayList.java).
+[AllocateInJavaGetArrayList.java](https://github.com/evolvedbinary/jni-construction-benchmark/blob/master/src/main/java/com/evolvedbinary/jnibench/common/array/AllocateInCppGet2DArrayListWrapper.java).
 
 
 ### Scenario 5 - Allocate ArrayList in Java, and fill with Complex Object in C++

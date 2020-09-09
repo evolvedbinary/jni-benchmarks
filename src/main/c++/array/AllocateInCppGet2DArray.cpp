@@ -27,16 +27,16 @@
 #include <jni.h>
 #include <vector>
 
-#include "com_evolvedbinary_jnibench_common_array_Jni2DGetArray.h"
+#include "com_evolvedbinary_jnibench_common_array_AllocateInCppGet2DArray.h"
 #include "FooObject.h"
 #include "Portal.h"
 
 /*
- * Class:     com_evolvedbinary_jnibench_common_array_Jni2DGetArray
+ * Class:     com_evolvedbinary_jnibench_common_array_AllocateInCppGet2DArray
  * Method:    get2DArray
  * Signature: (J)[[Ljava/lang/Object;
  */
-jobjectArray Java_com_evolvedbinary_jnibench_common_array_Jni2DGetArray_get2DArray(
+jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGet2DArray_get2DArray(
     JNIEnv *env, jclass, jlong handle) {
   const auto& cpp_array = *reinterpret_cast<std::vector<jnibench::FooObject>*>(handle);
   jsize len = static_cast<jsize>(cpp_array.size());

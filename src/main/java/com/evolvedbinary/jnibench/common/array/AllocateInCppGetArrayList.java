@@ -26,15 +26,14 @@
  */
 package com.evolvedbinary.jnibench.common.array;
 
-import java.util.Arrays;
 import java.util.List;
 
-public class JniGetArray implements JniListSupplier<FooObject> {
+public class AllocateInCppGetArrayList implements JniListSupplier<FooObject> {
 
-  @Override
-  public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
-    return Arrays.asList(getArray(nativeObjectArray.get_nativeHandle()));
-  }
+    @Override
+    public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
+        return getArrayList(nativeObjectArray.get_nativeHandle());
+    }
 
-  private static native FooObject[] getArray(final long handle);
+    private static native List<FooObject> getArrayList(final long handle);
 }
