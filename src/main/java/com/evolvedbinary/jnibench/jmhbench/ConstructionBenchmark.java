@@ -1,8 +1,8 @@
 package com.evolvedbinary.jnibench.jmhbench;
 
-import com.evolvedbinary.jnibench.common.FooByCall;
-import com.evolvedbinary.jnibench.common.FooByCallInvoke;
-import com.evolvedbinary.jnibench.common.FooByCallStatic;
+import com.evolvedbinary.jnibench.common.call.FooByCall;
+import com.evolvedbinary.jnibench.common.call.FooByCallInvoke;
+import com.evolvedbinary.jnibench.common.call.FooByCallStatic;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;

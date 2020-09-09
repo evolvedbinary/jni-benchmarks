@@ -62,21 +62,21 @@ template<class PTR, class DERIVED> class FooJniClass {
 };
 
 
-// The portal class for com.evolvedbinary.jnibench.common.FooByCallInvoke
+// The portal class for com.evolvedbinary.jnibench.common.call.FooByCallInvoke
 class FooByCallInvokeJni : public FooJniClass<jnibench::Foo*, FooByCallInvokeJni> {
  public:
   static jclass getJClass(JNIEnv* env) {
     return FooJniClass::getJClass(env,
-        "com/evolvedbinary/jnibench/common/FooByCallInvoke");
+        "com/evolvedbinary/jnibench/common/call/FooByCallInvoke");
   }
 };
 
-// The portal class for com.evolvedbinary.jnibench.common.FooByCallInvokeFinal
+// The portal class for com.evolvedbinary.jnibench.common.call.FooByCallInvokeFinal
 class FooByCallInvokeFinalJni : public FooJniClass<jnibench::Foo*, FooByCallInvokeFinalJni> {
  public:
   static jclass getJClass(JNIEnv* env) {
     return FooJniClass::getJClass(env,
-        "com/evolvedbinary/jnibench/common/FooByCallInvokeFinal");
+        "com/evolvedbinary/jnibench/common/call/FooByCallInvokeFinal");
   }
 };
 

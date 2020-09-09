@@ -24,25 +24,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common;
+#include <jni.h>
+#include "com_evolvedbinary_jnibench_common_call_FooByCall.h"
+#include "Foo.h"
 
-/**
- * Follows <i>9.2.3 Pattern 1: Call</i> from Java Platform Performance by Steve Wilson
- * for setting up the handle to the native object.
- *
- * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
+/*
+ * Class:     com_evolvedbinary_jnibench_common_FooByCall
+ * Method:    newFoo
+ * Signature: ()J
  */
-public class FooByCall extends NativeBackedObject {
-    public FooByCall() {
-        super();
-        this._nativeHandle = newFoo();
-    }
+jlong Java_com_evolvedbinary_jnibench_common_call_FooByCall_newFoo(JNIEnv* env, jobject jobj) {
+  jnibench::Foo* foo = new jnibench::Foo();
+  return reinterpret_cast<jlong>(foo);
+}
 
-    @Override
-    protected void disposeInternal() {
-        disposeInternal(_nativeHandle);
-    }
-
-    private native long newFoo();
-    private native void disposeInternal(final long handle);
+/*
+ * Class:     com_evolvedbinary_jnibench_common_FooByCall
+ * Method:    disposeInternal
+ * Signature: (J)V
+ */
+void Java_com_evolvedbinary_jnibench_common_call_FooByCall_disposeInternal(JNIEnv* env, jobject jobj, jlong handle) {
+    delete reinterpret_cast<jnibench::Foo*>(handle);
 }

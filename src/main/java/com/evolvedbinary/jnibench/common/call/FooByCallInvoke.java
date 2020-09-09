@@ -24,25 +24,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <jni.h>
-#include "com_evolvedbinary_jnibench_common_FooByCallStatic.h"
-#include "Foo.h"
+package com.evolvedbinary.jnibench.common.call;
 
-/*
- * Class:     com_evolvedbinary_jnibench_common_FooByCallStatic
- * Method:    newFoo
- * Signature: ()J
- */
-jlong Java_com_evolvedbinary_jnibench_common_FooByCallStatic_newFoo(JNIEnv* env, jclass jcls) {
-  jnibench::Foo* foo = new jnibench::Foo();
-  return reinterpret_cast<jlong>(foo);
-}
+import com.evolvedbinary.jnibench.common.NativeBackedObject;
 
-/*
- * Class:     com_evolvedbinary_jnibench_common_FooByCallStatic
- * Method:    disposeInternal
- * Signature: (J)V
+/**
+ * Follows <i>9.2.7 Pattern 4: Call-Invoke</i> from Java Platform Performance by Steve Wilson
+ * for setting up the handle to the native object.
+ *
+ * @author <a href="mailto:adam@evolvedbinary.com">Adam Retter</a>
  */
-void Java_com_evolvedbinary_jnibench_common_FooByCallStatic_disposeInternal(JNIEnv* env, jclass jcls, jlong handle) {
-    delete reinterpret_cast<jnibench::Foo*>(handle);
+public class FooByCallInvoke extends NativeBackedObject {
+    public FooByCallInvoke() {
+        super();
+        newFoo();   //the native method, will find _nativeHandle from the class and set it directly
+    }
+
+    @Override
+    protected void disposeInternal() {
+        disposeInternal(_nativeHandle);
+    }
+
+    private native void newFoo();
+    private native void disposeInternal(final long handle);
 }

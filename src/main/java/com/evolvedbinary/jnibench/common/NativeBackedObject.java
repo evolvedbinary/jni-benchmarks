@@ -52,5 +52,9 @@ public abstract class NativeBackedObject implements AutoCloseable {
 //        }
     }
 
+    public long get_nativeHandle() {
+        return _nativeHandle;
+    }
+
     protected abstract void disposeInternal();
 }

@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <jni.h>
-#include "com_evolvedbinary_jnibench_common_FooByCallInvoke.h"
+#include "com_evolvedbinary_jnibench_common_call_FooByCallInvoke.h"
 #include "Foo.h"
 #include "Portal.h"
 
@@ -34,7 +34,7 @@
  * Method:    newFoo
  * Signature: ()J
  */
-void Java_com_evolvedbinary_jnibench_common_FooByCallInvoke_newFoo(JNIEnv* env, jobject jobj) {
+void Java_com_evolvedbinary_jnibench_common_call_FooByCallInvoke_newFoo(JNIEnv* env, jobject jobj) {
   jnibench::Foo* foo = new jnibench::Foo();
 
   //set the _nativeHandle in Java
@@ -46,6 +46,6 @@ void Java_com_evolvedbinary_jnibench_common_FooByCallInvoke_newFoo(JNIEnv* env, 
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_com_evolvedbinary_jnibench_common_FooByCallInvoke_disposeInternal(JNIEnv* env, jobject jobj, jlong handle) {
+void Java_com_evolvedbinary_jnibench_common_call_FooByCallInvoke_disposeInternal(JNIEnv* env, jobject jobj, jlong handle) {
     delete reinterpret_cast<jnibench::Foo*>(handle);
 }
