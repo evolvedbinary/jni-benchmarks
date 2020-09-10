@@ -1,5 +1,7 @@
 # JNI Benchmarks
 
+[![Build Status](https://travis-ci.com/evolvedbinary/jni-benchmarks.svg?branch=master)](https://travis-ci.com/evolvedbinary/jni-benchmarks)
+
 We provide the code for a small set of benchmarks to compare various approaches to solving common JNI use-cases and then present the results.
 
 The benchmarks at present are:
