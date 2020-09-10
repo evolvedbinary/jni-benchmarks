@@ -87,8 +87,10 @@ public class AllocateInCppGet2DArrayListWrapper extends AllocateInCppGet2DArray 
 
       // second, search any uncached objects after the cached objects
       for (int i = lastCachedIdx + 1; i < backingObjects.length; i++) {
-        return ((String)backingObjects[i][0]).equals(other.name)
-                && ((long)backingObjects[i][1]) == other.value;
+        if (((String)backingObjects[i][0]).equals(other.name)
+                && ((long)backingObjects[i][1]) == other.value) {
+          return true;
+        }
       }
 
       return false;
