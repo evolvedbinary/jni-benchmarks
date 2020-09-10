@@ -1,13 +1,13 @@
 # JNI Benchmarks
 
-[![Build Status](https://travis-ci.com/evolvedbinary/jni-benchmarks.svg?branch=master)](https://travis-ci.com/evolvedbinary/jni-benchmarks)
+[![Build Status](https://travis-ci.com/evolvedbinary/jni-benchmarks.svg?branch=main)](https://travis-ci.com/evolvedbinary/jni-benchmarks)
 [![License](https://img.shields.io/badge/license-BSD%203-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 We provide the code for a small set of benchmarks to compare various approaches to solving common JNI use-cases and then present the results.
 
 The benchmarks at present are:
-* [com.evolvedbinary.jnibench.common.call](tree/master/src/main/java/com/evolvedbinary/jnibench/common/call) - Benchmarks for [Creating Objects with JNI](#jni-object-creation-benchmarks) [(results)](#object-creation-results).
-* [com.evolvedbinary.jnibench.common.array](tree/master/src/main/java/com/evolvedbinary/jnibench/common/array) - Benchmarks for [Passing Arrays with JNI](#jni-array-passing-benchmarks) [(results)](#array-passing-results).
+* [com.evolvedbinary.jnibench.common.call](tree/main/src/main/java/com/evolvedbinary/jnibench/common/call) - Benchmarks for [Creating Objects with JNI](#jni-object-creation-benchmarks) [(results)](#object-creation-results).
+* [com.evolvedbinary.jnibench.common.array](tree/main/src/main/java/com/evolvedbinary/jnibench/common/array) - Benchmarks for [Passing Arrays with JNI](#jni-array-passing-benchmarks) [(results)](#array-passing-results).
 
 ## JNI Object Creation Benchmarks
 
@@ -149,7 +149,7 @@ Thread model: posix
 
 The `com.evolvedbinary.jnibench.consbench.Benchmark` class already calls each scenario 1,000,000 times, so for the benchmark we repeated this 100 times and plotted the results.
 
-![Image of JNI Object Creation Benchmark Results](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/master/benchmark-results.png)
+![Image of JNI Object Creation Benchmark Results](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/main/benchmark-results.png)
 
 ### Object Creation Conclusions
 The difference between the non-final (Scenarios 1 - 3) and the final (Scenarios 4 - 6) class versions is so small that
@@ -590,7 +590,7 @@ jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGet2DArra
 ### Scenario 6 - Allocate 2 arrays in C++, Fill in C++, copy to custom List (backed by 2 arrays) in Java
 This is an extended version of Scenario 5, where the resultant 2 arrays are wrapped in a custom list. This scenario
 is concerned with reducing the number of data copies that are needed in Scenario 3. The C++ code is the same as that in Scenario 3, for the Java code see:
-[AllocateInJavaGetArrayList.java](https://github.com/evolvedbinary/jni-benchmarks/blob/master/src/main/java/com/evolvedbinary/jnibench/common/array/AllocateInCppGet2DArrayListWrapper.java).
+[AllocateInJavaGetArrayList.java](https://github.com/evolvedbinary/jni-benchmarks/blob/main/src/main/java/com/evolvedbinary/jnibench/common/array/AllocateInCppGet2DArrayListWrapper.java).
 
 
 ### Scenario 7 - Allocate ArrayList in Java, and fill with Complex Object in C++
@@ -742,8 +742,8 @@ Thread model: posix
 
 The `com.evolvedbinary.jnibench.consbench.Benchmark` class already calls each scenario 1,000,000 times, so for the benchmark we repeated this 100 times and plotted the results.
 
-![Image of JNI Array Passing Benchmark Results when size is 2](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/master/jni-arrays-size-2.png)
-![Image of JNI Array Passing Benchmark Results when size is 20](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/master/jni-arrays-size-20.png)
+![Image of JNI Array Passing Benchmark Results when size is 2](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/main/jni-arrays-size-2.png)
+![Image of JNI Array Passing Benchmark Results when size is 20](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/main/jni-arrays-size-20.png)
 
 ### Array Passing Conclusions
 The fastest approach appears to be by performing most of the allocations in Java, and then passing arrays of simple types between C++ and Java.
