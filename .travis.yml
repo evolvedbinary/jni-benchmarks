@@ -1,11 +1,11 @@
 language: java
 
-jdk:
-  - openjdk8
-
-os:
-  - linux
-  - osx
+jobs:
+  include:
+    - os: linux
+      jdk: openjdk8
+    - os: macos
+      jdk: openjdk9
 
 script: mvn clean compile package -B
 
