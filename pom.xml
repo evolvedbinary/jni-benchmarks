@@ -5,18 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.evolvedbinary.jni</groupId>
-    <artifactId>jni-construction-benchmark</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>jni-benchmarks</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>nar</packaging>
 
     <scm>
-        <connection>scm:git:https://github.com/adamretter/jni-construction-benchmark.git</connection>
-        <developerConnection>scm:git:https://github.com/adamretter/jni-construction-benchmark.git</developerConnection>
-        <url>scm:git:https://github.com/adamretter/jni-construction-benchmark.git</url>
+        <connection>scm:git:https://github.com/evolvedbinary/jni-benchmarks.git</connection>
+        <developerConnection>scm:git:https://github.com/evolvedbinary/jni-benchmarks.git</developerConnection>
+        <url>scm:git:https://github.com/evolvedbinary/jni-benchmarks.git</url>
     </scm>
 
-    <description>A small benchmark to compare costs of JNI object construction</description>
-    <url>https://github.com/adamretter/jni-construction-benchmark</url>
+    <description>Benchmarks to compare different approaches for solving JNI use-cases</description>
+    <url>https://github.com/evolvedbinary/jni-benchmarks</url>
     <inceptionYear>2016</inceptionYear>
 
     <organization>
@@ -145,6 +145,9 @@
                     <includeConfigurationDirectoryInClasspath>false</includeConfigurationDirectoryInClasspath>
                     <repositoryLayout>flat</repositoryLayout>
                     <repositoryName>lib</repositoryName>
+                    <binFileExtensions>
+                        <unix>.sh</unix>
+                    </binFileExtensions>
                     <programs>
                         <program>
                             <id>benchmark</id>
