@@ -1,6 +1,7 @@
 # JNI Benchmarks
 
 [![Build Status](https://travis-ci.com/evolvedbinary/jni-benchmarks.svg?branch=master)](https://travis-ci.com/evolvedbinary/jni-benchmarks)
+[![License](https://img.shields.io/badge/license-BSD%203-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 We provide the code for a small set of benchmarks to compare various approaches to solving common JNI use-cases and then present the results.
 
