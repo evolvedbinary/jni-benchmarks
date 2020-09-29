@@ -1,6 +1,8 @@
 #include <jni.h>
 
 #include <algorithm>
+#include <cassert>
+#include <cstring>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -24,7 +26,7 @@ static const auto DB_MOCK = std::unordered_map<std::string, std::string>{
 };
 
 static const std::string& GetByteArrayInternal(const char* key) {
-  std::string str(key);
+  std::string str(key, 38);
   //std::cerr << std::endl << "Getting " << str << std::endl << std::endl;
   return DB_MOCK.at(str);
 }
@@ -55,15 +57,13 @@ static jbyteArray StringToJavaByteArray(JNIEnv *env, const std::string& str) {
  */
 jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_get___3BII
   (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len) {
-  jbyte* key = new jbyte[jkey_len + 1];
+  jbyte* key = new jbyte[jkey_len];
   env->GetByteArrayRegion(jkey, jkey_off, jkey_len, key);
   if (env->ExceptionCheck()) {
     // exception thrown: ArrayIndexOutOfBoundsException
     delete[] key;
     return nullptr;
   }
-  // Termination character
-  key[jkey_len] = 0;
 
   // Mock getting value
   std::string value = GetByteArrayInternal(reinterpret_cast<char*>(key));
@@ -87,18 +87,15 @@ jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_get___3
  */
 jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_get___3BII_3BII
   (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval, jint jval_off, jint jval_len) {
-  static const int kNotFound = -1;
   static const int kStatusError = -2;
 
-  jbyte* key = new jbyte[jkey_len + 1];
+  jbyte* key = new jbyte[jkey_len];
   env->GetByteArrayRegion(jkey, jkey_off, jkey_len, key);
   if (env->ExceptionCheck()) {
     // exception thrown: OutOfMemoryError
     delete[] key;
     return kStatusError;
   }
-  // Terminate string
-  key[jkey_len] = 0;
 
   std::string cvalue = GetByteArrayInternal(reinterpret_cast<char*>(key));
 
@@ -115,6 +112,255 @@ jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_get___3BII_3B
     // exception thrown: OutOfMemoryError
     return kStatusError;
   }
+
+  return cvalue_len;
+}
+
+static inline void SetByteBufferData(JNIEnv* env, const jmethodID jarray_mid, const jobject& jbuf,
+    const char* content, const size_t content_len) {
+  jbyteArray jarray = static_cast<jbyteArray>(env->CallObjectMethod(jbuf, jarray_mid));
+  if (env->ExceptionCheck()) {
+    // exception occurred
+    env->DeleteLocalRef(jbuf);
+    return;
+  }
+
+  jboolean is_copy = JNI_FALSE;
+  jbyte* ja = reinterpret_cast<jbyte*>(
+      env->GetPrimitiveArrayCritical(jarray, &is_copy));
+  if (ja == nullptr) {
+    // exception occurred
+     env->DeleteLocalRef(jarray);
+     env->DeleteLocalRef(jbuf);
+     return;
+  }
+
+  memcpy(ja, const_cast<char*>(content), content_len);
+
+  env->ReleasePrimitiveArrayCritical(jarray, ja, 0);
+
+  env->DeleteLocalRef(jarray);
+}
+
+static inline jint SetDirectByteBufferData(char* buf, const jint jbuf_len,
+    const char* data, const size_t data_size) {
+  const jint jdata_len = static_cast<jint>(data_size);
+  const jint length = std::min(jbuf_len, jdata_len);
+
+  memcpy(buf, data, length);
+
+  return jdata_len;
+}
+
+static inline jobject NewByteBuffer(JNIEnv* env, const size_t capacity, const char* content) {
+  const jclass jclazz = env->FindClass("java/nio/ByteBuffer");
+  if (jclazz == nullptr) {
+    // exception occurred accessing class
+    return nullptr;
+  }
+  // TODO: introduce caching?
+  static const jmethodID jmid_allocate = env->GetStaticMethodID(
+      jclazz, "allocate", "(I)Ljava/nio/ByteBuffer;");
+  if (jmid_allocate == nullptr) {
+    // exception occurred accessing class, or NoSuchMethodException or OutOfMemoryError
+    return nullptr;
+  }
+  const jobject jbuf = env->CallStaticObjectMethod(
+      jclazz, jmid_allocate, static_cast<jint>(capacity));
+  if (env->ExceptionCheck()) {
+    // exception occurred
+    return nullptr;
+  }
+
+  // Set buffer data
+  if (content != nullptr) {
+    static const jmethodID array_mid = env->GetMethodID(jclazz, "array", "()[B");
+    assert(array_mid != nullptr);
+    SetByteBufferData(env, array_mid, jbuf, content, capacity);
+  }
+
+  return jbuf;
+}
+
+static inline jobject NewDirectByteBuffer(JNIEnv* env, const size_t capacity, const char* content) {
+  bool allocated = false;
+  if (content == nullptr) {
+    content = new char[capacity];
+    allocated = true;
+  }
+  jobject jbuf = env->NewDirectByteBuffer(const_cast<char*>(content), static_cast<jlong>(capacity));
+  if (jbuf == nullptr) {
+    // exception occurred
+    if (allocated) {
+      delete[] static_cast<const char*>(content);
+    }
+    return nullptr;
+  }
+  return jbuf;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
+ * Method:    getInBuffer
+ * Signature: ([BII)Ljava/nio/ByteBuffer;
+ */
+jobject Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInBuffer___3BII
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len) {
+  jbyte* key = new jbyte[jkey_len];
+  env->GetByteArrayRegion(jkey, jkey_off, jkey_len, key);
+  if (env->ExceptionCheck()) {
+    // exception thrown: ArrayIndexOutOfBoundsException
+    delete[] key;
+    return nullptr;
+  }
+
+  // Mock getting value
+  std::string value = GetByteArrayInternal(reinterpret_cast<char*>(key));
+
+  // Cleanup
+  delete[] key;
+
+  return NewByteBuffer(env, value.size(), value.c_str());
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
+ * Method:    getInDirectBuffer
+ * Signature: ([BII)Ljava/nio/ByteBuffer;
+ */
+jobject Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInDirectBuffer___3BII
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len) {
+  jbyte* key = new jbyte[jkey_len];
+  env->GetByteArrayRegion(jkey, jkey_off, jkey_len, key);
+  if (env->ExceptionCheck()) {
+    // exception thrown: ArrayIndexOutOfBoundsException
+    delete[] key;
+    return nullptr;
+  }
+
+  // Mock getting value
+  std::string value = GetByteArrayInternal(reinterpret_cast<char*>(key));
+
+  // Cleanup
+  delete[] key;
+
+  return NewDirectByteBuffer(env, value.size(), value.c_str());
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
+ * Method:    getInBuffer
+ * Signature: ([BIILjava/nio/ByteBuffer;IIZ)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInBuffer___3BIILjava_nio_ByteBuffer_2IIZ
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jobject jval,
+      jint jval_off, jint jval_len) {
+   static const int kStatusError = -2;
+   static const int kArgumentError = -3;
+
+  jbyte* key = new jbyte[jkey_len];
+  env->GetByteArrayRegion(jkey, jkey_off, jkey_len, key);
+  if (env->ExceptionCheck()) {
+    // exception thrown: ArrayIndexOutOfBoundsException
+    delete[] key;
+    return kArgumentError;
+  }
+
+  const jclass jclazz = env->FindClass("java/nio/ByteBuffer");
+  if (jclazz == nullptr) {
+    // exception occurred accessing class
+    return kStatusError;
+  }
+
+  // Mock getting value
+  std::string cvalue = GetByteArrayInternal(reinterpret_cast<char*>(key));
+
+  static const jmethodID array_mid = env->GetMethodID(jclazz, "array", "()[B");
+  assert(array_mid != nullptr);
+
+  // TODO: ensure capacity to be jval_off + jval_len, otherwise allow to copy only capacity - jval_off bytes
+  //const size_t length = std::min(len, static_cast<size_t>(jval_len - jval_off));
+  SetByteBufferData(env, array_mid, jval, cvalue.c_str(), cvalue.size());
+  return static_cast<jint>(cvalue.size());
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
+ * Method:    getInDirectBuffer
+ * Signature: ([BIILjava/nio/ByteBuffer;II)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInDirectBuffer___3BIILjava_nio_ByteBuffer_2II
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jobject jval,
+         jint jval_off, jint jval_len) {
+   static const int kArgumentError = -3;
+
+  jbyte* key = new jbyte[jkey_len];
+  env->GetByteArrayRegion(jkey, jkey_off, jkey_len, key);
+  if (env->ExceptionCheck()) {
+    // exception thrown: ArrayIndexOutOfBoundsException
+    delete[] key;
+    return kArgumentError;
+  }
+
+  char* value = reinterpret_cast<char*>(env->GetDirectBufferAddress(jval));
+  if (value == nullptr) {
+    std::cerr <<
+        "Invalid value argument (argument is not a valid direct ByteBuffer)" << std::endl;
+    return kArgumentError;
+  }
+  if (env->GetDirectBufferCapacity(jval) < (jval_off + jval_len)) {
+    std::cerr <<
+        "Invalid value argument. Capacity is less than requested region "
+        "(offset + length)." << std::endl;
+    return kArgumentError;
+  }
+
+  // Mock getting value
+  std::string cvalue = GetByteArrayInternal(reinterpret_cast<char*>(key));
+
+  return SetDirectByteBufferData(value, jval_len, cvalue.c_str(), cvalue.size());
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
+ * Method:    getInDirectBuffer
+ * Signature: (Ljava/nio/ByteBuffer;IILjava/nio/ByteBuffer;II)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInDirectBuffer__Ljava_nio_ByteBuffer_2IILjava_nio_ByteBuffer_2II
+  (JNIEnv *env, jclass, jobject jkey, jint jkey_off, jint jkey_len, jobject jval, jint jval_off, jint jval_len) {
+  static const int kArgumentError = -3;
+
+  char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey));
+  if (key == nullptr) {
+    std::cerr << "Invalid key argument (argument is not a valid direct ByteBuffer)" << std::endl;
+    return kArgumentError;
+  }
+  if (env->GetDirectBufferCapacity(jkey) < (jkey_off + jkey_len)) {
+    std::cerr <<
+        "Invalid key argument. Capacity is less than requested region (offset "
+        "+ length)." << std::endl;
+    return kArgumentError;
+  }
+
+  char* value = reinterpret_cast<char*>(env->GetDirectBufferAddress(jval));
+  if (value == nullptr) {
+    std::cerr <<
+        "Invalid value argument (argument is not a valid direct ByteBuffer)" << std::endl;
+    return kArgumentError;
+  }
+  if (env->GetDirectBufferCapacity(jval) < (jval_off + jval_len)) {
+    std::cerr <<
+        "Invalid value argument. Capacity is less than requested region "
+        "(offset + length)." << std::endl;
+    return kArgumentError;
+  }
+
+  std::string cvalue = GetByteArrayInternal(key);
+
+  const jint cvalue_len = static_cast<jint>(cvalue.size());
+  const jint length = std::min(jval_len, cvalue_len);
+
+  memcpy(value, cvalue.c_str(), length);
 
   return cvalue_len;
 }

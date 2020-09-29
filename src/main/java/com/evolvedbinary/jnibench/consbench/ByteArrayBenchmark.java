@@ -36,8 +36,11 @@ public class ByteArrayBenchmark implements BenchmarkInterface {
       long results[] = {
           end1 - start1
       };
+      ByteArrayBenchmarkFixture[] byteArrayBenchmarkFixtures = {
+        new ByteArrayBenchmarkFixture("Basic get byte array, " + key, end1 - start1)
+      };
 
-      outputResults(benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs(), names, results);
+      outputResults(benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs(), byteArrayBenchmarkFixtures);
     }
 
   }
