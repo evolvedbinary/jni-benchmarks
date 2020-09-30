@@ -102,4 +102,51 @@ public class GetByteArray {
   public static native int getInDirectBuffer(final ByteBuffer key,
                                              final int keyOffset, final int keyLength, final ByteBuffer value,
                                              final int valueOffset, final int valueLength);
+
+  /**
+   * User allocates and provides key in Java.
+   * We allocate and fill byte[] value in C++ and return it.
+   * On native side GetPrimitiveArrayCritical function is used to read key.
+   *
+   * @param key
+   * @param keyOffset
+   * @param keyLength
+   * @return
+   */
+  public static native byte[] getCritical(final byte[] key, final int keyOffset,
+                                  final int keyLength);
+
+  /**
+   * User allocates and provides key and value byte[]s in Java.
+   * We fill value in C++ up to value#length and return both it and the total length of the available value in the db.
+   * On native side GetPrimitiveArrayCritical function is used to read key and write value.
+   *
+   * @param key
+   * @param keyOffset
+   * @param keyLength
+   * @param value
+   * @param valueOffset
+   * @param valueLength
+   * @return
+   */
+  public static native int getCritical(final byte[] key,
+                               final int keyOffset, final int keyLength, final byte[] value,
+                               final int valueOffset, final int valueLength);
+
+  /**
+   * User allocates and provides key byte[] in Java.
+   * User also allocates memory for value byte array using sun.misc.Unsafe.
+   * We fill value in C++ up to valueLength and return it.
+   *
+   * @param key
+   * @param keyOffset
+   * @param keyLength
+   * @param valueArrayHandle
+   * @param valueOffset
+   * @param valueLength
+   * @return
+   */
+  public static native int getUnsafe(final byte[] key,
+                                       final int keyOffset, final int keyLength, final long valueArrayHandle,
+                                       final int valueOffset, final int valueLength);
 }
