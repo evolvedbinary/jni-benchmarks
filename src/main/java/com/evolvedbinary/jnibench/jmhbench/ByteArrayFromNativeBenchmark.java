@@ -12,6 +12,10 @@ import java.util.concurrent.TimeUnit;
 /**
  * Benchmark getting byte arrays from native methods.
  */
+@BenchmarkMode(Mode.SampleTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Warmup(iterations = 100, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
+@Measurement(iterations = 500, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
 public class ByteArrayFromNativeBenchmark {
 
   static {
@@ -58,48 +62,28 @@ public class ByteArrayFromNativeBenchmark {
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void basicGetByteArray(BenchmarkState benchmarkState) {
     GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void preallocatedGetByteArray(BenchmarkState benchmarkState) {
     byte[] valueBuffer = new byte[benchmarkState.valueSize];
     GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void bufferGetByteArray(BenchmarkState benchmarkState) {
     GetByteArray.getInBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void directBufferGetByteArray(BenchmarkState benchmarkState) {
     GetByteArray.getInDirectBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void directBuffersPreallocatedGetByteArray(BenchmarkState benchmarkState) {
+  public void directKeyAndValueBuffersPreallocatedGetByteArray(BenchmarkState benchmarkState) {
     ByteBuffer keyBuffer = ByteBuffer.allocateDirect(benchmarkState.keyBytes.length);
     keyBuffer.put(benchmarkState.keyBytes);
     ByteBuffer valueBuffer = ByteBuffer.allocateDirect(benchmarkState.valueSize);
@@ -107,10 +91,6 @@ public class ByteArrayFromNativeBenchmark {
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void directValueBufferOnlyPreallocatedGetByteArray(BenchmarkState benchmarkState) {
     ByteBuffer valueBuffer = ByteBuffer.allocateDirect(benchmarkState.valueSize);
     GetByteArray.getInDirectBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length,
@@ -118,31 +98,19 @@ public class ByteArrayFromNativeBenchmark {
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void valueBufferOnlyPreallocatedGetByteArray(BenchmarkState benchmarkState) {
+  public void bufferValueOnlyPreallocatedGetByteArray(BenchmarkState benchmarkState) {
     ByteBuffer valueBuffer = ByteBuffer.allocate(benchmarkState.valueSize);
     GetByteArray.getInBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length,
         valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void preallocatedGetByteArrayWithGetPrimitiveArrayCritical(BenchmarkState benchmarkState) {
     byte[] valueBuffer = new byte[benchmarkState.valueSize];
     GetByteArray.getCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void unsafeAllocatedGetByteArray(BenchmarkState benchmarkState) {
     long arrayHandle = unsafe.allocateMemory(benchmarkState.valueSize);
     GetByteArray.getUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, arrayHandle, 0, benchmarkState.valueSize);

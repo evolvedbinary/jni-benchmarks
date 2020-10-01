@@ -13,6 +13,10 @@ import java.util.concurrent.TimeUnit;
 /**
  * Benchmark passing byte arrays to native methods and reading them.
  */
+@BenchmarkMode(Mode.SampleTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+@Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
 public class ByteArrayToNativeBenchmark {
 
   static {
@@ -63,28 +67,16 @@ public class ByteArrayToNativeBenchmark {
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void passKeyAsByteArray(BenchmarkState benchmarkState) {
     GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void passKeyAsByteArrayCritical(BenchmarkState benchmarkState) {
     GetByteArray.getWithCriticalKey(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void passKeyAsDirectByteBuffer(BenchmarkState benchmarkState) {
     ByteBuffer keyBuffer = ByteBuffer.allocateDirect(benchmarkState.keyBytes.length);
     keyBuffer.put(benchmarkState.keyBytes);
@@ -92,10 +84,6 @@ public class ByteArrayToNativeBenchmark {
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SampleTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public void passKeyAsUnsafeAllocated(BenchmarkState benchmarkState) {
     final long keyArrayHandle = unsafe.allocateMemory(benchmarkState.keySize);
     for (int i = 0; i < benchmarkState.keyBytes.length; ++i) {
