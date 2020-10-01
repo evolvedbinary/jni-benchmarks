@@ -3,14 +3,31 @@ package com.evolvedbinary.jnibench.jmhbench;
 import com.evolvedbinary.jnibench.common.bytearray.GetByteArray;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
 import org.openjdk.jmh.annotations.*;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Benchmark passing byte arrays to native methods and reading them.
+ */
 public class ByteArrayToNativeBenchmark {
 
   static {
     NarSystem.loadLibrary();
+  }
+
+  private static Unsafe unsafe;
+  static {
+    try {
+      Field f = Unsafe.class.getDeclaredField("theUnsafe");
+      f.setAccessible(true);
+      unsafe = (Unsafe) f.get(null);
+    } catch(Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @State(Scope.Benchmark)
@@ -26,6 +43,7 @@ public class ByteArrayToNativeBenchmark {
 
     @Setup
     public void setup() {
+      // Fixed return value
       keyBase = "testKeyWithReturnValueSize0000512Bytes";
 
       keyBytes = new byte[keySize];
@@ -45,12 +63,45 @@ public class ByteArrayToNativeBenchmark {
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SingleShotTime)
+  @BenchmarkMode(Mode.SampleTime)
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void basicGetByteArray(ByteArrayFromNativeBenchmark.BenchmarkState benchmarkState) {
+  public void passKeyAsByteArray(BenchmarkState benchmarkState) {
     GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
+  @Benchmark
+  @BenchmarkMode(Mode.SampleTime)
+  @OutputTimeUnit(TimeUnit.NANOSECONDS)
+  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
+  public void passKeyAsByteArrayCritical(BenchmarkState benchmarkState) {
+    GetByteArray.getWithCriticalKey(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
+  }
+
+  @Benchmark
+  @BenchmarkMode(Mode.SampleTime)
+  @OutputTimeUnit(TimeUnit.NANOSECONDS)
+  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
+  public void passKeyAsDirectByteBuffer(BenchmarkState benchmarkState) {
+    ByteBuffer keyBuffer = ByteBuffer.allocateDirect(benchmarkState.keyBytes.length);
+    keyBuffer.put(benchmarkState.keyBytes);
+    GetByteArray.getDirectBufferKey(keyBuffer, 0, benchmarkState.keyBytes.length);
+  }
+
+  @Benchmark
+  @BenchmarkMode(Mode.SampleTime)
+  @OutputTimeUnit(TimeUnit.NANOSECONDS)
+  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
+  public void passKeyAsUnsafeAllocated(BenchmarkState benchmarkState) {
+    final long keyArrayHandle = unsafe.allocateMemory(benchmarkState.keySize);
+    for (int i = 0; i < benchmarkState.keyBytes.length; ++i) {
+      unsafe.putByte(keyArrayHandle + i, benchmarkState.keyBytes[i]);
+    }
+    GetByteArray.getUnsafeAllocatedKey(keyArrayHandle, 0, benchmarkState.keyBytes.length);
+    unsafe.freeMemory(keyArrayHandle);
+  }
 }

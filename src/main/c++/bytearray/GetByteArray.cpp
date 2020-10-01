@@ -106,6 +106,57 @@ jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_get___3
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
+ * Method:    getDirectBufferKey
+ * Signature: (Ljava/nio/ByteBuffer;II)[B
+ */
+jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getDirectBufferKey
+  (JNIEnv *env, jclass, jobject jkey_buffer, jint jkey_off, jint jkey_len) {
+
+  char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey_buffer));
+  if (key == nullptr) {
+    std::cerr << "Invalid key argument (argument is not a valid direct ByteBuffer)" << std::endl;
+    return nullptr;
+  }
+  if (env->GetDirectBufferCapacity(jkey_buffer) < (jkey_off + jkey_len)) {
+    std::cerr <<
+        "Invalid key argument. Capacity is less than requested region (offset "
+        "+ length)." << std::endl;
+    return nullptr;
+  }
+
+  // Mock getting value
+  std::string value = GetByteArrayInternal(key);
+
+  jbyteArray jret_value = StringToJavaByteArray(env, value);
+  if (jret_value == nullptr) {
+    // exception occurred
+    return nullptr;
+  }
+
+  return jret_value;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
+ * Method:    getUnsafeAllocatedKey
+ * Signature: (JII)[B
+ */
+jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getUnsafeAllocatedKey
+  (JNIEnv *env, jclass, jlong jkey_handle, jint jkey_off, jint jkey_len) {
+  // Mock getting value
+  std::string value = GetByteArrayInternal(reinterpret_cast<char*>(jkey_handle));
+
+  jbyteArray jret_value = StringToJavaByteArray(env, value);
+  if (jret_value == nullptr) {
+    // exception occurred
+    return nullptr;
+  }
+
+  return jret_value;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
  * Method:    get
  * Signature: ([BII[BII)I
  */
@@ -191,9 +242,9 @@ jobject Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInDirec
 /*
  * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
  * Method:    getInBuffer
- * Signature: ([BIILjava/nio/ByteBuffer;IIZ)I
+ * Signature: ([BIILjava/nio/ByteBuffer;II)I
  */
-jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInBuffer___3BIILjava_nio_ByteBuffer_2IIZ
+jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInBuffer___3BIILjava_nio_ByteBuffer_2II
   (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jobject jval,
       jint jval_off, jint jval_len) {
    static const int kError = -1;
@@ -209,10 +260,11 @@ jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInBuffer__
   // Mock getting value
   std::string cvalue = GetByteArrayInternal(reinterpret_cast<char*>(key));
 
-  // TODO: ensure capacity to be jval_off + jval_len, otherwise allow to copy only capacity - jval_off bytes
-  //const size_t length = std::min(len, static_cast<size_t>(jval_len - jval_off));
-  SetByteBufferData(env, g_jbyte_buffer_array_mid, jval, cvalue.c_str(), cvalue.size());
-  return static_cast<jint>(cvalue.size());
+  const size_t jdata_len = cvalue.size();
+  const size_t length = std::min(static_cast<size_t>(jval_len), jdata_len);
+
+  SetByteBufferData(env, g_jbyte_buffer_array_mid, jval, cvalue.c_str(), length);
+  return static_cast<jint>(jdata_len);
 }
 
 /*
@@ -306,10 +358,10 @@ jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getInDirectBu
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_bytearray_GetByteArray
- * Method:    getCritical
+ * Method:    getWithCriticalKey
  * Signature: ([BII)[B
  */
-jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getCritical___3BII
+jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getWithCriticalKey
   (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len) {
 
   jboolean is_copy = JNI_FALSE;
@@ -340,7 +392,7 @@ jbyteArray Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getCrit
  * Method:    getCritical
  * Signature: ([BII[BII)I
  */
-jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getCritical___3BII_3BII
+jint Java_com_evolvedbinary_jnibench_common_bytearray_GetByteArray_getCritical
   (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval, jint jval_off, jint jval_len) {
   static const int kError = -1;
 

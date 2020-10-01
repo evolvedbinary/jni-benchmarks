@@ -17,6 +17,30 @@ public class GetByteArray {
                                   final int keyLength);
 
   /**
+   * User allocates and provides key in Java using direct {@link ByteBuffer}.
+   * We allocate and fill byte[] value in C++ and return it.
+   *
+   * @param key
+   * @param keyOffset
+   * @param keyLength
+   * @return
+   */
+  public static native byte[] getDirectBufferKey(final ByteBuffer key, final int keyOffset,
+                                  final int keyLength);
+
+  /**
+   * User allocates and provides key in Java using {@link sun.misc.Unsafe}.
+   * We allocate and fill byte[] value in C++ and return it.
+   *
+   * @param keyByteArrayHandle
+   * @param keyOffset
+   * @param keyLength
+   * @return
+   */
+  public static native byte[] getUnsafeAllocatedKey(final long keyByteArrayHandle, final int keyOffset,
+                                  final int keyLength);
+
+  /**
    * User allocates and provides key and value byte[]s in Java.
    * We fill value in C++ up to value#length and return both it and the total length of the available value in the db.
    *
@@ -88,7 +112,7 @@ public class GetByteArray {
                                        final int valueOffset, final int valueLength);
 
   /**
-   * User allocates and provides key and value Direct Byte Buffers in Java.
+   * User allocates and provides key and value direct {@link ByteBuffer} in Java.
    * We fill value in C++ up to value#capacity and return both it and the total length of the available value in the db.
    *
    * @param key
@@ -113,7 +137,7 @@ public class GetByteArray {
    * @param keyLength
    * @return
    */
-  public static native byte[] getCritical(final byte[] key, final int keyOffset,
+  public static native byte[] getWithCriticalKey(final byte[] key, final int keyOffset,
                                   final int keyLength);
 
   /**
@@ -135,7 +159,7 @@ public class GetByteArray {
 
   /**
    * User allocates and provides key byte[] in Java.
-   * User also allocates memory for value byte array using sun.misc.Unsafe.
+   * User also allocates memory for value byte array using {@link sun.misc.Unsafe}.
    * We fill value in C++ up to valueLength and return it.
    *
    * @param key
