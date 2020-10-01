@@ -45,11 +45,15 @@ public class ByteArrayToNativeBenchmark {
     String keyBase;
     byte[] keyBytes;
 
+    ByteBuffer keyBuffer;
+    long unsafeKeyHandle;
+
     @Setup
     public void setup() {
       // Fixed return value
       keyBase = "testKeyWithReturnValueSize0000512Bytes";
 
+      // Allocate and generate byte array with given size
       keyBytes = new byte[keySize];
       System.arraycopy(keyBase.getBytes(), 0, keyBytes, 0, keyBase.length());
       int randomPartLength = keySize - keyBase.length();
@@ -58,11 +62,21 @@ public class ByteArrayToNativeBenchmark {
         random.nextBytes(randomPart);
         System.arraycopy(randomPart, 0, keyBytes, keyBase.length(), randomPartLength);
       }
+
+      // Byte array as direct byte buffer
+      keyBuffer = ByteBuffer.allocateDirect(keyBytes.length);
+      keyBuffer.put(keyBytes);
+
+      // Byte array allocated with Unsafe
+      unsafeKeyHandle = unsafe.allocateMemory(keySize);
+      for (int i = 0; i < keyBytes.length; ++i) {
+        unsafe.putByte(unsafeKeyHandle + i, keyBytes[i]);
+      }
     }
 
     @TearDown
     public void tearDown() {
-
+      unsafe.freeMemory(unsafeKeyHandle);
     }
   }
 
@@ -78,13 +92,23 @@ public class ByteArrayToNativeBenchmark {
 
   @Benchmark
   public void passKeyAsDirectByteBuffer(BenchmarkState benchmarkState) {
+    GetByteArray.getDirectBufferKey(benchmarkState.keyBuffer, 0, benchmarkState.keyBytes.length);
+  }
+
+  @Benchmark
+  public void passKeyAsDirectByteBufferWithAllocate(BenchmarkState benchmarkState) {
     ByteBuffer keyBuffer = ByteBuffer.allocateDirect(benchmarkState.keyBytes.length);
     keyBuffer.put(benchmarkState.keyBytes);
     GetByteArray.getDirectBufferKey(keyBuffer, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void passKeyAsUnsafeAllocated(BenchmarkState benchmarkState) {
+  public void passKeyAsUnsafe(BenchmarkState benchmarkState) {
+    GetByteArray.getUnsafeAllocatedKey(benchmarkState.unsafeKeyHandle, 0, benchmarkState.keyBytes.length);
+  }
+
+  @Benchmark
+  public void passKeyAsUnsafeWithAllocate(BenchmarkState benchmarkState) {
     final long keyArrayHandle = unsafe.allocateMemory(benchmarkState.keySize);
     for (int i = 0; i < benchmarkState.keyBytes.length; ++i) {
       unsafe.putByte(keyArrayHandle + i, benchmarkState.keyBytes[i]);
