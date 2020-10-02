@@ -10,9 +10,11 @@ def plot_byte_array_from_native_performance_comparisons(results_dict, chart_titl
 	for k, benchmarks in results_dict.items():
 		fig = plt.figure(num=None, figsize=(12, 8), dpi=80, facecolor='w', edgecolor='k')
 		ax1 = fig.add_subplot(111)
-		for name, samples in benchmarks.items():
+		for name, obj in benchmarks.items():
+			samples = obj["scores"]
+			errors = obj["errors"]
 			x = np.linspace(0, len(samples), len(samples))
-			ax1.plot(x, samples, '-o', label = name)
+			ax1.errorbar(x, samples, yerr=errors, fmt='-o', label = name)
 			ax1.legend()
 		plt.title(chart_title_template.format(str(k)))
 		plt.xlabel("Sample")
@@ -24,7 +26,7 @@ def plot_byte_array_from_native_performance_comparisons(results_dict, chart_titl
 # Columns:
 # Benchmark	Mode	Threads	Samples	Score	Score Error (99.9%)	Unit	Param: valueSize
 def process_value_results(path, param_name, chart_title_template):
-	# Example results_dict: { 10: { "benchmark1": [223, 243, 221, 219], "benchmark2": [566, ...], ... }, 50: { ... }, ... }
+	# Example results_dict: { 10: { "benchmark1": { "scores": [223, 243, 221, 219], "errors": [22, 25, 12, 45]}, "benchmark2": { "scores": [566, ...], "errors": [22, ...] }, ... }, 50: { ... }, ... }
 	results_dict = { }
 	for file in os.listdir(path):
 		if file.endswith(".csv"):
@@ -43,8 +45,9 @@ def process_value_results(path, param_name, chart_title_template):
 				# iterate through pandas dataframe *distant sound of crying baby*
 				for index, row in df_for_sz.iterrows():
 					if row["Benchmark"] not in results_dict[sz]:
-						results_dict[sz][row["Benchmark"]] = []
-					results_dict[sz][row["Benchmark"]].append(row["Score"])
+						results_dict[sz][row["Benchmark"]] = { "scores": [], "errors": [] }
+					results_dict[sz][row["Benchmark"]]["scores"].append(row["Score"])
+					results_dict[sz][row["Benchmark"]]["errors"].append(row["Score Error (99.9%)"])
 			
 	plot_byte_array_from_native_performance_comparisons(results_dict, chart_title_template)
 
