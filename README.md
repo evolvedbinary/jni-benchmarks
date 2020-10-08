@@ -766,6 +766,25 @@ These scripts will run a single iteration of the benchmark.
 If you want to run multiple iterations and get a CSV file of the results, you can use `benchmark-100.sh`
 and/or `benchmark-100-with-close.sh`, or `array-benchmark-100.sh`. 
 
-## Experimental JMH support
-We have experimental support for running the tests via JMH, see `jmh-benchmarks.sh`. You can also pass `--help`
-to the script to see JMH options. 
+## JMH support
+We have support for running the tests via JMH, see `jmh-benchmarks.sh`. You can also pass `--help`
+to the script to see JMH options.
+
+### Byte array benchmarks
+There are two benchmarks, which are currently available only via JMH: ByteArrayFromNativeBenchmark and ByteArrayToNativeBenchmark.
+They can be run multiple times using `jmh-benchmarks-parametrized.sh` with:
+
+```bash
+./jmh-benchmarks-parametrized.sh -i 10 -b ByteArrayToNativeBenchmark -o results/ -f csv
+```
+
+Above command will run JMH with ByteArrayToNativeBenchmark benchmarks 10 times and store result in CSV files in 'results' directory.
+You can also pass `--help` to the script to see additional JMH options that can be passed.
+<p>
+Results can then be plotted using `process_byte_array_benchmarks_results.py` script.
+For results of ByteArrayToNativeBenchmark benchmarks:
+```bash
+python3 process_byte_array_benchmarks_results.py -p results/ --param-name "Param: keySize" --chart-title "Performance comparison of passing byte array with {} bytes via JNI"
+```
+Command line parameter `p` expects path to directory with JMH result CSV files from running benchmarks with `jmh-benchmarks-parametrized.sh`.
+The `{}` in `chart-title` parameter will be replaced by value from `param-name` column.
