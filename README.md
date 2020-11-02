@@ -402,7 +402,7 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGet2DArray_getAr
     value_array_ptr[i] = static_cast<jlong>(foo_obj.GetValue());
   }
 
-  env->ReleaseLongArrayElements(value_array, value_array_ptr, JNI_COMMIT);
+  env->ReleaseLongArrayElements(value_array, value_array_ptr, 0);
 }
 ```
 ### Scenario 4 - Allocate Complex Object Array in C++, Fill in C++
