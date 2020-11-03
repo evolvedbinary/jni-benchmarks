@@ -59,13 +59,13 @@ public class ArrayBenchmark {
 
     }
 
-    public BenchmarkState(final FooNativeObjectArray fooObjectArray,
-                          final AllocateInJavaGet2DArray allocateInJavaGet2DArray,
-                          final AllocateInCppGetArray allocateInCppGetArray,
-                          final AllocateInCppGet2DArray allocateInCppGet2DArray,
-                          final AllocateInCppGet2DArrayListWrapper jni2DGetArrayListWrapper,
-                          final AllocateInJavaGetArrayList allocateInJavaGetArrayList,
-                          final AllocateInCppGetArrayList allocateInCppGetArrayList) {
+    public BenchmarkState(FooNativeObjectArray fooObjectArray,
+                          AllocateInJavaGet2DArray allocateInJavaGet2DArray,
+                          AllocateInCppGetArray allocateInCppGetArray,
+                          AllocateInCppGet2DArray allocateInCppGet2DArray,
+                          AllocateInCppGet2DArrayListWrapper jni2DGetArrayListWrapper,
+                          AllocateInJavaGetArrayList allocateInJavaGetArrayList,
+                          AllocateInCppGetArrayList allocateInCppGetArrayList) {
       this.fooObjectArray = fooObjectArray;
       this.allocateInJavaGet2DArray = allocateInJavaGet2DArray;
       this.allocateInCppGetArray = allocateInCppGetArray;
@@ -80,10 +80,10 @@ public class ArrayBenchmark {
 
     @Setup
     public void setup() {
-      final FooObject[] fooObjects = new FooObject[DEFAULT_ARRAY_SIZE];
-      final Random random = new Random();
+      FooObject[] fooObjects = new FooObject[DEFAULT_ARRAY_SIZE];
+      Random random = new Random();
       for (int i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
-        final int num = random.nextInt();
+        int num = random.nextInt();
         fooObjects[i] = new FooObject("str" + num, num);
       }
       fooObjectArray = new FooNativeObjectArray(
