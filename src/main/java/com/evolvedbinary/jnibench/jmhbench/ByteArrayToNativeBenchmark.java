@@ -63,7 +63,7 @@ public class ByteArrayToNativeBenchmark {
   @State(Scope.Benchmark)
   public static class BenchmarkState {
 
-    private static final Random random = new Random();
+    private static Random random = new Random();
 
     @Param({"38", "128", "512"})
     int keySize;
@@ -107,39 +107,40 @@ public class ByteArrayToNativeBenchmark {
   }
 
   @Benchmark
-  public void passKeyAsByteArray(BenchmarkState benchmarkState) {
-    GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
+  public byte[] passKeyAsByteArray(BenchmarkState benchmarkState) {
+    return GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void passKeyAsByteArrayCritical(BenchmarkState benchmarkState) {
-    GetByteArray.getWithCriticalKey(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
+  public byte[] passKeyAsByteArrayCritical(BenchmarkState benchmarkState) {
+    return GetByteArray.getWithCriticalKey(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void passKeyAsDirectByteBuffer(BenchmarkState benchmarkState) {
-    GetByteArray.getDirectBufferKey(benchmarkState.keyBuffer, 0, benchmarkState.keyBytes.length);
+  public byte[] passKeyAsDirectByteBuffer(BenchmarkState benchmarkState) {
+    return GetByteArray.getDirectBufferKey(benchmarkState.keyBuffer, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void passKeyAsDirectByteBufferWithAllocate(BenchmarkState benchmarkState) {
+  public byte[] passKeyAsDirectByteBufferWithAllocate(BenchmarkState benchmarkState) {
     ByteBuffer keyBuffer = ByteBuffer.allocateDirect(benchmarkState.keyBytes.length);
     keyBuffer.put(benchmarkState.keyBytes);
-    GetByteArray.getDirectBufferKey(keyBuffer, 0, benchmarkState.keyBytes.length);
+    return GetByteArray.getDirectBufferKey(keyBuffer, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void passKeyAsUnsafe(BenchmarkState benchmarkState) {
-    GetByteArray.getUnsafeAllocatedKey(benchmarkState.unsafeKeyHandle, 0, benchmarkState.keyBytes.length);
+  public byte[] passKeyAsUnsafe(BenchmarkState benchmarkState) {
+    return GetByteArray.getUnsafeAllocatedKey(benchmarkState.unsafeKeyHandle, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void passKeyAsUnsafeWithAllocate(BenchmarkState benchmarkState) {
-    final long keyArrayHandle = unsafe.allocateMemory(benchmarkState.keySize);
+  public byte[] passKeyAsUnsafeWithAllocate(BenchmarkState benchmarkState) {
+    long keyArrayHandle = unsafe.allocateMemory(benchmarkState.keySize);
     for (int i = 0; i < benchmarkState.keyBytes.length; ++i) {
       unsafe.putByte(keyArrayHandle + i, benchmarkState.keyBytes[i]);
     }
-    GetByteArray.getUnsafeAllocatedKey(keyArrayHandle, 0, benchmarkState.keyBytes.length);
+    byte[] value = GetByteArray.getUnsafeAllocatedKey(keyArrayHandle, 0, benchmarkState.keyBytes.length);
     unsafe.freeMemory(keyArrayHandle);
+    return value;
   }
 }

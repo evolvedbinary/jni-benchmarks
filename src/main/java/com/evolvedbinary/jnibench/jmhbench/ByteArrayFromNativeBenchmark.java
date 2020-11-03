@@ -123,21 +123,14 @@ public class ByteArrayFromNativeBenchmark {
   }
 
   @Benchmark
-  public void basicGetByteArray(BenchmarkState benchmarkState) {
-    GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
+  public byte[] basicGetByteArray(BenchmarkState benchmarkState) {
+    return GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void preallocatedGetByteArray(BenchmarkState benchmarkState) {
+  public int preallocatedGetByteArray(BenchmarkState benchmarkState) {
     byte[] valueBuffer = new byte[benchmarkState.valueSize];
-    GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
-  }
-
-  @Benchmark
-  public void batchPreallocatedGetByteArray(BenchmarkState benchmarkState, ThreadState threadState) {
-    byte[] valueBuffer = threadState.batchValueBuffer;
-    int valueOffset = threadState.getValueOffset();
-    GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, valueOffset, threadState.valueSize);
+    return GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
@@ -146,45 +139,46 @@ public class ByteArrayFromNativeBenchmark {
   }
 
   @Benchmark
-  public void directBufferGetByteArray(BenchmarkState benchmarkState) {
-    GetByteArray.getInDirectBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
+  public ByteBuffer directBufferGetByteArray(BenchmarkState benchmarkState) {
+    return GetByteArray.getInDirectBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
   }
 
   @Benchmark
-  public void directKeyAndValueBuffersPreallocatedGetByteArray(BenchmarkState benchmarkState) {
+  public int directKeyAndValueBuffersPreallocatedGetByteArray(BenchmarkState benchmarkState) {
     ByteBuffer keyBuffer = ByteBuffer.allocateDirect(benchmarkState.keyBytes.length);
     keyBuffer.put(benchmarkState.keyBytes);
     ByteBuffer valueBuffer = ByteBuffer.allocateDirect(benchmarkState.valueSize);
-    GetByteArray.getInDirectBuffer(keyBuffer, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
+    return GetByteArray.getInDirectBuffer(keyBuffer, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
-  public void directValueBufferOnlyPreallocatedGetByteArray(BenchmarkState benchmarkState) {
+  public int directValueBufferOnlyPreallocatedGetByteArray(BenchmarkState benchmarkState) {
     ByteBuffer valueBuffer = ByteBuffer.allocateDirect(benchmarkState.valueSize);
-    GetByteArray.getInDirectBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length,
+    return GetByteArray.getInDirectBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length,
         valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
-  public void bufferValueOnlyPreallocatedGetByteArray(BenchmarkState benchmarkState) {
+  public int bufferValueOnlyPreallocatedGetByteArray(BenchmarkState benchmarkState) {
     ByteBuffer valueBuffer = ByteBuffer.allocate(benchmarkState.valueSize);
-    GetByteArray.getInBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length,
+    return GetByteArray.getInBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length,
         valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
-  public void preallocatedGetByteArrayWithGetPrimitiveArrayCritical(BenchmarkState benchmarkState) {
+  public int preallocatedGetByteArrayWithGetPrimitiveArrayCritical(BenchmarkState benchmarkState) {
     byte[] valueBuffer = new byte[benchmarkState.valueSize];
-    GetByteArray.getCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
+    return GetByteArray.getCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
   }
 
   @Benchmark
-  public void unsafeAllocatedGetByteArray(BenchmarkState benchmarkState) {
+  public int unsafeAllocatedGetByteArray(BenchmarkState benchmarkState) {
     long arrayHandle = unsafe.allocateMemory(benchmarkState.valueSize);
-    GetByteArray.getUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, arrayHandle, 0, benchmarkState.valueSize);
+    int read = GetByteArray.getUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, arrayHandle, 0, benchmarkState.valueSize);
     // Access through getByte with address offset
     //System.out.println("First byte: " + benchmarkState.unsafe.getByte(arrayHandle));
     unsafe.freeMemory(arrayHandle);
+    return read;
   }
 
 }
