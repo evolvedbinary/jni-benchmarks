@@ -30,6 +30,7 @@ import com.evolvedbinary.jnibench.common.array.*;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
 import org.openjdk.jmh.annotations.*;
 
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -104,8 +105,8 @@ public class ArrayBenchmark {
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void allocateInJavaArray(BenchmarkState benchmarkState) {
-    benchmarkState.allocateInJavaGet2DArray.getObjectList(benchmarkState.fooObjectArray);
+  public List<FooObject> allocateInJavaArray(BenchmarkState benchmarkState) {
+    return benchmarkState.allocateInJavaGet2DArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -113,8 +114,8 @@ public class ArrayBenchmark {
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void jniGetArray(BenchmarkState benchmarkState) {
-    benchmarkState.allocateInCppGetArray.getObjectList(benchmarkState.fooObjectArray);
+  public List<FooObject> jniGetArray(BenchmarkState benchmarkState) {
+    return benchmarkState.allocateInCppGetArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -122,8 +123,8 @@ public class ArrayBenchmark {
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void jni2DGetArray(BenchmarkState benchmarkState) {
-    benchmarkState.allocateInCppGet2DArray.getObjectList(benchmarkState.fooObjectArray);
+  public List<FooObject> jni2DGetArray(BenchmarkState benchmarkState) {
+    return benchmarkState.allocateInCppGet2DArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -131,8 +132,8 @@ public class ArrayBenchmark {
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void jni2DGetArrayListWrapper(BenchmarkState benchmarkState) {
-    benchmarkState.jni2DGetArrayListWrapper.getObjectList(benchmarkState.fooObjectArray);
+  public List<FooObject> jni2DGetArrayListWrapper(BenchmarkState benchmarkState) {
+    return benchmarkState.jni2DGetArrayListWrapper.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -140,8 +141,8 @@ public class ArrayBenchmark {
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void allocateInJavaArrayList(BenchmarkState benchmarkState) {
-    benchmarkState.allocateInJavaGetArrayList.getObjectList(benchmarkState.fooObjectArray);
+  public List<FooObject> allocateInJavaArrayList(BenchmarkState benchmarkState) {
+    return benchmarkState.allocateInJavaGetArrayList.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
@@ -149,7 +150,7 @@ public class ArrayBenchmark {
   @OutputTimeUnit(TimeUnit.NANOSECONDS)
   @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
   @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
-  public void allocateInCppGetArrayList(BenchmarkState benchmarkState) {
-    benchmarkState.allocateInCppGetArrayList.getObjectList(benchmarkState.fooObjectArray);
+  public List<FooObject> allocateInCppGetArrayList(BenchmarkState benchmarkState) {
+    return benchmarkState.allocateInCppGetArrayList.getObjectList(benchmarkState.fooObjectArray);
   }
 }
