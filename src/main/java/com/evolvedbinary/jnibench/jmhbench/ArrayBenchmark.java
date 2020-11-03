@@ -34,6 +34,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+@BenchmarkMode(Mode.SingleShotTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+@Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
 public class ArrayBenchmark {
 
   static {
@@ -85,7 +89,7 @@ public class ArrayBenchmark {
         fooObjects[i] = new FooObject("str" + num, num);
       }
       fooObjectArray = new FooNativeObjectArray(
-          fooObjects);
+              fooObjects);
       allocateInJavaGet2DArray = new AllocateInJavaGet2DArray();
       allocateInCppGetArray = new AllocateInCppGetArray();
       allocateInCppGet2DArray = new AllocateInCppGet2DArray();
@@ -101,55 +105,31 @@ public class ArrayBenchmark {
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SingleShotTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public List<FooObject> allocateInJavaArray(BenchmarkState benchmarkState) {
     return benchmarkState.allocateInJavaGet2DArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SingleShotTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public List<FooObject> jniGetArray(BenchmarkState benchmarkState) {
     return benchmarkState.allocateInCppGetArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SingleShotTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public List<FooObject> jni2DGetArray(BenchmarkState benchmarkState) {
     return benchmarkState.allocateInCppGet2DArray.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SingleShotTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public List<FooObject> jni2DGetArrayListWrapper(BenchmarkState benchmarkState) {
     return benchmarkState.jni2DGetArrayListWrapper.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SingleShotTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public List<FooObject> allocateInJavaArrayList(BenchmarkState benchmarkState) {
     return benchmarkState.allocateInJavaGetArrayList.getObjectList(benchmarkState.fooObjectArray);
   }
 
   @Benchmark
-  @BenchmarkMode(Mode.SingleShotTime)
-  @OutputTimeUnit(TimeUnit.NANOSECONDS)
-  @Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-  @Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
   public List<FooObject> allocateInCppGetArrayList(BenchmarkState benchmarkState) {
     return benchmarkState.allocateInCppGetArrayList.getObjectList(benchmarkState.fooObjectArray);
   }
