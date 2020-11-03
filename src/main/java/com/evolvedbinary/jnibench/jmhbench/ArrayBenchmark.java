@@ -42,9 +42,6 @@ public class ArrayBenchmark {
     NarSystem.loadLibrary();
   }
 
-  // TODO(AR) parameterize the array size
-  private static final int DEFAULT_ARRAY_SIZE = 20;
-
   @State(Scope.Benchmark)
   public static class BenchmarkState {
     FooNativeObjectArray fooObjectArray;
@@ -75,19 +72,19 @@ public class ArrayBenchmark {
       this.allocateInCppGetArrayList = allocateInCppGetArrayList;
     }
 
-    @Param({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"})
-    int iteration;
+    @Param({"10", "50", "512", "1024", "4096", "16384"})
+    public int arraySize;
 
     @Setup
     public void setup() {
-      FooObject[] fooObjects = new FooObject[DEFAULT_ARRAY_SIZE];
+      FooObject[] fooObjects = new FooObject[arraySize];
       Random random = new Random();
-      for (int i = 0; i < DEFAULT_ARRAY_SIZE; i++) {
+      for (int i = 0; i < arraySize; i++) {
         int num = random.nextInt();
         fooObjects[i] = new FooObject("str" + num, num);
       }
-      fooObjectArray = new FooNativeObjectArray(
-              fooObjects);
+      fooObjectArray = new FooNativeObjectArray(fooObjects);
+
       allocateInJavaGet2DArray = new AllocateInJavaGet2DArray();
       allocateInCppGetArray = new AllocateInCppGetArray();
       allocateInCppGet2DArray = new AllocateInCppGet2DArray();
