@@ -27,8 +27,11 @@
 package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.common.call.FooByCall;
+import com.evolvedbinary.jnibench.common.call.FooByCallFinal;
 import com.evolvedbinary.jnibench.common.call.FooByCallInvoke;
+import com.evolvedbinary.jnibench.common.call.FooByCallInvokeFinal;
 import com.evolvedbinary.jnibench.common.call.FooByCallStatic;
+import com.evolvedbinary.jnibench.common.call.FooByCallStaticFinal;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -58,5 +61,20 @@ public class ConstructionBenchmark {
     @Benchmark
     public FooByCallInvoke fooByCallInvoke() {
         return new FooByCallInvoke();
+    }
+
+    @Benchmark
+    public FooByCallFinal fooByCallFinal() {
+        return new FooByCallFinal();
+    }
+
+    @Benchmark
+    public FooByCallStaticFinal fooByCallStaticFinal() {
+        return new FooByCallStaticFinal();
+    }
+
+    @Benchmark
+    public FooByCallInvokeFinal fooByCallInvokeFinal() {
+        return new FooByCallInvokeFinal();
     }
 }
