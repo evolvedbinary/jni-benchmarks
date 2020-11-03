@@ -34,10 +34,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-@BenchmarkMode(Mode.SingleShotTime)
+@BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-@Warmup(iterations = 10, time = 1, timeUnit = TimeUnit.NANOSECONDS)
-@Measurement(iterations = 100, time = 200, timeUnit = TimeUnit.NANOSECONDS)
 public class ArrayBenchmark {
 
   static {
