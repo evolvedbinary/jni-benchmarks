@@ -26,17 +26,24 @@
  */
 package com.evolvedbinary.jnibench.consbench;
 
+import java.util.List;
+import java.util.Map;
+
 public class BenchmarkOptions {
   private final int iterations;
   private final boolean outputAsCSV;
+  private final boolean noCsvHeader;
   private final boolean inNs;
   private final boolean close;
+  private final Map<String, List<String>> params;
 
-  public BenchmarkOptions(final int iterations, final boolean outputAsCSV, final boolean inNs, final boolean close) {
+  public BenchmarkOptions(final int iterations, final boolean outputAsCSV, final boolean noCsvHeader, final boolean inNs, final boolean close, final Map<String, List<String>> params) {
     this.iterations = iterations;
     this.outputAsCSV = outputAsCSV;
+    this.noCsvHeader = noCsvHeader;
     this.inNs = inNs;
     this.close = close;
+    this.params = params;
   }
 
   public int getIterations() {
@@ -47,11 +54,19 @@ public class BenchmarkOptions {
     return outputAsCSV;
   }
 
+  public boolean isNoCsvHeader() {
+    return noCsvHeader;
+  }
+
   public boolean isInNs() {
     return inNs;
   }
 
   public boolean isClose() {
     return close;
+  }
+
+  public Map<String, List<String>> getParams() {
+    return params;
   }
 }

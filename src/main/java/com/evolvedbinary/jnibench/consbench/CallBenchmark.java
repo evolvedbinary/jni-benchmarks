@@ -29,20 +29,23 @@ package com.evolvedbinary.jnibench.consbench;
 import com.evolvedbinary.jnibench.common.NativeBackedObject;
 import com.evolvedbinary.jnibench.common.call.*;
 
+import java.util.Arrays;
+
 import static com.evolvedbinary.jnibench.consbench.BenchmarkHelper.outputResults;
 import static com.evolvedbinary.jnibench.consbench.BenchmarkHelper.time;
 
 public class CallBenchmark implements BenchmarkInterface {
+
   @Override
   public void test(final BenchmarkOptions benchmarkOptions) {
     if (benchmarkOptions.isClose()) {
-      testWithClose(benchmarkOptions.getIterations(), benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs());
+      testWithClose(benchmarkOptions.getIterations(), benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isNoCsvHeader(), benchmarkOptions.isInNs());
     } else {
-      testWithoutClose(benchmarkOptions.getIterations(), benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isInNs());
+      testWithoutClose(benchmarkOptions.getIterations(), benchmarkOptions.isOutputAsCSV(), benchmarkOptions.isNoCsvHeader(), benchmarkOptions.isInNs());
     }
   }
 
-  private static void testWithClose(final int iterations, final boolean outputAsCSV, final boolean inNs) {
+  private static void testWithClose(final int iterations, final boolean outputAsCSV, final boolean noCsvHeader, final boolean inNs) {
     final CallBenchmarkFixture[] benchmarkFixtures = {
             new CallBenchmarkFixture("FooByCall", FooByCall::new),
             new CallBenchmarkFixture("FooByCallStatic", FooByCallStatic::new),
@@ -62,10 +65,10 @@ public class CallBenchmark implements BenchmarkInterface {
       benchmarkFixture.end = time(inNs);
     }
 
-    outputResults(outputAsCSV, inNs, benchmarkFixtures);
+    outputResults(outputAsCSV, noCsvHeader, inNs, Arrays.asList(benchmarkFixtures));
   }
 
-  private static void testWithoutClose(final int iterations, final boolean outputAsCSV, final boolean inNs) {
+  private static void testWithoutClose(final int iterations, final boolean outputAsCSV, final boolean noCsvHeader, final boolean inNs) {
     final CallBenchmarkFixture[] benchmarkFixtures = {
             new CallBenchmarkFixture("FooByCall", FooByCall::new),
             new CallBenchmarkFixture("FooByCallStatic", FooByCallStatic::new),
@@ -84,6 +87,6 @@ public class CallBenchmark implements BenchmarkInterface {
       benchmarkFixture.end = time(inNs);
     }
 
-    outputResults(outputAsCSV, inNs, benchmarkFixtures);
+    outputResults(outputAsCSV, noCsvHeader, inNs, Arrays.asList(benchmarkFixtures));
   }
 }

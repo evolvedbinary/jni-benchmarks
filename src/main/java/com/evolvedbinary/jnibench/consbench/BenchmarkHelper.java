@@ -26,16 +26,33 @@
  */
 package com.evolvedbinary.jnibench.consbench;
 
+import java.util.List;
+
 public class BenchmarkHelper {
 
-  public static void outputResults(final boolean outputAsCSV, final boolean inNs, final BenchmarkFixture[] benchmarkFixtures) {
+  public static void outputResults(final boolean outputAsCSV, final boolean noCsvHeader, final boolean inNs, final List<? extends BenchmarkFixture> benchmarkFixtures) {
     if (outputAsCSV) {
       final StringBuilder stringBuilder = new StringBuilder();
-      for (final BenchmarkFixture benchmarkFixture : benchmarkFixtures) {
-        stringBuilder.append(benchmarkFixture.duration());
-        stringBuilder.append(',');
+
+      // header
+      if (!noCsvHeader) {
+        for (int i = 0; i < benchmarkFixtures.size(); i++) {
+          stringBuilder.append('"').append(benchmarkFixtures.get(i).getDescription()).append('"');
+          if (i < benchmarkFixtures.size() - 1) {
+            stringBuilder.append(',');
+          }
+        }
+        stringBuilder.append(System.getProperty("line.separator"));
       }
-      stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+
+      // data
+      for (int i = 0; i < benchmarkFixtures.size(); i++) {
+        stringBuilder.append(benchmarkFixtures.get(i).duration());
+        if (i < benchmarkFixtures.size() - 1) {
+          stringBuilder.append(',');
+        }
+      }
+
       System.out.println(stringBuilder.toString());
     } else {
       final String timeUnits = timeUnits(inNs);

@@ -31,19 +31,25 @@ import com.evolvedbinary.jnibench.common.array.JniListSupplier;
 import java.util.function.Supplier;
 
 public class ArrayBenchmarkFixture implements BenchmarkFixture {
+    final int arraySize;
     final String description;
     final Supplier<JniListSupplier<FooObject>> listSupplierConstructor;
     long start;
     long end;
 
-    public ArrayBenchmarkFixture(final String description, final Supplier<JniListSupplier<FooObject>> listSupplierConstructor) {
+    public ArrayBenchmarkFixture(final int arraySize, final String description, final Supplier<JniListSupplier<FooObject>> listSupplierConstructor) {
+        this.arraySize = arraySize;
         this.description = description;
         this.listSupplierConstructor = listSupplierConstructor;
     }
 
+    public int getArraySize() {
+        return arraySize;
+    }
+
     @Override
     public String getDescription() {
-        return description;
+        return description + " (size " + arraySize+ ")";
     }
 
     @Override

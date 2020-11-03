@@ -26,6 +26,11 @@
  */
 package com.evolvedbinary.jnibench.consbench;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 /**
  * A small JNI Benchmark to show the difference
  * in cost between various models of Object Construction
@@ -40,9 +45,11 @@ public class Benchmark {
 
         int iterations = DEFAULT_ITERATIONS;
         boolean outputAsCSV = false;
+        boolean noCsvHeader = false;
         boolean inNs = false;
         boolean close = false;
         String benchmarkName = "CallBenchmark";
+        final Map<String, List<String>> params = new TreeMap<>();
 
         if (args != null && args.length > 0) {
             for (String arg : args) {
@@ -51,19 +58,33 @@ public class Benchmark {
                     iterations = Integer.parseInt(arg);
                 } else if (arg.equals("--csv")) {
                     outputAsCSV = true;
+                } else if (arg.equals("--no-csv-header")) {
+                    noCsvHeader = true;
                 } else if (arg.equals("--ns")) {
                     inNs = true;
                 } else if (arg.equals("--close")) {
                     close = true;
-                }else if (arg.startsWith("--benchmark=")) {
+                } else if (arg.startsWith("--benchmark=")) {
                     benchmarkName = arg.substring("--benchmark=".length());
+                } else if (arg.startsWith("--param=")) {
+                    final String param = arg.substring("--param=".length());
+                    final String[] nameValue = param.split(":");
+                    List<String> values = params.get(nameValue[0]);
+                    if (values == null) {
+                        values = new ArrayList<>();
+                        params.put(nameValue[0], values);
+                    }
+                    values.add(nameValue[1]);
                 } else if (arg.equals("--help") || arg.equals("-h") || arg.equals("/?")) {
                     System.out.println();
                     System.out.println("Benchmark");
-                    System.out.println("--iterations=n    set the number of iterations");
-                    System.out.println("--csv             output results in CSV format");
-                    System.out.println("--ns              compute times in ns as opposed to ms");
-                    System.out.println("--close           native objects should be closed (disposed) after use");
+                    System.out.println("--iterations=n          set the number of iterations");
+                    System.out.println("--csv                   output results in CSV format");
+                    System.out.println("--no-csv-header         disable CSV header line");
+                    System.out.println("--ns                    compute times in ns as opposed to ms");
+                    System.out.println("--close                 native objects should be closed (disposed) after use");
+                    System.out.println("--benchmark=name        name of the benchmark");
+                    System.out.println("--param=name:value      parameter for the benchmark");
                     System.out.println();
                 }
             }
@@ -71,13 +92,13 @@ public class Benchmark {
 
         NarSystem.loadLibrary();
 
-        final BenchmarkOptions benchmarkOptions = new BenchmarkOptions(iterations, outputAsCSV, inNs, close);
+        final BenchmarkOptions benchmarkOptions = new BenchmarkOptions(iterations, outputAsCSV, noCsvHeader, inNs, close, params);
 
         try {
-            Class<?> benchmarkClazz = Class.forName("com.evolvedbinary.jnibench.consbench." + benchmarkName);
-            BenchmarkInterface benchmarkObject = (BenchmarkInterface) benchmarkClazz.newInstance();
+            final Class<?> benchmarkClazz = Class.forName("com.evolvedbinary.jnibench.consbench." + benchmarkName);
+            final BenchmarkInterface benchmarkObject = (BenchmarkInterface) benchmarkClazz.newInstance();
             benchmarkObject.test(benchmarkOptions);
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+        } catch (final ClassNotFoundException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
     }
