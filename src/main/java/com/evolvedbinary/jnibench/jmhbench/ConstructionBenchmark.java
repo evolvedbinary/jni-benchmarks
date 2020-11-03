@@ -34,7 +34,6 @@ import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 
@@ -47,20 +46,17 @@ public class ConstructionBenchmark {
     }
 
     @Benchmark
-    public void fooByCall(Blackhole blackhole) {
-        final FooByCall fooByCall = new FooByCall();
-        blackhole.consume(fooByCall);
+    public FooByCall fooByCall() {
+        return new FooByCall();
     }
 
     @Benchmark
-    public void fooByCallStatic(Blackhole blackhole) {
-        final FooByCallStatic fooByCallStatic = new FooByCallStatic();
-        blackhole.consume(fooByCallStatic);
+    public FooByCallStatic fooByCallStatic() {
+        return new FooByCallStatic();
     }
 
     @Benchmark
-    public void fooByCallInvoke(Blackhole blackhole) {
-        final FooByCallInvoke fooByCallInvoke = new FooByCallInvoke();
-        blackhole.consume(fooByCallInvoke);
+    public FooByCallInvoke fooByCallInvoke() {
+        return new FooByCallInvoke();
     }
 }
