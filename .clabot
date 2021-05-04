@@ -4,6 +4,7 @@
     "alucarded",
     "duncdrum",
     "dependabot-preview",
-    "dependabot-preview[bot]"
+    "dependabot-preview[bot]",
+    "dependabot[bot]"
   ]
 }
