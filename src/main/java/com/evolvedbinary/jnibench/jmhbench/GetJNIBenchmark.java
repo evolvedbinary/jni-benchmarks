@@ -28,10 +28,12 @@ package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.common.getputjni.GetPutJNI;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
+import com.evolvedbinary.jnibench.jmhbench.common.DirectByteBufferCache;
+import com.evolvedbinary.jnibench.jmhbench.common.JMHCaller;
+import com.evolvedbinary.jnibench.jmhbench.common.UnsafeBufferCache;
 import org.openjdk.jmh.annotations.*;
 
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -71,9 +73,12 @@ public class GetJNIBenchmark {
         String keyBase;
         byte[] keyBytes;
 
+        JMHCaller caller;
+
         @Setup
         public void setup() {
-            LOG.info("setup benchmark");
+            this.caller = JMHCaller.fromStack();
+
             keyBase = "testKeyWithReturnValueSize" + String.format("%07d", valueSize) + "Bytes";
 
             keyBytes = keyBase.getBytes();
@@ -88,43 +93,73 @@ public class GetJNIBenchmark {
     @State(Scope.Thread)
     public static class GetJNIThreadState {
 
-        // As many elements of valueSize as fit in cacheSize
-        private LinkedList<ByteBuffer> cacheBuffers = new LinkedList<>();
+        private DirectByteBufferCache directByteBufferCache = new DirectByteBufferCache();
+        private UnsafeBufferCache unsafeBufferCache = new UnsafeBufferCache();
 
         int valueSize;
         int cacheSize;
 
         @Setup
         public void setup(GetJNIBenchmarkState benchmarkState) {
-            LOG.info("setup thread");
             valueSize = benchmarkState.valueSize;
             cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
-            for (int totalBuffers = 0; totalBuffers < cacheSize; totalBuffers += valueSize + benchmarkState.cacheEntryOverhead)
-            {
-                cacheBuffers.addLast(ByteBuffer.allocateDirect(valueSize));
+
+            switch (benchmarkState.caller.benchmarkMethod) {
+                case "getIntoDirectByteBuffer":
+                    directByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead);
+                    break;
+                case "getIntoDirectByteBufferFromUnsafe":
+                case "buffersOnlyDirectByteBufferFromUnsafe":
+                case "getIntoUnsafe":
+                    unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead);
+                    break;
+                default:
+                    throw new RuntimeException("Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
             }
         }
 
-        ByteBuffer takeBuffer() {
-            return cacheBuffers.getFirst();
-        }
+        @TearDown
+        public void tearDown(GetJNIBenchmarkState benchmarkState) {
 
-        void putBackBuffer(ByteBuffer byteBuffer) {
-            cacheBuffers.addLast(byteBuffer);
+            switch (benchmarkState.caller.benchmarkMethod) {
+                case "getIntoDirectByteBuffer":
+                    directByteBufferCache.tearDown();
+                    break;
+                case "getIntoDirectByteBufferFromUnsafe":
+                case "buffersOnlyDirectByteBufferFromUnsafe":
+                case "getIntoUnsafe":
+                    unsafeBufferCache.tearDown();
+                    break;
+                default:
+                    throw new RuntimeException("Don't know how to tearDown() for benchmark: " + benchmarkState.caller.benchmarkMethod);
+            }
         }
     }
 
     @Benchmark
     public void getIntoDirectByteBuffer(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
-        ByteBuffer byteBuffer = threadState.takeBuffer();
+        ByteBuffer byteBuffer = threadState.directByteBufferCache.acquire();
         GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
-        threadState.putBackBuffer(byteBuffer);
+        threadState.directByteBufferCache.release(byteBuffer);
     }
 
     @Benchmark
-    public void getIntoDirectByteBufferAllocate(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
-        ByteBuffer byteBuffer = threadState.takeBuffer();
-        GetPutJNI.getIntoDirectByteBufferAllocate(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, benchmarkState.valueSize);
-        threadState.putBackBuffer(byteBuffer);
+    public void buffersOnlyDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
+        UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
+        threadState.unsafeBufferCache.release(unsafeBuffer);
+    }
+
+    @Benchmark
+    public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
+        UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
+        ByteBuffer result = GetPutJNI.getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+        threadState.unsafeBufferCache.release(unsafeBuffer);
+    }
+
+    @Benchmark
+    public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
+        UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
+        int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+        threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 }

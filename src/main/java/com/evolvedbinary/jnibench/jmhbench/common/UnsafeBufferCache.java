@@ -24,30 +24,58 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common.getputjni;
+package com.evolvedbinary.jnibench.jmhbench.common;
 
-import java.nio.ByteBuffer;
+import sun.misc.Unsafe;
 
-public class GetPutJNI {
+import java.lang.reflect.Field;
 
-    public static native ByteBuffer getIntoDirectByteBufferFromUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
+public class UnsafeBufferCache extends LinkedListAllocationCache<UnsafeBufferCache.UnsafeBuffer>  {
 
-    public static native int getIntoUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
+    private static Unsafe unsafe;
 
-    public static native int getIntoDirectByteBuffer(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final ByteBuffer value,
-            final int valueLength);
+    static {
+        try {
+            Field f = Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            unsafe = (Unsafe) f.get(null);
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static class UnsafeBuffer {
+
+        public long handle;
+        public long size;
+
+        public UnsafeBuffer(long handle, long size) {
+            this.handle = handle;
+            this.size = size;
+        }
+
+        public void reset() {
+            this.handle = 0;
+            this.size = 0;
+        }
+    }
+
+    @Override
+    UnsafeBuffer allocate(int bytes) {
+        long handle = unsafe.allocateMemory(bytes);
+        return new UnsafeBuffer(handle, bytes);
+    }
+
+    @Override
+    void free(UnsafeBuffer buffer) {
+        if (buffer.handle != 0 && buffer.size > 0) {
+            unsafe.freeMemory(buffer.handle);
+            buffer.reset();
+        }
+        try {
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

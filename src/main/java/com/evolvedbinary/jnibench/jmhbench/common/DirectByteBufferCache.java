@@ -24,30 +24,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common.getputjni;
+package com.evolvedbinary.jnibench.jmhbench.common;
 
 import java.nio.ByteBuffer;
 
-public class GetPutJNI {
+public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>  {
 
-    public static native ByteBuffer getIntoDirectByteBufferFromUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
+    @Override
+    ByteBuffer allocate(int valueSize) {
+        return ByteBuffer.allocateDirect(valueSize);
+    }
 
-    public static native int getIntoUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
-
-    public static native int getIntoDirectByteBuffer(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final ByteBuffer value,
-            final int valueLength);
+    @Override
+    void free(ByteBuffer buffer) {
+        //this is just a best effort
+        buffer.clear();
+    }
 }

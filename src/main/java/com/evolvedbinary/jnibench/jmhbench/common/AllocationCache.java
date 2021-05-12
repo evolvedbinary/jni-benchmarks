@@ -24,30 +24,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common.getputjni;
+package com.evolvedbinary.jnibench.jmhbench.common;
 
-import java.nio.ByteBuffer;
+public interface AllocationCache<T> {
 
-public class GetPutJNI {
+    public T acquire();
 
-    public static native ByteBuffer getIntoDirectByteBufferFromUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
-
-    public static native int getIntoUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
-
-    public static native int getIntoDirectByteBuffer(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final ByteBuffer value,
-            final int valueLength);
+    public void release(T item);
 }

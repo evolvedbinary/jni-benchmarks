@@ -24,30 +24,44 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common.getputjni;
+package com.evolvedbinary.jnibench.jmhbench.common;
 
-import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
 
-public class GetPutJNI {
+public abstract class LinkedListAllocationCache<T> implements AllocationCache<T> {
 
-    public static native ByteBuffer getIntoDirectByteBufferFromUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
+    @Override
+    public T acquire() {
+        return cacheBuffers.getFirst();
+    }
 
-    public static native int getIntoUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
+    @Override
+    public void release(T buffer) {
+        cacheBuffers.addLast(buffer);
+    }
 
-    public static native int getIntoDirectByteBuffer(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final ByteBuffer value,
-            final int valueLength);
+    abstract T allocate(int valueSize);
+
+    abstract void free(T buffer);
+
+    // As many elements of valueSize as fit in cacheSize
+    private LinkedList<T> cacheBuffers = new LinkedList<>();
+
+    public void setup(int valueSize, int valueOverhead, int cacheSize) {
+        for (int totalBuffers = 0; totalBuffers < cacheSize; totalBuffers += valueSize + valueOverhead)
+        {
+            cacheBuffers.addLast(allocate(valueSize));
+        }
+    }
+
+    // Hope we have done enough to free direct BB memory.
+    public void tearDown() {
+
+        while (!cacheBuffers.isEmpty()) {
+            T buffer = cacheBuffers.removeFirst();
+            free(buffer);
+        }
+    }
+
 }

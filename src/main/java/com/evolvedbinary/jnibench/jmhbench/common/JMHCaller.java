@@ -24,30 +24,36 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.common.getputjni;
+package com.evolvedbinary.jnibench.jmhbench.common;
 
-import java.nio.ByteBuffer;
+/**
+ * Utility which uses assumptions about the JMH setup call stack
+ * in order to figure out which benchmark class / method is being run.
+ * The caller can use this information to guide the setup.
+ */
+public class JMHCaller {
 
-public class GetPutJNI {
+    private final static int JMH_MAGIC = 3;
 
-    public static native ByteBuffer getIntoDirectByteBufferFromUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
+    public String benchmarkMethod;
+    public String benchmarkClass;
 
-    public static native int getIntoUnsafe(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final long bufferHandle,
-            final int valueLength);
+    public static JMHCaller fromStack() {
+        JMHCaller caller = new JMHCaller();
+        Exception e = new Exception();
+        StackTraceElement[] stack = e.getStackTrace();
+        assert stack.length > JMH_MAGIC;
+        char dot = Character.toChars(0x2E)[0];
+        char backslash = Character.toChars(0x5C)[0];
+        String clazz = stack[JMH_MAGIC].getClassName();
+        String[] clazzPath = clazz.split(String.valueOf(backslash) + String.valueOf(dot));
+        String[] methodParts = stack[JMH_MAGIC].getMethodName().split(String.valueOf('_'));
+        assert "jmh_generated".equals(clazzPath[clazzPath.length - 2]);
+        String[] clazzParts = clazzPath[clazzPath.length - 1].split(String.valueOf('_'));
+        caller.benchmarkClass = clazzParts[0];
+        caller.benchmarkMethod = clazzParts[1];
+        assert caller.benchmarkMethod.equals(methodParts[0]);
 
-    public static native int getIntoDirectByteBuffer(
-            final byte[] key,
-            final int keyOffset,
-            final int keyLength,
-            final ByteBuffer value,
-            final int valueLength);
+        return caller;
+    }
 }

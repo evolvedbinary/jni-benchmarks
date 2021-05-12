@@ -73,6 +73,51 @@ jobject JNICALL Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIn
 }
 
 /*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getIntoDirectByteBufferFromUnsafe
+ * Signature: ([BIIJI)Ljava/nio/ByteBuffer;
+ */
+jobject Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoDirectByteBufferFromUnsafe
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jlong jval_unsafe_handle, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr) {
+      return nullptr;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  void *buffer_memory = reinterpret_cast<void *>(jval_unsafe_handle);
+  jobject byte_buffer = env->NewDirectByteBuffer(buffer_memory, jval_len);
+  if (byte_buffer != nullptr) {
+      memcpy(buffer_memory, cvalue.c_str(), std::min(static_cast<size_t>(jval_len), cvalue.size()));
+  }
+  return byte_buffer;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getIntoUnsafe
+ * Signature: ([BIIJI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoUnsafe
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jlong jval_unsafe_handle, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr) {
+      return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  void *buffer_memory = reinterpret_cast<void *>(jval_unsafe_handle);
+  size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(buffer_memory, cvalue.c_str(), get_size);
+
+  return get_size;
+}
+
+/*
  * Class:     com_evolvedbinary_jnibench_common_GetPutJNI
  * Method:    getIntoDirectByteBuffer
  * Signature: ([BIILjava/nio/ByteBuffer;I)I
