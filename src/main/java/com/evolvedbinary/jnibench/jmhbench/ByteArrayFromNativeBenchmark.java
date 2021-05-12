@@ -68,8 +68,16 @@ public class ByteArrayFromNativeBenchmark {
         "512",
         "1024",
         "4096",
-        "16384"})
+        "16384",
+        "65536"})
     int valueSize;
+
+    /**
+     * Sweet spot for a byte[] that we share out across multiple requests in a thread
+     * Thus reducing allocation overhead.
+     * We have played in the range 4k - 1M with this, current value is close eenough to optimal.
+     */
+    @Param({"65536"}) int preallocationBatchSize;
 
     String keyBase;
     byte[] keyBytes;
@@ -87,6 +95,33 @@ public class ByteArrayFromNativeBenchmark {
     }
   }
 
+  @State(Scope.Thread)
+  public static class ThreadState {
+
+    byte[] batchValueBuffer;
+    int valueSize;
+    int batchSize;
+    private int valueOffset = 0;
+
+    @Setup
+    public void setup(BenchmarkState benchmarkState) {
+      valueSize = benchmarkState.valueSize;
+      batchSize = Math.max(benchmarkState.preallocationBatchSize, benchmarkState.valueSize);
+      batchValueBuffer = new byte[batchSize];
+    }
+
+    int getValueOffset() {
+      int result = valueOffset;
+      valueOffset += valueSize;
+      if (valueOffset > batchSize) {
+        result = 0;
+        valueOffset = valueSize;
+        batchValueBuffer = new byte[batchSize];
+      }
+      return result;
+    }
+  }
+
   @Benchmark
   public void basicGetByteArray(BenchmarkState benchmarkState) {
     GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length);
@@ -96,6 +131,13 @@ public class ByteArrayFromNativeBenchmark {
   public void preallocatedGetByteArray(BenchmarkState benchmarkState) {
     byte[] valueBuffer = new byte[benchmarkState.valueSize];
     GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, 0, benchmarkState.valueSize);
+  }
+
+  @Benchmark
+  public void batchPreallocatedGetByteArray(BenchmarkState benchmarkState, ThreadState threadState) {
+    byte[] valueBuffer = threadState.batchValueBuffer;
+    int valueOffset = threadState.getValueOffset();
+    GetByteArray.get(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, valueBuffer, valueOffset, threadState.valueSize);
   }
 
   @Benchmark
