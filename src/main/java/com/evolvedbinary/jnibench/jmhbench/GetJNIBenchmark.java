@@ -33,6 +33,10 @@ import com.evolvedbinary.jnibench.jmhbench.common.JMHCaller;
 import com.evolvedbinary.jnibench.jmhbench.common.UnsafeBufferCache;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +48,9 @@ import java.util.logging.Logger;
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 100, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
-@Measurement(iterations = 500, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
+// Less iterations for the duration of "in development" only
+@Measurement(iterations = 50, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
+//@Measurement(iterations = 500, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
 public class GetJNIBenchmark {
 
     private static final Logger LOG = Logger.getLogger(GetJNIBenchmark.class.getName());
@@ -71,6 +77,7 @@ public class GetJNIBenchmark {
         @Param({"128"}) int cacheEntryOverhead;
 
         @Param({"checksum", "nochecksum"}) String afterRead;
+        boolean doChecksum;
 
         String keyBase;
         byte[] keyBytes;
@@ -84,6 +91,8 @@ public class GetJNIBenchmark {
             keyBase = "testKeyWithReturnValueSize" + String.format("%07d", valueSize) + "Bytes";
 
             keyBytes = keyBase.getBytes();
+
+            doChecksum = ("checksum".equalsIgnoreCase(afterRead));
         }
 
         @TearDown
@@ -142,7 +151,9 @@ public class GetJNIBenchmark {
     public void getIntoDirectByteBuffer(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuffer byteBuffer = threadState.directByteBufferCache.acquire();
         GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
-        blackhole.consume(threadState.directByteBufferCache.checksum(byteBuffer));
+        if (benchmarkState.doChecksum) {
+            blackhole.consume(threadState.directByteBufferCache.checksum(byteBuffer));
+        }
         threadState.directByteBufferCache.release(byteBuffer);
     }
 
@@ -156,7 +167,9 @@ public class GetJNIBenchmark {
     public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         ByteBuffer byteBuffer = GetPutJNI.getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
-        blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
+        if (benchmarkState.doChecksum) {
+            blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
+        }
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 
@@ -164,7 +177,20 @@ public class GetJNIBenchmark {
     public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
-        blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
+        if (benchmarkState.doChecksum) {
+            blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
+        }
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
+
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .jvmArgsAppend("-Djava.library.path=target/jni-benchmarks-1.0.0-SNAPSHOT-application/jni-benchmarks-1.0.0-SNAPSHOT/lib")
+                .jvmArgsAppend("-jar target/jni-benchmarks-1.0.0-SNAPSHOT-benchmarks.nar")
+                .include(GetJNIBenchmark.class.getSimpleName())
+                .build();
+
+        new Runner(opt).run();
+    }
+
 }

@@ -27,7 +27,6 @@
 package com.evolvedbinary.jnibench.jmhbench.common;
 
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 
 public abstract class LinkedListAllocationCache<T> implements AllocationCache<T> {
 

@@ -43,6 +43,9 @@ public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>
 
     @Override
     public int checksum(ByteBuffer item) {
+        if (item.remaining() != item.capacity()) {
+            throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
+        }
         int sum = 0;
         for (int i = 0; i < item.remaining(); i++) {
             sum += item.get();
