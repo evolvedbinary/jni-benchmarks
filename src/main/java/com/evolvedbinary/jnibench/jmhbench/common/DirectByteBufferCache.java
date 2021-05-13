@@ -37,8 +37,7 @@ public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>
 
     @Override
     void free(ByteBuffer buffer) {
-        //this is just a best effort
-        buffer.clear();
+        //we have no way to forcibly deallocate
     }
 
     @Override
@@ -47,7 +46,7 @@ public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>
             throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
         }
         int sum = 0;
-        for (int i = 0; i < item.remaining(); i++) {
+        while (item.remaining() > 0) {
             sum += item.get();
         }
         return sum;
