@@ -31,4 +31,6 @@ public interface AllocationCache<T> {
     public T acquire();
 
     public void release(T item);
+
+    public int checksum(T item);
 }

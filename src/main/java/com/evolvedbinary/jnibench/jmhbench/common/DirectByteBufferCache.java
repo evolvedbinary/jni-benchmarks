@@ -40,4 +40,13 @@ public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>
         //this is just a best effort
         buffer.clear();
     }
+
+    @Override
+    public int checksum(ByteBuffer item) {
+        int sum = 0;
+        for (int i = 0; i < item.remaining(); i++) {
+            sum += item.get();
+        }
+        return sum;
+    }
 }

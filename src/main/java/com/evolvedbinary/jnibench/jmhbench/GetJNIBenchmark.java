@@ -32,6 +32,7 @@ import com.evolvedbinary.jnibench.jmhbench.common.DirectByteBufferCache;
 import com.evolvedbinary.jnibench.jmhbench.common.JMHCaller;
 import com.evolvedbinary.jnibench.jmhbench.common.UnsafeBufferCache;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -65,10 +66,11 @@ public class GetJNIBenchmark {
                 "65536"})
         int valueSize;
 
-        @Param({"16"}) int cacheMB;
+        @Param({"4", "16"}) int cacheMB;
         final static int MB = 1024 * 1024;
-
         @Param({"128"}) int cacheEntryOverhead;
+
+        @Param({"checksum", "nochecksum"}) String afterRead;
 
         String keyBase;
         byte[] keyBytes;
@@ -137,9 +139,10 @@ public class GetJNIBenchmark {
     }
 
     @Benchmark
-    public void getIntoDirectByteBuffer(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
+    public void getIntoDirectByteBuffer(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuffer byteBuffer = threadState.directByteBufferCache.acquire();
         GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        blackhole.consume(threadState.directByteBufferCache.checksum(byteBuffer));
         threadState.directByteBufferCache.release(byteBuffer);
     }
 
@@ -150,16 +153,18 @@ public class GetJNIBenchmark {
     }
 
     @Benchmark
-    public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
+    public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
-        ByteBuffer result = GetPutJNI.getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+        ByteBuffer byteBuffer = GetPutJNI.getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+        blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 
     @Benchmark
-    public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
+    public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+        blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 }

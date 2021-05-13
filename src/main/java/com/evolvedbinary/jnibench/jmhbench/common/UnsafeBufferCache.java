@@ -44,6 +44,16 @@ public class UnsafeBufferCache extends LinkedListAllocationCache<UnsafeBufferCac
         }
     }
 
+    @Override
+    public int checksum(UnsafeBuffer item) {
+        int sum = 0;
+        long handle = item.handle;
+        for (int i = 0; i < item.size; i++) {
+            sum += unsafe.getByte(handle++);
+        }
+        return sum;
+    }
+
     public static class UnsafeBuffer {
 
         public long handle;
