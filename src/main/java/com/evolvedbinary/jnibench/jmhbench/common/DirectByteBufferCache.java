@@ -27,6 +27,7 @@
 package com.evolvedbinary.jnibench.jmhbench.common;
 
 import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 
 public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>  {
 
@@ -41,7 +42,7 @@ public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>
     }
 
     @Override
-    public int checksum(ByteBuffer item) {
+    public int byteChecksum(ByteBuffer item) {
         if (item.remaining() != item.capacity()) {
             throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
         }
@@ -50,5 +51,18 @@ public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>
             sum += item.get();
         }
         return sum;
+    }
+
+    @Override
+    public int longChecksum(ByteBuffer item) {
+        if (item.remaining() != item.capacity()) {
+            throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
+        }
+        LongBuffer buffer = item.asLongBuffer();
+        long sum = 0;
+        while (buffer.remaining() > 0) {
+            sum += buffer.get();
+        }
+        return (int)sum;
     }
 }

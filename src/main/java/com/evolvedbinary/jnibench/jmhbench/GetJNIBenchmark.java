@@ -39,6 +39,8 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -72,10 +74,15 @@ public class GetJNIBenchmark {
 
         @Param({"4", "16"}) int cacheMB;
         final static int MB = 1024 * 1024;
-        @Param({"128"}) int cacheEntryOverhead;
+        @Param({"1024"}) int cacheEntryOverhead;
 
-        @Param({"checksum", "nochecksum"}) String afterRead;
-        boolean doChecksum;
+        enum Checksum {
+            none,
+            bytesum,
+            longsum,
+        };
+        @Param({"none", "bytesum", "longsum"}) String checksum;
+        Checksum readChecksum;
 
         String keyBase;
         byte[] keyBytes;
@@ -90,7 +97,7 @@ public class GetJNIBenchmark {
 
             keyBytes = keyBase.getBytes();
 
-            doChecksum = ("checksum".equalsIgnoreCase(afterRead));
+            readChecksum = Checksum.valueOf(checksum);
         }
 
         @TearDown
@@ -150,8 +157,15 @@ public class GetJNIBenchmark {
         ByteBuffer byteBuffer = threadState.directByteBufferCache.acquire();
         byteBuffer.clear();
         GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
-        if (benchmarkState.doChecksum) {
-            blackhole.consume(threadState.directByteBufferCache.checksum(byteBuffer));
+        switch (benchmarkState.readChecksum) {
+            case bytesum:
+                blackhole.consume(threadState.directByteBufferCache.byteChecksum(byteBuffer));
+                break;
+            case longsum:
+                blackhole.consume(threadState.directByteBufferCache.longChecksum(byteBuffer));
+                break;
+            case none:
+                break;
         }
         threadState.directByteBufferCache.release(byteBuffer);
     }
@@ -166,8 +180,15 @@ public class GetJNIBenchmark {
     public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         ByteBuffer byteBuffer = GetPutJNI.getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
-        if (benchmarkState.doChecksum) {
-            blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
+        switch (benchmarkState.readChecksum) {
+            case bytesum:
+                blackhole.consume(threadState.unsafeBufferCache.byteChecksum(unsafeBuffer));
+                break;
+            case longsum:
+                blackhole.consume(threadState.unsafeBufferCache.longChecksum(unsafeBuffer));
+                break;
+            case none:
+                break;
         }
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
@@ -176,8 +197,15 @@ public class GetJNIBenchmark {
     public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
-        if (benchmarkState.doChecksum) {
-            blackhole.consume(threadState.unsafeBufferCache.checksum(unsafeBuffer));
+        switch (benchmarkState.readChecksum) {
+            case bytesum:
+                blackhole.consume(threadState.unsafeBufferCache.byteChecksum(unsafeBuffer));
+                break;
+            case longsum:
+                blackhole.consume(threadState.unsafeBufferCache.longChecksum(unsafeBuffer));
+                break;
+            case none:
+                break;
         }
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
@@ -202,11 +230,17 @@ public class GetJNIBenchmark {
      * @throws RunnerException
      */
     public static void main(String[] args) throws RunnerException {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss.SSS");
         Options opt = new OptionsBuilder()
                 .forks(0)
+                .param("checksum", "none", "bytesum", "longsum")
+                //.param("valueSize", "50", "4096", "16384", "65536")
+                .param("valueSize", "65536")
+                .param("cacheMB", "4")
                 .warmupIterations(10)
                 .measurementIterations(50)
                 .include(GetJNIBenchmark.class.getSimpleName())
+                .result("results/" +  simpleDateFormat.format(new Date()) + "_" + GetJNIBenchmark.class.getSimpleName() + ".csv")
                 .build();
 
         new Runner(opt).run();

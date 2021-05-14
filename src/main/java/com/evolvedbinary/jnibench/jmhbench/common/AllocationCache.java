@@ -32,5 +32,7 @@ public interface AllocationCache<T> {
 
     public void release(T item);
 
-    public int checksum(T item);
+    public int byteChecksum(T item);
+
+    public int longChecksum(T item);
 }
