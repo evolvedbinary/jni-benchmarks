@@ -148,3 +148,25 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoDirectByt
   return jval_len;
 }
 
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getIntoByteArray
+ * Signature: ([BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArraySetRegion
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+      const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr) {
+      return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  env->SetByteArrayRegion(jval_byte_array, 0, get_size, const_cast<jbyte*>(reinterpret_cast<const jbyte*>(cvalue.c_str())));
+
+  return get_size;
+}
+
+

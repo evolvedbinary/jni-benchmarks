@@ -50,4 +50,11 @@ public class GetPutJNI {
             final int keyLength,
             final ByteBuffer value,
             final int valueLength);
+
+    public static native int getIntoByteArraySetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
 }

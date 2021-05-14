@@ -28,6 +28,7 @@ package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.common.getputjni.GetPutJNI;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
+import com.evolvedbinary.jnibench.jmhbench.common.ByteArrayCache;
 import com.evolvedbinary.jnibench.jmhbench.common.DirectByteBufferCache;
 import com.evolvedbinary.jnibench.jmhbench.common.JMHCaller;
 import com.evolvedbinary.jnibench.jmhbench.common.UnsafeBufferCache;
@@ -112,6 +113,7 @@ public class GetJNIBenchmark {
 
         private DirectByteBufferCache directByteBufferCache = new DirectByteBufferCache();
         private UnsafeBufferCache unsafeBufferCache = new UnsafeBufferCache();
+        private ByteArrayCache byteArrayCache = new ByteArrayCache();
 
         int valueSize;
         int cacheSize;
@@ -130,6 +132,9 @@ public class GetJNIBenchmark {
                 case "getIntoUnsafe":
                     unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead);
                     break;
+                case "getIntoByteArraySetRegion":
+                    byteArrayCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead);
+                    break;
                 default:
                     throw new RuntimeException("Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
             }
@@ -146,6 +151,9 @@ public class GetJNIBenchmark {
                 case "buffersOnlyDirectByteBufferFromUnsafe":
                 case "getIntoUnsafe":
                     unsafeBufferCache.tearDown();
+                    break;
+                case "getIntoByteArraySetRegion":
+                    byteArrayCache.tearDown();
                     break;
                 default:
                     throw new RuntimeException("Don't know how to tearDown() for benchmark: " + benchmarkState.caller.benchmarkMethod);
@@ -218,6 +226,26 @@ public class GetJNIBenchmark {
                 break;
         }
         threadState.unsafeBufferCache.release(unsafeBuffer);
+    }
+
+    @Benchmark
+    public void getIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        byte[] array = threadState.byteArrayCache.acquire();
+        int size = GetPutJNI.getIntoByteArraySetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        switch (benchmarkState.readChecksum) {
+            case bytesum:
+                blackhole.consume(threadState.byteArrayCache.byteChecksum(array));
+                break;
+            case copyout:
+                blackhole.consume(threadState.byteArrayCache.copyOut(array));
+                break;
+            case longsum:
+                blackhole.consume(threadState.byteArrayCache.longChecksum(array));
+                break;
+            case none:
+                break;
+        }
+        threadState.byteArrayCache.release(array);
     }
 
     /**
