@@ -78,10 +78,11 @@ public class GetJNIBenchmark {
 
         enum Checksum {
             none,
+            copyout,
             bytesum,
             longsum,
         };
-        @Param({"none", "bytesum", "longsum"}) String checksum;
+        @Param({"none", "copyout", "bytesum", "longsum"}) String checksum;
         Checksum readChecksum;
 
         String keyBase;
@@ -158,6 +159,9 @@ public class GetJNIBenchmark {
         byteBuffer.clear();
         GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
         switch (benchmarkState.readChecksum) {
+            case copyout:
+                blackhole.consume(threadState.directByteBufferCache.copyOut(byteBuffer));
+                break;
             case bytesum:
                 blackhole.consume(threadState.directByteBufferCache.byteChecksum(byteBuffer));
                 break;
@@ -184,6 +188,9 @@ public class GetJNIBenchmark {
             case bytesum:
                 blackhole.consume(threadState.unsafeBufferCache.byteChecksum(unsafeBuffer));
                 break;
+            case copyout:
+                blackhole.consume(threadState.unsafeBufferCache.copyOut(unsafeBuffer));
+                break;
             case longsum:
                 blackhole.consume(threadState.unsafeBufferCache.longChecksum(unsafeBuffer));
                 break;
@@ -200,6 +207,9 @@ public class GetJNIBenchmark {
         switch (benchmarkState.readChecksum) {
             case bytesum:
                 blackhole.consume(threadState.unsafeBufferCache.byteChecksum(unsafeBuffer));
+                break;
+            case copyout:
+                blackhole.consume(threadState.unsafeBufferCache.copyOut(unsafeBuffer));
                 break;
             case longsum:
                 blackhole.consume(threadState.unsafeBufferCache.longChecksum(unsafeBuffer));
@@ -233,7 +243,7 @@ public class GetJNIBenchmark {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss.SSS");
         Options opt = new OptionsBuilder()
                 .forks(0)
-                .param("checksum", "none", "bytesum", "longsum")
+                .param("checksum", "none", "copyout")
                 //.param("valueSize", "50", "4096", "16384", "65536")
                 .param("valueSize", "65536")
                 .param("cacheMB", "4")

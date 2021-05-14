@@ -26,7 +26,9 @@
  */
 package com.evolvedbinary.jnibench.jmhbench.common;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 public abstract class LinkedListAllocationCache<T> implements AllocationCache<T> {
 
@@ -46,6 +48,12 @@ public abstract class LinkedListAllocationCache<T> implements AllocationCache<T>
 
     // As many elements of valueSize as fit in cacheSize
     private LinkedList<T> cacheBuffers = new LinkedList<>();
+
+    protected byte[] byteArrayOfSize(int size) {
+        return copyOutCache.computeIfAbsent(size, k -> new byte[size]);
+    }
+
+    Map<Integer, byte[]> copyOutCache = new HashMap<>();
 
     public void setup(int valueSize, int valueOverhead, int cacheSize) {
         for (int totalBuffers = 0; totalBuffers < cacheSize; totalBuffers += valueSize + valueOverhead)

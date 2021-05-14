@@ -35,4 +35,6 @@ public interface AllocationCache<T> {
     public int byteChecksum(T item);
 
     public int longChecksum(T item);
+
+    public byte[] copyOut(T item);
 }

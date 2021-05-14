@@ -65,6 +65,20 @@ public class UnsafeBufferCache extends LinkedListAllocationCache<UnsafeBufferCac
         return (int)sum;
     }
 
+    @Override
+    public byte[] copyOut(UnsafeBuffer item) {
+
+        byte[] array = byteArrayOfSize((int)item.size);
+
+        //Is there a faster/bulk way to do this ?
+        long handle = item.handle;
+        for (int i = 0; i < item.size; i++) {
+            array[i] = unsafe.getByte(handle++);
+        }
+
+        return array;
+    }
+
     public static class UnsafeBuffer {
 
         public long handle;

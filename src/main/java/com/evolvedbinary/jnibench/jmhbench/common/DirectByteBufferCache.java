@@ -41,8 +41,19 @@ public class DirectByteBufferCache extends LinkedListAllocationCache<ByteBuffer>
         //we have no way to forcibly deallocate
     }
 
+
+    @Override
+    public byte[] copyOut(ByteBuffer item) {
+
+        byte[] array = byteArrayOfSize(item.capacity());
+        item.get(array);
+
+        return array;
+    }
+
     @Override
     public int byteChecksum(ByteBuffer item) {
+
         if (item.remaining() != item.capacity()) {
             throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
         }
