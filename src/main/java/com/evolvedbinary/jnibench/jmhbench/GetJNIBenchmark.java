@@ -28,10 +28,7 @@ package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.common.getputjni.GetPutJNI;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
-import com.evolvedbinary.jnibench.jmhbench.common.ByteArrayCache;
-import com.evolvedbinary.jnibench.jmhbench.common.DirectByteBufferCache;
-import com.evolvedbinary.jnibench.jmhbench.common.JMHCaller;
-import com.evolvedbinary.jnibench.jmhbench.common.UnsafeBufferCache;
+import com.evolvedbinary.jnibench.jmhbench.common.*;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -77,14 +74,8 @@ public class GetJNIBenchmark {
         final static int MB = 1024 * 1024;
         @Param({"1024"}) int cacheEntryOverhead;
 
-        enum Checksum {
-            none,
-            copyout,
-            bytesum,
-            longsum,
-        };
         @Param({"none", "copyout", "bytesum", "longsum"}) String checksum;
-        Checksum readChecksum;
+        AllocationCache.Checksum readChecksum;
 
         String keyBase;
         byte[] keyBytes;
@@ -99,7 +90,7 @@ public class GetJNIBenchmark {
 
             keyBytes = keyBase.getBytes();
 
-            readChecksum = Checksum.valueOf(checksum);
+            readChecksum = AllocationCache.Checksum.valueOf(checksum);
         }
 
         @TearDown
@@ -119,21 +110,23 @@ public class GetJNIBenchmark {
         int cacheSize;
 
         @Setup
-        public void setup(GetJNIBenchmarkState benchmarkState) {
+        public void setup(GetJNIBenchmarkState benchmarkState, Blackhole blackhole) {
             valueSize = benchmarkState.valueSize;
             cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
 
             switch (benchmarkState.caller.benchmarkMethod) {
                 case "getIntoDirectByteBuffer":
-                    directByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead);
+                    directByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
                 case "getIntoDirectByteBufferFromUnsafe":
                 case "buffersOnlyDirectByteBufferFromUnsafe":
                 case "getIntoUnsafe":
-                    unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead);
+                    unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
                 case "getIntoByteArraySetRegion":
-                    byteArrayCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead);
+                case "getIntoByteArrayGetElements":
+                case "getIntoByteArrayCritical":
+                    byteArrayCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
                 default:
                     throw new RuntimeException("Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
@@ -153,6 +146,8 @@ public class GetJNIBenchmark {
                     unsafeBufferCache.tearDown();
                     break;
                 case "getIntoByteArraySetRegion":
+                case "getIntoByteArrayGetElements":
+                case "getIntoByteArrayCritical":
                     byteArrayCache.tearDown();
                     break;
                 default:
@@ -162,49 +157,25 @@ public class GetJNIBenchmark {
     }
 
     @Benchmark
+    public void buffersOnlyDirectByteBufferFromUnsafe(GetJNIThreadState threadState) {
+        UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
+        threadState.unsafeBufferCache.release(unsafeBuffer);
+    }
+
+    @Benchmark
     public void getIntoDirectByteBuffer(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuffer byteBuffer = threadState.directByteBufferCache.acquire();
         byteBuffer.clear();
         GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
-        switch (benchmarkState.readChecksum) {
-            case copyout:
-                blackhole.consume(threadState.directByteBufferCache.copyOut(byteBuffer));
-                break;
-            case bytesum:
-                blackhole.consume(threadState.directByteBufferCache.byteChecksum(byteBuffer));
-                break;
-            case longsum:
-                blackhole.consume(threadState.directByteBufferCache.longChecksum(byteBuffer));
-                break;
-            case none:
-                break;
-        }
+        threadState.directByteBufferCache.checksumBuffer(byteBuffer);
         threadState.directByteBufferCache.release(byteBuffer);
-    }
-
-    @Benchmark
-    public void buffersOnlyDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState) {
-        UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
-        threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 
     @Benchmark
     public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         ByteBuffer byteBuffer = GetPutJNI.getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
-        switch (benchmarkState.readChecksum) {
-            case bytesum:
-                blackhole.consume(threadState.unsafeBufferCache.byteChecksum(unsafeBuffer));
-                break;
-            case copyout:
-                blackhole.consume(threadState.unsafeBufferCache.copyOut(unsafeBuffer));
-                break;
-            case longsum:
-                blackhole.consume(threadState.unsafeBufferCache.longChecksum(unsafeBuffer));
-                break;
-            case none:
-                break;
-        }
+        threadState.unsafeBufferCache.checksumBuffer(unsafeBuffer);
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 
@@ -212,19 +183,7 @@ public class GetJNIBenchmark {
     public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
-        switch (benchmarkState.readChecksum) {
-            case bytesum:
-                blackhole.consume(threadState.unsafeBufferCache.byteChecksum(unsafeBuffer));
-                break;
-            case copyout:
-                blackhole.consume(threadState.unsafeBufferCache.copyOut(unsafeBuffer));
-                break;
-            case longsum:
-                blackhole.consume(threadState.unsafeBufferCache.longChecksum(unsafeBuffer));
-                break;
-            case none:
-                break;
-        }
+        threadState.unsafeBufferCache.checksumBuffer(unsafeBuffer);
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 
@@ -232,21 +191,41 @@ public class GetJNIBenchmark {
     public void getIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         byte[] array = threadState.byteArrayCache.acquire();
         int size = GetPutJNI.getIntoByteArraySetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
-        switch (benchmarkState.readChecksum) {
-            case bytesum:
-                blackhole.consume(threadState.byteArrayCache.byteChecksum(array));
-                break;
-            case copyout:
-                blackhole.consume(threadState.byteArrayCache.copyOut(array));
-                break;
-            case longsum:
-                blackhole.consume(threadState.byteArrayCache.longChecksum(array));
-                break;
-            case none:
-                break;
-        }
+        threadState.byteArrayCache.checksumBuffer(array);
         threadState.byteArrayCache.release(array);
     }
+
+    @Benchmark
+    public void getIntoByteArrayGetElements(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        byte[] array = threadState.byteArrayCache.acquire();
+        int size = GetPutJNI.getIntoByteArrayGetElements(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        threadState.byteArrayCache.checksumBuffer(array);
+        threadState.byteArrayCache.release(array);
+    }
+
+    @Benchmark
+    public void getIntoByteArrayCritical(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        byte[] array = threadState.byteArrayCache.acquire();
+        int size = GetPutJNI.getIntoByteArrayCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        threadState.byteArrayCache.checksumBuffer(array);
+        threadState.byteArrayCache.release(array);
+    }
+
+    //final supplied buffer(s)
+    //TODO getIntoIndirectByteBuffer
+
+    //create/allocate the result buffers, analogous to the "into" methods (but no unsafe ones here)
+    //TODO getReturnDirectByteBuffer
+    //TODO getReturnIndirectByteBuffer
+    //TODO getReturnByteArrayCritical
+    //TODO getReturnByteArrayGetElements
+    //TODO getReturnByteArraySetRegion
+
+    //TODO env->NewDirectByteBuffer() - what aree the ownership rules ?
+    //TODO track whether the byte[] copying/sharing methods we are using are doing copies
+    //env->GetByteArrayElements(..., &is_copy)
+
+    //TODO graphing - dig into the Python stuff a bit more
 
     /**
      * Run from the IDE
@@ -272,8 +251,7 @@ public class GetJNIBenchmark {
         Options opt = new OptionsBuilder()
                 .forks(0)
                 .param("checksum", "none", "copyout")
-                //.param("valueSize", "50", "4096", "16384", "65536")
-                .param("valueSize", "65536")
+                .param("valueSize", "50", "4096", "16384", "65536")
                 .param("cacheMB", "4")
                 .warmupIterations(10)
                 .measurementIterations(50)

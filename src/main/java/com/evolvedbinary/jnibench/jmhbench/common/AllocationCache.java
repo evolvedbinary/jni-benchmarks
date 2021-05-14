@@ -28,13 +28,16 @@ package com.evolvedbinary.jnibench.jmhbench.common;
 
 public interface AllocationCache<T> {
 
-    public T acquire();
+    public enum Checksum {
+        none,
+        copyout,
+        bytesum,
+        longsum,
+    };
 
-    public void release(T item);
+    T acquire();
 
-    public int byteChecksum(T item);
+    void release(T item);
 
-    public int longChecksum(T item);
-
-    public byte[] copyOut(T item);
+    void checksumBuffer(T item);
 }

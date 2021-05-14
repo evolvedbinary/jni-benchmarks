@@ -57,4 +57,18 @@ public class GetPutJNI {
             final int keyLength,
             final byte[] value,
             final int valueLength);
+
+    public static native int getIntoByteArrayGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
+    public static native int getIntoByteArrayCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
 }

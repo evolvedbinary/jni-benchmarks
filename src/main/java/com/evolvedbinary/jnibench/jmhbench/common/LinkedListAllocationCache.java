@@ -26,11 +26,16 @@
  */
 package com.evolvedbinary.jnibench.jmhbench.common;
 
+import org.openjdk.jmh.infra.Blackhole;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
 public abstract class LinkedListAllocationCache<T> implements AllocationCache<T> {
+
+    private Checksum checksum;
+    private Blackhole blackhole;
 
     @Override
     public T acquire() {
@@ -55,7 +60,10 @@ public abstract class LinkedListAllocationCache<T> implements AllocationCache<T>
 
     Map<Integer, byte[]> copyOutCache = new HashMap<>();
 
-    public void setup(int valueSize, int valueOverhead, int cacheSize) {
+    public void setup(int valueSize, int valueOverhead, int cacheSize, Checksum checksum, Blackhole blackhole) {
+        this.checksum = checksum;
+        this.blackhole = blackhole;
+
         for (int totalBuffers = 0; totalBuffers < cacheSize; totalBuffers += valueSize + valueOverhead)
         {
             cacheBuffers.addLast(allocate(valueSize));
@@ -71,4 +79,26 @@ public abstract class LinkedListAllocationCache<T> implements AllocationCache<T>
         }
     }
 
+    abstract protected int byteChecksum(T item);
+
+    abstract protected int longChecksum(T item);
+
+    abstract protected byte[] copyOut(T item);
+
+    public void checksumBuffer(T item) {
+        switch (checksum) {
+            case copyout:
+                blackhole.consume(this.copyOut(item));
+                break;
+            case bytesum:
+                blackhole.consume(this.byteChecksum(item));
+                break;
+            case longsum:
+                blackhole.consume(this.longChecksum(item));
+                break;
+            case none:
+                break;
+        }
+
+    }
 }

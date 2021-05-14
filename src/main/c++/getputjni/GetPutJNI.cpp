@@ -156,7 +156,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoDirectByt
 jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArraySetRegion
   (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
 {
-      const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
   if (key == nullptr) {
       return kError;
   }
@@ -169,4 +169,50 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   return get_size;
 }
 
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getIntoByteArrayGetElements
+ * Signature: ([BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArrayGetElements
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr) {
+      return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
 
+  jboolean is_copy;
+  jbyte *array_elements = env->GetByteArrayElements(jval_byte_array, &is_copy);
+  size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(array_elements, cvalue.c_str(), get_size);
+  env->ReleaseByteArrayElements(jval_byte_array, array_elements, JNI_ABORT);
+
+  return get_size;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    getIntoByteArrayCritical
+ * Signature: ([BII[BI)I
+ */
+JNIEXPORT jint JNICALL Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArrayCritical
+  (JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr) {
+      return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  jboolean is_copy;
+  void *array_elements = env->GetPrimitiveArrayCritical(jval_byte_array, &is_copy);
+  size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(array_elements, cvalue.c_str(), get_size);
+  env->ReleasePrimitiveArrayCritical(jval_byte_array, array_elements, JNI_ABORT);
+
+  return get_size;
+}
