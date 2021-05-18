@@ -27,11 +27,23 @@
 #
 
 import argparse
+from collections import namedtuple
+import pathlib
+from typing import NewType, Sequence, Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
+from pandas.core.frame import DataFrame
+
+# Types
+Params = NewType('Params', dict[str, str])
+BMParams = namedtuple("BMParams", "primary secondary")
+Benchmark = NewType('Benchmark', str)
+BMResult = namedtuple("BMResult", "value, score, error")
+ResultSet = NewType('ResultSet', dict[Benchmark, Sequence[BMResult]])
+ResultSets = NewType('ResultSets', dict[Tuple, ResultSet])
 
 
 class BenchmarkError(Exception):
@@ -45,26 +57,30 @@ class BenchmarkError(Exception):
 #
 
 
-def normalize_data_frame_from_path(path):
+def normalize_data_frame_from_path(path: pathlib.Path):
+    files = []
+    if path.is_dir():
+        files = sorted(path.rglob("*.csv"))
+    else:
+        files.append(path)
+
     normalized = None
-    for file in os.listdir(path):
-        if file.endswith(".csv"):
-            fp = os.path.join(path, file)
-            df = pd.read_csv(fp)
-            # every 9th line is the interesting one, discard the rest
-            df = df.iloc[::9, :]
-            df["Benchmark"] = df["Benchmark"].apply(lambda x: x.split('.')[-1])
-            if normalized is None:
-                normalized = df
-            else:
-                normalized = pd.merge(normalized, df)
+    for file in files:
+        df = pd.read_csv(file)
+        # every 9th line is the interesting one, discard the rest
+        df = df.iloc[::9, :]
+        df["Benchmark"] = df["Benchmark"].apply(lambda x: x.split('.')[-1])
+        if normalized is None:
+            normalized = df
+        else:
+            normalized = pd.merge(normalized, df)
     return normalized
 
 # Decide which columns are params (they are labelled "Param: <name>")
 # return a map of { <name> : <label> } e.g. { "valueSize": "Param: valueSize", "checksum": "Param: checksum"}
 
 
-def extract_params(dataframe):
+def extract_params(dataframe: DataFrame) -> Params:
     params = {}
     for column in dataframe.columns:
         fields = column.split(':')
@@ -77,67 +93,70 @@ def extract_params(dataframe):
 # and a multi-entry (all the rest)
 
 
-def split_params(params, primary_param_name):
-    primary_param = {primary_param_name: params[primary_param_name]}
+def split_params(params: Params, primary_param_name: str) -> BMParams:
+
+    if not primary_param_name in params.keys():
+        raise BenchmarkError(
+            f'Missing {primary_param_name} in params {params}')
+    primary_params = {primary_param_name: params[primary_param_name]}
+
     del params[primary_param_name]
     secondary_params = params
-    return {"primary": primary_param, "secondary": secondary_params}
+
+    return BMParams(primary=primary_params, secondary=secondary_params)
 
 
 # Dictionary indexed by the tuple of secondary parameter values
 # For the fixed tuple, indexed by each benchmark
 # within each benchmark, a list of { value:, score:, error:, } for the value of the primary parameter, its score and its error
 
-def extract_results_per_param(dataframe, params):
-    resultSets = {}
-    for index, row in dataframe.iterrows():
+def extract_results_per_param(dataframe: DataFrame, params: BMParams) -> ResultSets:
+    resultSets: ResultSets = {}
+    for _, row in dataframe.iterrows():
         secondaryTuple = tuple_of_secondary_values(params, row)
         if not secondaryTuple in resultSets.keys():
             resultSets[secondaryTuple] = {}
         if not row['Benchmark'] in resultSets[secondaryTuple].keys():
             resultSets[secondaryTuple][row['Benchmark']] = []
-        for key, column in params['primary'].items():
-            entry = {'value': row[column], 'score': row['Score'],
-                     'error': row['Score Error (99.9%)']}
+        for _, column in params.primary.items():
+            entry = BMResult(
+                value=row[column], score=row['Score'], error=row['Score Error (99.9%)'])
             resultSets[secondaryTuple][row['Benchmark']].append(entry)
 
     return resultSets
 
 
-def tuple_of_secondary_values(params, row):
+def tuple_of_secondary_values(params: BMParams, row: np.row_stack) -> Tuple:
     secondaryValues = []
-    for key, column in params['secondary'].items():
+    for _, column in params.secondary.items():
         secondaryValues.append(row[column])
     return tuple(secondaryValues)
 
 
-def tuple_of_secondary_keys(params):
+def tuple_of_secondary_keys(params: BMParams) -> Tuple:
     secondaryKeys = []
-    for key, column in params['secondary'].items():
+    for key, _ in params.secondary.items():
         secondaryKeys.append(key)
     return tuple(secondaryKeys)
 
 
-def plot_all_results(params, resultSets, path):
+def plot_all_results(params: BMParams, resultSets: ResultSets, path) -> None:
     indexKeys = tuple_of_secondary_keys(params)
     for indexTuple, resultSet in resultSets.items():
         plot_result_set(indexKeys, indexTuple, resultSet, path)
 
 
-def plot_result_set(indexKeys, indexTuple, resultSet, path):
-    results = list(resultSet.values())[0]
-    paramValues = [result['value'] for result in results]
-
-    fig = plt.figure(num=None, figsize=(12, 8), dpi=80,
+def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path):
+    fig = plt.figure(num=None, figsize=(18, 12), dpi=80,
                      facecolor='w', edgecolor='k')
     ax = plt.subplot()
     ax.set_xscale('log')
     ax.set_yscale('log')
 
     for benchmark, results in resultSet.items():
-        values = [result['value'] for result in results]
-        scores = [result['score'] for result in results]
-        errors = [result['error'] for result in results]
+        values = [result.value for result in results]
+        scores = [result.score for result in results]
+        errors = [result.error for result in results]
         ax.errorbar(np.array(values), np.array(scores),
                     yerr=np.array(errors), label=benchmark)
 
@@ -150,12 +169,21 @@ def plot_result_set(indexKeys, indexTuple, resultSet, path):
         name = name + "_" + str(k)
     for k in list(indexTuple):
         name = name + "_" + str(k)
-    fig.savefig(path + name)
+
+    if path.is_file():
+        path = path.parent()
+    fig.savefig(path.joinpath(name))
 
 
-def process_benchmarks(path, primary_param_name):
+def process_benchmarks(stringpath: str, primary_param_name: str) -> None:
+
+    path = pathlib.Path(stringpath)
+    if not path.exists():
+        raise BenchmarkError(f'The file path {path} does not exist')
+
     dataframe = normalize_data_frame_from_path(path)
-    params = split_params(extract_params(dataframe), primary_param_name)
+    params: BMParams = split_params(
+        extract_params(dataframe), primary_param_name)
     resultSets = extract_results_per_param(dataframe, params)
     plot_all_results(params, resultSets, path)
 
@@ -170,14 +198,13 @@ def main():
     parser = argparse.ArgumentParser(
         description='Process JMH benchmarks result files (only SampleTime mode supported).')
     parser.add_argument('-p', '--path', type=str,
-                        help='Path to the directory with benchmarking results generated by JMH run', default='/Users/alan/swProjects/evolvedBinary/jni-benchmarks/plotthis/')
+                        help='Path to the directory with benchmarking results generated by JMH run', default='/Users/alan/swProjects/evolvedBinary/jni-benchmarks/plotthis')
     parser.add_argument('--param-name', type=str,
                         help='Benchmarks parameter name', default='valueSize')
     parser.add_argument('--chart-title', type=str, help='Charts\' title',
                         default='Performance comparison of getting byte array with {} bytes via JNI')
     args = parser.parse_args()
 
-    # process_value_results(args.path, args.param_name, args.chart_title)
     process_benchmarks(args.path, args.param_name)
 
 
