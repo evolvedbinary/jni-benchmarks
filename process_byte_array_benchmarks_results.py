@@ -108,7 +108,7 @@ def split_params(params: Params, primary_param_name: str) -> BMParams:
 
 # Dictionary indexed by the tuple of secondary parameter values
 # For the fixed tuple, indexed by each benchmark
-# within each benchmark, a list of { value:, score:, error:, } for the value of the primary parameter, its score and its error
+# within each benchmark, a namedtuple of { value:, score:, error:, } for the value of the primary parameter, its score and its error
 
 def extract_results_per_param(dataframe: DataFrame, params: BMParams) -> ResultSets:
     resultSets: ResultSets = {}
@@ -146,24 +146,60 @@ def plot_all_results(params: BMParams, resultSets: ResultSets, path) -> None:
         plot_result_set(indexKeys, indexTuple, resultSet, path)
 
 
+def plot_result_axis_errorbars(ax, resultSet: ResultSet) -> None:
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    uplimits = [True, False] * 5
+    lolimits = [False, True] * 5
+
+    for benchmark, results in resultSet.items():
+        count = len(results)
+        values = [result.value for result in results]
+        offsets = list(range(count))
+        scores = [result.score for result in results]
+        errors = [result.error for result in results]
+
+        swaplimits = uplimits
+        uplimits = lolimits
+        lolimits = swaplimits
+
+        ax.errorbar(np.array(values), np.array(scores),
+                    uplims=uplimits[:count], lolims=lolimits[:count],
+                    yerr=np.array(errors), label=benchmark, capsize=6.0, capthick=1.5)
+
+
+def plot_result_axis_bars(ax, resultSet: ResultSet) -> None:
+
+    ax.set_xscale('log')
+
+    barCount = len(resultSet)
+    widths = [0 for _ in range(barCount)]
+
+    for benchmark, results in resultSet.items():
+        xs = [result.value for result in results]
+        ys = [result.score for result in results]
+        bottoms = [result.score - result.error/2 for result in results]
+        heights = [result.error for result in results]
+        widths = [result.value/(barCount) for result in results]
+
+        ax.bar(x=xs, bottom=bottoms, height=heights,
+               width=widths, label=benchmark, alpha=0.25)
+        ax.plot(xs, ys)
+
+
 def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path):
     fig = plt.figure(num=None, figsize=(18, 12), dpi=80,
                      facecolor='w', edgecolor='k')
     ax = plt.subplot()
-    ax.set_xscale('log')
-    ax.set_yscale('log')
 
-    for benchmark, results in resultSet.items():
-        values = [result.value for result in results]
-        scores = [result.score for result in results]
-        errors = [result.error for result in results]
-        ax.errorbar(np.array(values), np.array(scores),
-                    yerr=np.array(errors), label=benchmark)
+    plot_result_axis_bars(ax, resultSet)
 
     plt.title(str(indexKeys) + "=" + str(indexTuple))
     plt.xlabel("X")
     plt.ylabel("t (ns)")
     plt.legend(loc='lower right')
+    plt.grid(b='True', which='both')
     name = "fig"
     for k in list(indexKeys):
         name = name + "_" + str(k)
