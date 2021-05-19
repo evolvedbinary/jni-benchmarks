@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from pandas.core.frame import DataFrame
+import re
 
 # Types
 Params = NewType('Params', dict[str, str])
@@ -173,7 +174,11 @@ def plot_result_axis_bars(ax, resultSet: ResultSet) -> None:
 
     ax.set_xscale('log')
 
-    barCount = len(resultSet)
+    barCount = 0
+    for index, result in resultSet.items():
+        barCount = len(result)
+        break
+
     widths = [0 for _ in range(barCount+1)]
     bmIndex = -(barCount/2)
 
@@ -184,7 +189,8 @@ def plot_result_axis_bars(ax, resultSet: ResultSet) -> None:
             bmIndex = bmIndex + 1
 
         xs = [result.value for result in results]
-        x2s = [vw[1].value + vw[0]*0.67*bmIndex for vw in zip(widths, results)]
+        pairs = list(zip(widths, results))
+        x2s = [vw[1].value + vw[0]*0.67*bmIndex for vw in pairs]
         ys = [result.score for result in results]
 
         bottoms = [result.score - result.error/2 for result in results]
@@ -220,13 +226,36 @@ def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, p
     fig.savefig(path.joinpath(name))
 
 
-def process_benchmarks(stringpath: str, primary_param_name: str) -> None:
+def filter_for_benchmarks(dataframe: DataFrame, report_benchmarks: str) -> DataFrame:
+    report_bms = report_benchmarks.split(',')
+    pattern = re.compile(f'[A-Za-z0-9_\-+]')
+    for report_bm in report_bms:
+        if pattern.match(report_bm) is None:
+            raise BenchmarkError(
+                f'The benchmark pattern {report_bm} has non-alphanumeric characters')
+    report_bms_translated = '|'.join(report_bms)
+
+    pattern = re.compile(f'\S+({report_bms_translated})\S+')
+    return dataframe[dataframe['Benchmark'].apply(
+        lambda x: pattern.match(x) is not None)]
+
+
+def process_benchmarks(stringpath: str, primary_param_name: str, report_benchmarks: str) -> None:
 
     path = pathlib.Path(stringpath)
     if not path.exists():
         raise BenchmarkError(f'The file path {path} does not exist')
 
     dataframe = normalize_data_frame_from_path(path)
+    if len(dataframe) == 0:
+        raise BenchmarkError(
+            f'0 results were read from the file(s) at {stringpath}')
+
+    dataframe = filter_for_benchmarks(dataframe, report_benchmarks)
+    if len(dataframe) == 0:
+        raise BenchmarkError(
+            f'0 results after filtering benchmarks {report_benchmarks}')
+
     params: BMParams = split_params(
         extract_params(dataframe), primary_param_name)
     resultSets = extract_results_per_param(dataframe, params)
@@ -238,6 +267,7 @@ def process_benchmarks(stringpath: str, primary_param_name: str) -> None:
 
 argDirectory = '/Users/alan/swProjects/evolvedBinary/jni-benchmarks/analysis/testplots'
 argParam = 'valueSize'
+reportBenchmarks = 'Direct,Byte'
 
 # Example usage:
 # python process_byte_array_benchmarks_results.py -p results_dir/ --param-name "Param: valueSize" --chart-title "Performance comparison of getting byte array with {} bytes via JNI"
@@ -252,9 +282,11 @@ def main():
                         help='Benchmarks parameter name', default=argParam)
     parser.add_argument('--chart-title', type=str, help='Charts\' title',
                         default='Performance comparison of getting byte array with {} bytes via JNI')
+    parser.add_argument('--report-benchmarks', type=str, help='Subset of benchmarks to display in chart',
+                        default=reportBenchmarks)
     args = parser.parse_args()
 
-    process_benchmarks(args.path, args.param_name)
+    process_benchmarks(args.path, args.param_name, args.report_benchmarks)
 
 
 if __name__ == "__main__":
