@@ -51,6 +51,27 @@ public class GetPutJNI {
             final ByteBuffer value,
             final int valueLength);
 
+    public static native int getIntoIndirectByteBufferSetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int getIntoIndirectByteBufferGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int getIntoIndirectByteBufferGetCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
     public static native int getIntoByteArraySetRegion(
             final byte[] key,
             final int keyOffset,

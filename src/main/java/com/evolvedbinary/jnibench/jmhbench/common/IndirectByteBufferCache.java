@@ -28,15 +28,15 @@ package com.evolvedbinary.jnibench.jmhbench.common;
 
 import java.nio.ByteBuffer;
 
-public class DirectByteBufferCache extends BaseByteBufferCache  {
+public class IndirectByteBufferCache extends BaseByteBufferCache  {
 
     @Override
     ByteBuffer allocate(int valueSize) {
-        return ByteBuffer.allocateDirect(valueSize);
+        return ByteBuffer.allocate(valueSize);
     }
 
     @Override
     void free(ByteBuffer buffer) {
-        //we have no way to forcibly deallocate
+        //automatically GC-ed
     }
 }

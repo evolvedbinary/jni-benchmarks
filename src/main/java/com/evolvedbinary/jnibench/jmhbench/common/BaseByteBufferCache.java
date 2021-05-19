@@ -27,16 +27,42 @@
 package com.evolvedbinary.jnibench.jmhbench.common;
 
 import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 
-public class DirectByteBufferCache extends BaseByteBufferCache  {
+public abstract class BaseByteBufferCache extends LinkedListAllocationCache<ByteBuffer>  {
 
     @Override
-    ByteBuffer allocate(int valueSize) {
-        return ByteBuffer.allocateDirect(valueSize);
+    public byte[] copyOut(ByteBuffer item) {
+
+        byte[] array = byteArrayOfSize(item.capacity());
+        item.get(array);
+
+        return array;
     }
 
     @Override
-    void free(ByteBuffer buffer) {
-        //we have no way to forcibly deallocate
+    public int byteChecksum(ByteBuffer item) {
+
+        if (item.remaining() != item.capacity()) {
+            throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
+        }
+        int sum = 0;
+        while (item.remaining() > 0) {
+            sum += item.get();
+        }
+        return sum;
+    }
+
+    @Override
+    public int longChecksum(ByteBuffer item) {
+        if (item.remaining() != item.capacity()) {
+            throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
+        }
+        LongBuffer buffer = item.asLongBuffer();
+        long sum = 0;
+        while (buffer.remaining() > 0) {
+            sum += buffer.get();
+        }
+        return (int)sum;
     }
 }

@@ -47,8 +47,10 @@ import java.util.logging.Logger;
  */
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-@Warmup(iterations = 100, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
-@Measurement(iterations = 500, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
+@Warmup(iterations = 20, time = 100, timeUnit = TimeUnit.NANOSECONDS)
+@Measurement(iterations = 200, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
+//@Warmup(iterations = 100, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
+//@Measurement(iterations = 500, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
 public class GetJNIBenchmark {
 
     private static final Logger LOG = Logger.getLogger(GetJNIBenchmark.class.getName());
@@ -63,11 +65,15 @@ public class GetJNIBenchmark {
         @Param({
                 "10",
                 "50",
+                "128",
                 "512",
                 "1024",
                 "4096",
+                "8192",
                 "16384",
-                "65536"})
+                "32768",
+                "65536",
+                "131072"})
         int valueSize;
 
         @Param({"4", "16"}) int cacheMB;
@@ -105,6 +111,7 @@ public class GetJNIBenchmark {
         private DirectByteBufferCache directByteBufferCache = new DirectByteBufferCache();
         private UnsafeBufferCache unsafeBufferCache = new UnsafeBufferCache();
         private ByteArrayCache byteArrayCache = new ByteArrayCache();
+        private IndirectByteBufferCache indirectByteBufferCache = new IndirectByteBufferCache();
 
         int valueSize;
         int cacheSize;
@@ -117,6 +124,11 @@ public class GetJNIBenchmark {
             switch (benchmarkState.caller.benchmarkMethod) {
                 case "getIntoDirectByteBuffer":
                     directByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
+                    break;
+                case "getIntoIndirectByteBufferSetRegion":
+                case "getIntoIndirectByteBufferGetElements":
+                case "getIntoIndirectByteBufferGetCritical":
+                    indirectByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
                 case "getIntoDirectByteBufferFromUnsafe":
                 case "buffersOnlyDirectByteBufferFromUnsafe":
@@ -140,6 +152,11 @@ public class GetJNIBenchmark {
                 case "getIntoDirectByteBuffer":
                     directByteBufferCache.tearDown();
                     break;
+                case "getIntoIndirectByteBufferSetRegion":
+                case "getIntoIndirectByteBufferGetElements":
+                case "getIntoIndirectByteBufferGetCritical":
+                    indirectByteBufferCache.tearDown();
+                    break;
                 case "getIntoDirectByteBufferFromUnsafe":
                 case "buffersOnlyDirectByteBufferFromUnsafe":
                 case "getIntoUnsafe":
@@ -156,7 +173,7 @@ public class GetJNIBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void buffersOnlyDirectByteBufferFromUnsafe(GetJNIThreadState threadState) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         threadState.unsafeBufferCache.release(unsafeBuffer);
@@ -212,7 +229,35 @@ public class GetJNIBenchmark {
     }
 
     //final supplied buffer(s)
-    //TODO getIntoIndirectByteBuffer
+    //TODO this can be done in as many different ways as supplying a byte[]
+    //But why shouldn't we just expect the same performance as byte[] ?
+    //Start with one instance (one that seems good in the byte[] case), and check for surprises...
+    @Benchmark
+    public void getIntoIndirectByteBufferSetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
+        byteBuffer.clear();
+        GetPutJNI.getIntoIndirectByteBufferSetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        threadState.indirectByteBufferCache.checksumBuffer(byteBuffer);
+        threadState.indirectByteBufferCache.release(byteBuffer);
+    }
+
+    @Benchmark
+    public void getIntoIndirectByteBufferGetElements(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
+        byteBuffer.clear();
+        int size = GetPutJNI.getIntoIndirectByteBufferGetElements(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        threadState.indirectByteBufferCache.checksumBuffer(byteBuffer);
+        threadState.indirectByteBufferCache.release(byteBuffer);
+    }
+
+    @Benchmark
+    public void getIntoIndirectByteBufferGetCritical(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
+        byteBuffer.clear();
+        int size = GetPutJNI.getIntoIndirectByteBufferGetCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        threadState.indirectByteBufferCache.checksumBuffer(byteBuffer);
+        threadState.indirectByteBufferCache.release(byteBuffer);
+    }
 
     //create/allocate the result buffers, analogous to the "into" methods (but no unsafe ones here)
     //TODO getReturnDirectByteBuffer
@@ -256,7 +301,7 @@ public class GetJNIBenchmark {
                 .warmupIterations(10)
                 .measurementIterations(50)
                 .include(GetJNIBenchmark.class.getSimpleName())
-                .result("results/" +  simpleDateFormat.format(new Date()) + "_" + GetJNIBenchmark.class.getSimpleName() + ".csv")
+                .result("analysis/testplots/" +  simpleDateFormat.format(new Date()) + "_" + GetJNIBenchmark.class.getSimpleName() + ".csv")
                 .build();
 
         new Runner(opt).run();
