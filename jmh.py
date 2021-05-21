@@ -102,6 +102,12 @@ def output_options(config: Dict) -> list:
 def build_jmh_command(config: Dict) -> list:
 
     cmd = ["java"]
+    jvm_args = optional('jvmargs', config)
+    if jvm_args:
+        if not type(jvm_args) is list:
+            error('jvmargs field must be a list of arguments')
+        for arg_value in jvm_args:
+            cmd.append(f'-{arg_value}')
     java_library_path = optional('java.library.path', config)
     if java_library_path:
         cmd.append(f'-Djava.library.path={java_library_path}')
