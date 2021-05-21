@@ -188,7 +188,6 @@ public class GetJNIBenchmark {
         threadState.directByteBufferCache.release(byteBuffer);
     }
 
-    /*
     @Benchmark
     public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
@@ -204,7 +203,6 @@ public class GetJNIBenchmark {
         threadState.unsafeBufferCache.checksumBuffer(unsafeBuffer);
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
-     */
 
     @Benchmark
     public void getIntoByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
