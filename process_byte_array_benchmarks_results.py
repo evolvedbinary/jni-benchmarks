@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+# !/usr/bin/env python3
 #
 # Copyright © 2016, Evolved Binary Ltd
 # All rights reserved.

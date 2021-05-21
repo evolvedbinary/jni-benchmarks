@@ -1,0 +1,17 @@
+{
+    "benchmark": "GetJNIBenchmark",
+    "jvmargs": {
+    },
+    "params": {
+        "valueSize": [50, 4096, 16384],
+        "cacheMB": [4],
+        "checksum": ["none"]
+    },
+    "options": {
+        "batchsize": 2,
+        "iterations": 1
+    },
+    "result.path": "./results",
+    "java.library.path": "target/jni-benchmarks-1.0.0-SNAPSHOT-application/jni-benchmarks-1.0.0-SNAPSHOT/lib",
+    "jar": "target/jni-benchmarks-1.0.0-SNAPSHOT-benchmarks.nar"
+}
