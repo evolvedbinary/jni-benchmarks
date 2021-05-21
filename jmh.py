@@ -66,9 +66,9 @@ def required(key: str, dict: Dict):
 
 option_map = {'batchsize': 'bs',
               'iterations': 'i', 'forks': 'f', 'time': 'r', 'timeout': 'to',
-              'timeunit': 'tu', 'verbosity': 'v', 'warmuptime': 'w',
+              'timeunit': 'tu', 'verbosity': 'v',
               'warmupbatchsize': 'wbs', 'warmupforks': 'wf',
-              'warmupiterations': 'wi', 'warmuptime': 'wt',
+              'warmupiterations': 'wi', 'warmuptime': 'w',
               'warmupmode': 'wm'}
 
 const_datetime_str = datetime.today().isoformat()
@@ -109,6 +109,9 @@ def build_jmh_command(config: Dict) -> list:
     if jar:
         cmd.append('-jar')
         cmd.append(jar)
+    help = optional('help', config)
+    if help:
+        cmd.append('-h')
     benchmark = required('benchmark', config)
     cmd.append(str(benchmark))
     params = optional('params', config)
@@ -164,16 +167,19 @@ def log_jmh_session(cmd: list, config: Dict, config_file: str):
                        ['```', '#### Command', 'The java command executed to run the tests', '```', ' '.join(cmd), '```'])
 
 
-def exec_jmh_cmd(cmd: list):
+def exec_jmh_cmd(cmd: list, help_requested):
     cmd_str = ' '.join(cmd)
-    print(f'Execute: {cmd_str}')
+    if help_requested:
+        print(f'JMH Help requested, command: {cmd_str}')
+    else:
+        print(f'Execute: {cmd_str}')
     subprocess.run(cmd)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Run configured jmh tests.')
     parser.add_argument(
-        '-c', '--config', help='A JSON configuration file for the JHM run', default='jmh.json')
+        '-c', '--config', help='A JSON configuration file for the JMH run', default='jmh.json')
 
     args = parser.parse_args()
     try:
@@ -188,7 +194,7 @@ def main():
         cmd_list = build_jmh_command(config)
 
         log_jmh_session(cmd_list, config, f'{config_file.resolve()}')
-        exec_jmh_cmd(cmd_list)
+        exec_jmh_cmd(cmd_list, optional('help', config))
 
     except JMHRunnerError as error:
         print(
