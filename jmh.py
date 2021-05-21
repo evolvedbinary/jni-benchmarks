@@ -173,7 +173,7 @@ def exec_jmh_cmd(cmd: list):
 def main():
     parser = argparse.ArgumentParser(description='Run configured jmh tests.')
     parser.add_argument(
-        '-c', '--config', help='A configuration file for the JHM run', default='jmh.json')
+        '-c', '--config', help='A JSON configuration file for the JHM run', default='jmh.json')
 
     args = parser.parse_args()
     try:
@@ -191,7 +191,8 @@ def main():
         exec_jmh_cmd(cmd_list)
 
     except JMHRunnerError as error:
-        print(f'JMH runner error: {error.message}')
+        print(
+            f'JMH pyrunner ({pathlib.Path(__file__).name}) error: {error.message}')
 
 
 if __name__ == "__main__":
