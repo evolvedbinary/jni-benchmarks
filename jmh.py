@@ -31,9 +31,7 @@ from datetime import datetime
 import pathlib
 import json
 import subprocess
-from typing import Dict, ValuesView
-
-from numpy import number
+from typing import Dict
 
 
 class JMHRunnerError(Exception):
