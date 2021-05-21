@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 #
 # Copyright © 2016, Evolved Binary Ltd
 # All rights reserved.
@@ -49,7 +49,9 @@ ResultSets = NewType('ResultSets', dict[Tuple, ResultSet])
 
 class BenchmarkError(Exception):
     """Base class for exceptions in this module."""
-    pass
+
+    def __init__(self, message: str):
+        self.message = message
 
 
 # read files, merge allegedly similar results
@@ -75,6 +77,8 @@ def normalize_data_frame_from_path(path: pathlib.Path):
             normalized = df
         else:
             normalized = pd.merge(normalized, df)
+    if normalized is None:
+        raise BenchmarkError(f'No csv file(s) found at {path}')
     return normalized
 
 # Decide which columns are params (they are labelled "Param: <name>")
@@ -286,7 +290,11 @@ def main():
                         default=reportBenchmarks)
     args = parser.parse_args()
 
-    process_benchmarks(args.path, args.param_name, args.report_benchmarks)
+    try:
+        process_benchmarks(args.path, args.param_name, args.report_benchmarks)
+    except BenchmarkError as error:
+        print(
+            f'JMH process benchmarks ({pathlib.Path(__file__).name}) error: {error.message}')
 
 
 if __name__ == "__main__":
