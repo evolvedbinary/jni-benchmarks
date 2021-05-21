@@ -137,6 +137,13 @@ def build_jmh_command(config: Dict) -> list:
             else:
                 error(f'field {key} does not have a string or list value')
 
+    flags = optional('flags', config)
+    if flags:
+        if not type(flags) is list:
+            error('Flags field must be a list of flags')
+        for flag_value in flags:
+            cmd.append(f'-{flag_value}')
+
     options = optional('options', config)
     if options:
         if not type(options) is dict:
@@ -179,7 +186,8 @@ def exec_jmh_cmd(cmd: list, help_requested):
         print(f'JMH Help requested, command: {cmd_str}')
     else:
         print(f'Execute: {cmd_str}')
-    subprocess.run(cmd)
+    subprocess.Popen(cmd, start_new_session=True).wait()
+    # subprocess.run(cmd)
 
 
 def main():
