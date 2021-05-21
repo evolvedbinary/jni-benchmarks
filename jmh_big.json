@@ -15,6 +15,6 @@
         "time": "2000ns"
     },
     "result.path": "./results",
-    "java.library.path": "target/jni-benchmarks-1.0.0-SNAPSHOT-application/jni-benchmarks-1.0.0-SNAPSHOT/lib",
-    "jar": "target/jni-benchmarks-1.0.0-SNAPSHOT-benchmarks.nar"
+    "java.library.path": "target/jni-benchmarks-1.0.1-SNAPSHOT-application/jni-benchmarks-1.0.1-SNAPSHOT/lib",
+    "jar": "target/jni-benchmarks-1.0.1-SNAPSHOT-benchmarks.nar"
 }
