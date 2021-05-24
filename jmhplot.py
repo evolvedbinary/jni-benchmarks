@@ -27,16 +27,17 @@
 #
 
 import argparse
+from datetime import datetime
 from collections import namedtuple
 import pathlib
-from typing import NewType, Sequence, Tuple
+from typing import List, NewType, Sequence, Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 import pandas as pd
 from pandas.core.frame import DataFrame
 import re
+from sys import maxsize
 
 # Types
 Params = NewType('Params', dict[str, str])
@@ -45,6 +46,8 @@ Benchmark = NewType('Benchmark', str)
 BMResult = namedtuple("BMResult", "value, score, error")
 ResultSet = NewType('ResultSet', dict[Benchmark, Sequence[BMResult]])
 ResultSets = NewType('ResultSets', dict[Tuple, ResultSet])
+
+const_datetime_str = datetime.today().isoformat()
 
 
 class BenchmarkError(Exception):
@@ -145,10 +148,11 @@ def tuple_of_secondary_keys(params: BMParams) -> Tuple:
     return tuple(secondaryKeys)
 
 
-def plot_all_results(params: BMParams, resultSets: ResultSets, path) -> None:
+def plot_all_results(params: BMParams, resultSets: ResultSets, path, report_benchmarks: str) -> None:
     indexKeys = tuple_of_secondary_keys(params)
     for indexTuple, resultSet in resultSets.items():
-        plot_result_set(indexKeys, indexTuple, resultSet, path)
+        plot_result_set(indexKeys, indexTuple, resultSet,
+                        path, report_benchmarks)
 
 
 def plot_result_axis_errorbars(ax, resultSet: ResultSet) -> None:
@@ -207,23 +211,20 @@ def plot_result_axis_bars(ax, resultSet: ResultSet) -> None:
         bmIndex = bmIndex + 1
 
 
-def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path):
+def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path, report_benchmarks: str):
     fig = plt.figure(num=None, figsize=(18, 12), dpi=80,
                      facecolor='w', edgecolor='k')
     ax = plt.subplot()
 
     plot_result_axis_bars(ax, resultSet)
 
-    plt.title(str(indexKeys) + "=" + str(indexTuple))
+    plt.title(f'{str(indexKeys)}={str(indexTuple)}  {report_benchmarks}')
     plt.xlabel("X")
     plt.ylabel("t (ns)")
     plt.legend(loc='lower right')
     plt.grid(b='True', which='both')
-    name = "fig"
-    for k in list(indexKeys):
-        name = name + "_" + str(k)
-    for k in list(indexTuple):
-        name = name + "_" + str(k)
+    index_name = '_'.join([str(k) for k in list(indexTuple)])
+    name = f'fig_{const_datetime_str}_{index_name}.png'
 
     if path.is_file():
         path = path.parent()
@@ -248,7 +249,29 @@ def filter_for_benchmarks(dataframe: DataFrame, report_benchmarks: str) -> DataF
         lambda x: pattern.match(x) is not None)]
 
 
-def process_benchmarks(stringpath: str, primary_param_name: str, report_benchmarks: str) -> None:
+def filter_for_range(dataframe: DataFrame, primary_param_name: str, select_range: str) -> DataFrame:
+
+    from_to = select_range.split('<')
+    if len(from_to) != 2:
+        return dataframe
+
+    low = -maxsize
+    high = maxsize
+    try:
+        if (len(from_to[0]) > 0):
+            low = int(from_to[0])
+        if (len(from_to[1]) > 0):
+            high = int(from_to[1])
+    except Exception as e:
+        raise BenchmarkError(f'The range {from_to} is not valid')
+    if not low <= high:
+        raise BenchmarkError(f'The range {from_to} is not valid')
+
+    return dataframe[dataframe[f'Param: {primary_param_name}'].apply(
+        lambda x: int(x) >= low and int(x) <= high)]
+
+
+def process_benchmarks(stringpath: str, primary_param_name: str, report_benchmarks: str, select_range: str) -> None:
 
     path = pathlib.Path(stringpath)
     if not path.exists():
@@ -264,20 +287,29 @@ def process_benchmarks(stringpath: str, primary_param_name: str, report_benchmar
         raise BenchmarkError(
             f'0 results after filtering benchmarks {report_benchmarks}')
 
+    dataframe = filter_for_range(dataframe, primary_param_name, select_range)
+    if len(dataframe) == 0:
+        raise BenchmarkError(
+            f'0 results after filtering range {select_range}')
+
     params: BMParams = split_params(
         extract_params(dataframe), primary_param_name)
     resultSets = extract_results_per_param(dataframe, params)
-    plot_all_results(params, resultSets, path)
+    plot_all_results(params, resultSets, path, report_benchmarks)
 
 
 # Columns:
 # Benchmark	Mode	Threads	Samples	Score	Score Error (99.9%)	Unit	Param: valueSize
 
-argDirectory = '/Users/alan/swProjects/evolvedBinary/jni-benchmarks/analysis/testplots'
+argDirectory = '/Users/alan/swProjects/evolvedBinary/jni-benchmarks/analysis/run5mac'
 argParam = 'valueSize'
 # or a subset of these to show the ones we want
 reportBenchmarks = 'Direct,Byte,Unsafe,Critical'
+reportBenchmarks = 'Buffer'
 reportBenchmarks = ''
+
+argRange = '1<4097'
+argRange = '4096<'
 
 # Example usage:
 # python process_byte_array_benchmarks_results.py -p results_dir/ --param-name "Param: valueSize" --chart-title "Performance comparison of getting byte array with {} bytes via JNI"
@@ -290,6 +322,8 @@ def main():
                         help='Path to the directory with benchmarking results generated by JMH run', default=argDirectory)
     parser.add_argument('-n', '--param-name', type=str,
                         help='Benchmarks parameter name for X-axis of graphs', default=argParam)
+    parser.add_argument('-s', '--select-range', type=str,
+                        help='Range of values to plot for benchmark parameter', default=argRange)
     parser.add_argument('-c', '--chart-title', type=str, help='Charts\' title',
                         default='Performance comparison of getting byte array with {} bytes via JNI')
     parser.add_argument('-r', '--report-benchmarks', type=str, help='Subset of benchmarks to display in chart',
@@ -297,7 +331,8 @@ def main():
     args = parser.parse_args()
 
     try:
-        process_benchmarks(args.path, args.param_name, args.report_benchmarks)
+        process_benchmarks(args.path, args.param_name,
+                           args.report_benchmarks, args.select_range)
     except BenchmarkError as error:
         print(
             f'JMH process benchmarks ({pathlib.Path(__file__).name}) error: {error.message}')
