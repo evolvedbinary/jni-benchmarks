@@ -107,10 +107,5 @@ public class UnsafeBufferCache extends LinkedListAllocationCache<UnsafeBufferCac
             unsafe.freeMemory(buffer.handle);
             buffer.reset();
         }
-        try {
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
