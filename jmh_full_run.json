@@ -3,14 +3,14 @@
     "jvmargs": ["Xmx24G"],
     "params": {
         "valueSize": [10, 50, 512, 1024, 4096, 8192, 16384, 32768, 65536, 131072],
-        "cacheMB": [4, 16],
+        "cacheMB": [4],
         "checksum": ["none", "copyout"]
     },
     "options": {
         "batchsize": 2,
         "warmupiterations": 125,
         "warmuptime": "1250ns",
-        "iterations": 500,
+        "iterations": 2000,
         "time": "2000ns"
     },
     "result.path": "./results",
