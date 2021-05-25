@@ -7,11 +7,11 @@
         "checksum": ["none"]
     },
     "options": {
-        "batchsize": 2,
-        "warmupiterations": 125,
-        "warmuptime": "1250ns",
-        "iterations": 5000,
-        "time": "2000ns"
+        "batchsize": 1,
+        "warmupiterations": 5,
+        "warmuptime": "1s",
+        "iterations": 5,
+        "time": "2s"
     },
     "result.path": "./results",
     "java.library.path": "target/jni-benchmarks-1.0.1-SNAPSHOT-application/jni-benchmarks-1.0.1-SNAPSHOT/lib",
