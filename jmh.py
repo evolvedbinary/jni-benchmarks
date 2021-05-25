@@ -74,7 +74,7 @@ option_map = {'batchsize': 'bs',
 const_datetime_str = datetime.today().isoformat()
 
 
-def output_log_file(config: Dict):
+def output_dir_path(config: Dict):
     path = pathlib.Path('.')
     path_str = optional('result.path', config)
     if path_str:
@@ -83,7 +83,22 @@ def output_log_file(config: Dict):
             error(f'result.path: {path_str} does not exist')
         if not path.is_dir():
             error(f'result.path: {path_str} is not a directory')
+    return path
+
+
+def output_log_file(config: Dict):
+    path = output_dir_path(config)
     return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.md'))
+
+
+def output_stdout_file(config: Dict):
+    path = output_dir_path(config)
+    return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.stdout'))
+
+
+def output_stderr_file(config: Dict):
+    path = output_dir_path(config)
+    return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.stderr'))
 
 
 def output_options(config: Dict) -> list:
@@ -180,13 +195,15 @@ def log_jmh_session(cmd: list, config: Dict, config_file: str):
                        ['```', '#### Command', 'The java command executed to run the tests', '```', ' '.join(cmd), '```'])
 
 
-def exec_jmh_cmd(cmd: list, help_requested):
+def exec_jmh_cmd(cmd: list, help_requested, outf, errf):
     cmd_str = ' '.join(cmd)
     if help_requested:
         print(f'JMH Help requested, command: {cmd_str}')
     else:
         print(f'Execute: {cmd_str}')
-    subprocess.Popen(cmd, start_new_session=True).wait()
+    proc = subprocess.run(cmd, start_new_session=True,
+                          stdout=outf, stderr=errf)
+
     # subprocess.run(cmd)
 
 
@@ -208,7 +225,9 @@ def main():
         cmd_list = build_jmh_command(config)
 
         log_jmh_session(cmd_list, config, f'{config_file.resolve()}')
-        exec_jmh_cmd(cmd_list, optional('help', config))
+        outf = output_stdout_file(config).open(mode='w', encoding='UTF-8')
+        errf = output_stderr_file(config).open(mode='w', encoding='UTF-8')
+        exec_jmh_cmd(cmd_list, optional('help', config), outf, errf)
 
     except JMHRunnerError as error:
         print(

@@ -2,15 +2,15 @@
     "benchmark": "GetJNIBenchmark",
     "jvmargs": ["Xmx24G"],
     "params": {
-        "valueSize": [10, 50, 512, 1024, 4096, 8192, 16384, 32768, 65536, 131072],
+        "valueSize": [10, 50, 512, 1024, 4096, 8192, 16384, 32768, 65536],
         "cacheMB": [1],
-        "checksum": ["none", "copyout"]
+        "checksum": ["none"]
     },
     "options": {
         "batchsize": 2,
         "warmupiterations": 125,
         "warmuptime": "1250ns",
-        "iterations": 2000,
+        "iterations": 5000,
         "time": "2000ns"
     },
     "result.path": "./results",
