@@ -201,8 +201,7 @@ def exec_jmh_cmd(cmd: list, help_requested, outf, errf):
         print(f'JMH Help requested, command: {cmd_str}')
     else:
         print(f'Execute: {cmd_str}')
-    proc = subprocess.run(cmd, start_new_session=True,
-                          stdout=outf, stderr=errf)
+    proc = subprocess.run(cmd, start_new_session=True)
 
     # subprocess.run(cmd)
 

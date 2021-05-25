@@ -1,6 +1,6 @@
 {
     "benchmark": "GetJNIBenchmark",
-    "jvmargs": ["Xmx24G", "XX:ErrorFile=./results/hs_err_pid%p.log"],
+    "jvmargs": ["Xmx4G", "XX:ErrorFile=./results/hs_err_pid%p.log"],
     "params": {
         "valueSize": [10, 50, 512, 1024, 4096, 8192, 16384, 32768, 65536],
         "cacheMB": [1],

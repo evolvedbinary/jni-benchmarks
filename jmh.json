@@ -1,11 +1,13 @@
 {
     "benchmark": "GetJNIBenchmark",
+    "help": false,
     "jvmargs": ["Xmx24G"],
     "params": {
         "valueSize": [50, 4096, 16384],
         "cacheMB": [4],
         "checksum": ["none"]
     },
+    "flags": ["lprof"],
     "options": {
         "batchsize": 2,
         "iterations": 1
