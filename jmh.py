@@ -195,7 +195,7 @@ def log_jmh_session(cmd: list, config: Dict, config_file: str):
                        ['```', '#### Command', 'The java command executed to run the tests', '```', ' '.join(cmd), '```'])
 
 
-def exec_jmh_cmd(cmd: list, help_requested, outf, errf):
+def exec_jmh_cmd(cmd: list, help_requested):
     cmd_str = ' '.join(cmd)
     if help_requested:
         print(f'JMH Help requested, command: {cmd_str}')
@@ -224,9 +224,9 @@ def main():
         cmd_list = build_jmh_command(config)
 
         log_jmh_session(cmd_list, config, f'{config_file.resolve()}')
-        outf = output_stdout_file(config).open(mode='w', encoding='UTF-8')
-        errf = output_stderr_file(config).open(mode='w', encoding='UTF-8')
-        exec_jmh_cmd(cmd_list, optional('help', config), outf, errf)
+        #outf = output_stdout_file(config).open(mode='w', encoding='UTF-8')
+        #errf = output_stderr_file(config).open(mode='w', encoding='UTF-8')
+        exec_jmh_cmd(cmd_list, optional('help', config))
 
     except JMHRunnerError as error:
         print(

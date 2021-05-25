@@ -1,7 +1,7 @@
 {
     "benchmark": "GetJNIBenchmark",
     "help": false,
-    "jvmargs": ["Xmx24G"],
+    "jvmargs": ["Xmx24G", "XX:+HeapDumpOnOutOfMemoryError"],
     "params": {
         "valueSize": [50, 4096, 16384],
         "cacheMB": [4],
