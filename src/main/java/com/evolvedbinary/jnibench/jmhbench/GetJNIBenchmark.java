@@ -29,12 +29,14 @@ package com.evolvedbinary.jnibench.jmhbench;
 import com.evolvedbinary.jnibench.common.getputjni.GetPutJNI;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
 import com.evolvedbinary.jnibench.jmhbench.common.*;
+import io.netty.buffer.PooledByteBufAllocator;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
@@ -112,6 +114,8 @@ public class GetJNIBenchmark {
         private UnsafeBufferCache unsafeBufferCache = new UnsafeBufferCache();
         private ByteArrayCache byteArrayCache = new ByteArrayCache();
         private IndirectByteBufferCache indirectByteBufferCache = new IndirectByteBufferCache();
+        private PooledByteBufAllocator pooledByteBufAllocator;
+        private ByteBufCache byteBufCache = new ByteBufCache();
 
         int valueSize;
         int cacheSize;
@@ -122,6 +126,12 @@ public class GetJNIBenchmark {
             cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
 
             switch (benchmarkState.caller.benchmarkMethod) {
+                case "getIntoPooledByteBuf":
+                    pooledByteBufAllocator = PooledByteBufAllocator.DEFAULT;
+                    break;
+                case "getIntoByteBuf":
+                    byteBufCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
+                    break;
                 case "getIntoDirectByteBuffer":
                     directByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
@@ -149,6 +159,12 @@ public class GetJNIBenchmark {
         public void tearDown(GetJNIBenchmarkState benchmarkState) {
 
             switch (benchmarkState.caller.benchmarkMethod) {
+                case "getIntoPooledByteBuf":
+                    pooledByteBufAllocator = null;
+                    break;
+                case "getIntoByteBuf":
+                    byteBufCache.tearDown();
+                    break;
                 case "getIntoDirectByteBuffer":
                     directByteBufferCache.tearDown();
                     break;
@@ -194,6 +210,23 @@ public class GetJNIBenchmark {
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
         threadState.unsafeBufferCache.checksumBuffer(unsafeBuffer);
         threadState.unsafeBufferCache.release(unsafeBuffer);
+    }
+
+    @Benchmark
+    public void getIntoPooledByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        ByteBuf byteBuf = threadState.pooledByteBufAllocator.directBuffer(benchmarkState.valueSize);
+        byteBuf.retain();
+        int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuf.memoryAddress(), benchmarkState.valueSize);
+        //TODO checksumBuffer operation - we can use this for the "none" checksum in the meantime.
+        byteBuf.release();
+    }
+
+    @Benchmark
+    public void getIntoByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+        ByteBuf byteBuf = threadState.byteBufCache.acquire();
+        int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuf.memoryAddress(), benchmarkState.valueSize);
+        threadState.byteBufCache.checksumBuffer(byteBuf);
+        threadState.byteBufCache.release(byteBuf);
     }
 
     @Benchmark

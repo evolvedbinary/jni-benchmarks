@@ -38,12 +38,12 @@ public abstract class LinkedListAllocationCache<T> implements AllocationCache<T>
     private Blackhole blackhole;
 
     @Override
-    public T acquire() {
-        return cacheBuffers.getFirst();
+    public final T acquire() {
+        return cacheBuffers.removeFirst();
     }
 
     @Override
-    public void release(T buffer) {
+    public final void release(T buffer) {
         cacheBuffers.addLast(buffer);
     }
 

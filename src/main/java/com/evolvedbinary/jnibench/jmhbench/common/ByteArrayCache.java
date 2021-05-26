@@ -2,7 +2,6 @@ package com.evolvedbinary.jnibench.jmhbench.common;
 
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
-import java.util.Arrays;
 
 public class ByteArrayCache extends LinkedListAllocationCache<byte[]>  {
 
