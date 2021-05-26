@@ -29,6 +29,13 @@
             "xaxisparam": {
                 "name": "valueSize"
             },
+            "report_patterns": ["ByteBuf"],
+            "label": "bb"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
             "report_patterns": ["Direct"],
             "label": "dir"
         },

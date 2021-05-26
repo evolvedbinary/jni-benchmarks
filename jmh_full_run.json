@@ -8,10 +8,10 @@
     },
     "options": {
         "batchsize": 1,
-        "warmupiterations": 50,
-        "warmuptime": "5ms",
-        "iterations": 200,
-        "time": "10ms"
+        "warmupiterations": 20,
+        "warmuptime": "50ms",
+        "iterations": 50,
+        "time": "500ms"
     },
     "result.path": "./results",
     "java.library.path": "target/jni-benchmarks-1.0.1-SNAPSHOT-application/jni-benchmarks-1.0.1-SNAPSHOT/lib",
