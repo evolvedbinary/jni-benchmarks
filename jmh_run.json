@@ -1,16 +1,19 @@
 {
-    "benchmark": "GetJNIBenchmark",
     "help": false,
+    "benchmark": "GetJNIBenchmark",
     "jvmargs": ["Xmx24G", "XX:+HeapDumpOnOutOfMemoryError"],
     "params": {
-        "valueSize": [50, 4096, 16384],
-        "cacheMB": [4],
+        "valueSize": [50, 4096],
+        "cacheMB": [1],
         "checksum": ["none"]
     },
-    "flags": ["lprof"],
+    # "flags": ["lprof"],
     "options": {
         "batchsize": 2,
-        "iterations": 1
+        "warmupiterations": 1,
+        "warmuptime": "10us",
+        "iterations": 1,
+        "time": "10us"
     },
     "result.path": "./results",
     "java.library.path": "target/jni-benchmarks-1.0.1-SNAPSHOT-application/jni-benchmarks-1.0.1-SNAPSHOT/lib",

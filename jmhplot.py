@@ -29,8 +29,9 @@
 import argparse
 from datetime import datetime
 from collections import namedtuple
+from json.decoder import JSONDecodeError
 import pathlib
-from typing import List, NewType, Sequence, Tuple
+from typing import Dict, List, NewType, Sequence, Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,6 +39,7 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import re
 from sys import maxsize
+import json
 
 # Types
 Params = NewType('Params', dict[str, str])
@@ -50,11 +52,48 @@ ResultSets = NewType('ResultSets', dict[Tuple, ResultSet])
 const_datetime_str = datetime.today().isoformat()
 
 
-class BenchmarkError(Exception):
+class RunnerError(Exception):
     """Base class for exceptions in this module."""
 
     def __init__(self, message: str):
         self.message = message
+
+
+def error(message: str):
+    raise RunnerError(message)
+
+
+def uncomment(line: str) -> bool:
+    if line.strip().startswith('#'):
+        return False
+    return True
+
+
+def read_config_file(configFile: pathlib.Path):
+    lines = [line.strip()
+             for line in configFile.open().readlines() if uncomment(line)]
+    try:
+        return json.loads('\n'.join(lines))
+    except JSONDecodeError as e:
+        error(
+            f'JSON config file {configFile} ({configFile.absolute()}) error {str(e)}')
+
+
+def optional(key: str, dict: Dict, op=None):
+    if key in dict:
+        if op:
+            return op(dict[key])
+        else:
+            return dict[key]
+    else:
+        return None
+
+
+def required(key: str, dict: Dict):
+    if key in dict:
+        return dict[key]
+    else:
+        error(f'{key} missing from JMH config')
 
 
 # read files, merge allegedly similar results
@@ -72,7 +111,11 @@ def normalize_data_frame_from_path(path: pathlib.Path):
 
     normalized = None
     for file in files:
-        df = pd.read_csv(file)
+        try:
+            df = pd.read_csv(file)
+        except pd.errors.EmptyDataError:
+            break
+
         # every 9th line is the interesting one, discard the rest
         df = df.iloc[::9, :]
         df["Benchmark"] = df["Benchmark"].apply(lambda x: x.split('.')[-1])
@@ -81,7 +124,9 @@ def normalize_data_frame_from_path(path: pathlib.Path):
         else:
             normalized = pd.merge(normalized, df)
     if normalized is None:
-        raise BenchmarkError(f'No csv file(s) found at {path}')
+        raise RunnerError(f'No csv file(s) found at {path}')
+    if normalized.empty:
+        error(f'No CSV files, or all empty, in {path}')
     return normalized
 
 # Decide which columns are params (they are labelled "Param: <name>")
@@ -104,7 +149,7 @@ def extract_params(dataframe: DataFrame) -> Params:
 def split_params(params: Params, primary_param_name: str) -> BMParams:
 
     if not primary_param_name in params.keys():
-        raise BenchmarkError(
+        raise RunnerError(
             f'Missing {primary_param_name} in params {params}')
     primary_params = {primary_param_name: params[primary_param_name]}
 
@@ -148,11 +193,11 @@ def tuple_of_secondary_keys(params: BMParams) -> Tuple:
     return tuple(secondaryKeys)
 
 
-def plot_all_results(params: BMParams, resultSets: ResultSets, path, report_benchmarks: str) -> None:
+def plot_all_results(params: BMParams, resultSets: ResultSets, path, report_benchmarks: str, label: str) -> None:
     indexKeys = tuple_of_secondary_keys(params)
     for indexTuple, resultSet in resultSets.items():
         plot_result_set(indexKeys, indexTuple, resultSet,
-                        path, report_benchmarks)
+                        path, report_benchmarks, label)
 
 
 def plot_result_axis_errorbars(ax, resultSet: ResultSet) -> None:
@@ -211,95 +256,103 @@ def plot_result_axis_bars(ax, resultSet: ResultSet) -> None:
         bmIndex = bmIndex + 1
 
 
-def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path, report_benchmarks: str):
+def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path, report_benchmarks: str, label: str):
     fig = plt.figure(num=None, figsize=(18, 12), dpi=80,
                      facecolor='w', edgecolor='k')
     ax = plt.subplot()
 
     plot_result_axis_bars(ax, resultSet)
 
-    plt.title(f'{str(indexKeys)}={str(indexTuple)}  {report_benchmarks}')
+    plt.title(f'{str(indexKeys)}={str(indexTuple)} {report_benchmarks} _{label}')
     plt.xlabel("X")
     plt.ylabel("t (ns)")
     plt.legend(loc='lower right')
     plt.grid(b='True', which='both')
-    index_name = '_'.join([str(k) for k in list(indexTuple)])
-    name = f'fig_{const_datetime_str}_{index_name}.png'
+
+    name = f'fig_{const_datetime_str}_{label}.png'
 
     if path.is_file():
         path = path.parent()
     fig.savefig(path.joinpath(name))
 
 
-def filter_for_benchmarks(dataframe: DataFrame, report_benchmarks: str) -> DataFrame:
+def filter_for_benchmarks(dataframe: DataFrame, report_benchmarks) -> DataFrame:
 
-    if report_benchmarks is None or '' == report_benchmarks:
+    if report_benchmarks is None:
         return dataframe
 
-    report_bms = report_benchmarks.split(',')
     pattern = re.compile(f'[A-Za-z0-9_\-+]')
-    for report_bm in report_bms:
+    for report_bm in report_benchmarks:
         if pattern.match(report_bm) is None:
-            raise BenchmarkError(
+            raise RunnerError(
                 f'The benchmark pattern {report_bm} has non-alphanumeric characters')
-    report_bms_translated = '|'.join(report_bms)
+    report_bms_translated = '|'.join(report_benchmarks)
 
     pattern = re.compile(f'\S*({report_bms_translated})\S*')
     return dataframe[dataframe['Benchmark'].apply(
         lambda x: pattern.match(x) is not None)]
 
 
-def filter_for_range(dataframe: DataFrame, primary_param_name: str, select_range: str) -> DataFrame:
+def filter_for_range(dataframe: DataFrame, xaxisparam: Dict) -> DataFrame:
 
-    from_to = select_range.split('<')
-    if len(from_to) != 2:
+    param_name = required('name', xaxisparam)
+    xmin = optional('min', xaxisparam, lambda x: int(x))
+    xmax = optional('max', xaxisparam, lambda x: int(x))
+    if xmax is None and xmin is None:
         return dataframe
 
-    low = -maxsize
-    high = maxsize
-    try:
-        if (len(from_to[0]) > 0):
-            low = int(from_to[0])
-        if (len(from_to[1]) > 0):
-            high = int(from_to[1])
-    except Exception as e:
-        raise BenchmarkError(f'The range {from_to} is not valid')
-    if not low <= high:
-        raise BenchmarkError(f'The range {from_to} is not valid')
+    if xmax is None:
+        xmax = maxsize
+    if xmin is None:
+        xmin = -maxsize
 
-    return dataframe[dataframe[f'Param: {primary_param_name}'].apply(
-        lambda x: int(x) >= low and int(x) <= high)]
+    if xmin > xmax:
+        raise RunnerError(f'The range {xmin} to {xmax} is not valid')
+
+    return dataframe[dataframe[f'Param: {param_name}'].apply(
+        lambda x: int(x) >= xmin and int(x) <= xmax)]
 
 
-def process_benchmarks(stringpath: str, primary_param_name: str, report_benchmarks: str, select_range: str) -> None:
+def process_some_plots(path: pathlib.Path, plot: Dict) -> None:
 
-    path = pathlib.Path(stringpath)
-    if not path.exists():
-        raise BenchmarkError(f'The file path {path} does not exist')
+    xaxisparam = required('xaxisparam', plot)
+    primary_param_name = required('name', xaxisparam)
+
+    report_benchmarks = optional('report_patterns', plot)
+    label = required('label', plot)
 
     dataframe = normalize_data_frame_from_path(path)
     if len(dataframe) == 0:
-        raise BenchmarkError(
-            f'0 results were read from the file(s) at {stringpath}')
+        raise RunnerError(
+            f'0 results were read from the file(s) at {path} ({path.absolute})')
 
     dataframe = filter_for_benchmarks(dataframe, report_benchmarks)
     if len(dataframe) == 0:
-        raise BenchmarkError(
+        raise RunnerError(
             f'0 results after filtering benchmarks {report_benchmarks}')
 
-    dataframe = filter_for_range(dataframe, primary_param_name, select_range)
+    dataframe = filter_for_range(dataframe, xaxisparam)
     if len(dataframe) == 0:
-        raise BenchmarkError(
-            f'0 results after filtering range {select_range}')
+        raise RunnerError(
+            f'0 results after filtering range {xaxisparam}')
 
     params: BMParams = split_params(
         extract_params(dataframe), primary_param_name)
     resultSets = extract_results_per_param(dataframe, params)
-    plot_all_results(params, resultSets, path, report_benchmarks)
+    plot_all_results(params, resultSets, path, report_benchmarks, label)
 
+
+def process_benchmarks(config: Dict) -> None:
+    path = pathlib.Path(required('result.path', config))
+    if not path.exists():
+        raise RunnerError(f'The plot directory/file {path} does not exist')
+
+    for plot in required('plots', config):
+        process_some_plots(path, plot)
 
 # Columns:
 # Benchmark	Mode	Threads	Samples	Score	Score Error (99.9%)	Unit	Param: valueSize
+
 
 argDirectory = '/Users/alan/swProjects/evolvedBinary/jni-benchmarks/analysis/run5mac'
 argParam = 'valueSize'
@@ -316,24 +369,31 @@ argRange = '4096<'
 
 
 def main():
+
     parser = argparse.ArgumentParser(
         description='Process JMH benchmarks result files (only SampleTime mode supported).')
-    parser.add_argument('-p', '--path', type=str,
-                        help='Path to the directory with benchmarking results generated by JMH run', default=argDirectory)
-    parser.add_argument('-n', '--param-name', type=str,
-                        help='Benchmarks parameter name for X-axis of graphs', default=argParam)
-    parser.add_argument('-s', '--select-range', type=str,
-                        help='Range of values to plot for benchmark parameter', default=argRange)
-    parser.add_argument('-c', '--chart-title', type=str, help='Charts\' title',
-                        default='Performance comparison of getting byte array with {} bytes via JNI')
-    parser.add_argument('-r', '--report-benchmarks', type=str, help='Subset of benchmarks to display in chart',
-                        default=reportBenchmarks)
+    parser.add_argument(
+        '-c', '--config', help='A JSON configuration file for the JMH plot(s)', default='jmh_plot.json')
+    parser.add_argument(
+        '-f', '--file', help='A directory or CSV file with the output to process')
     args = parser.parse_args()
-
     try:
-        process_benchmarks(args.path, args.param_name,
-                           args.report_benchmarks, args.select_range)
-    except BenchmarkError as error:
+        config_file = pathlib.Path(args.config)
+        if not config_file.exists():
+            raise RunnerError(
+                f'The config file {config_file} does not exist')
+        if not config_file.is_file():
+            raise RunnerError(
+                f'The config file {config_file} is not a text file')
+        config = read_config_file(config_file)
+
+        # Override the config if a path is supplied
+        if args.file:
+            config['result.path'] = args.file
+
+        plot_index = 1
+        process_benchmarks(config)
+    except RunnerError as error:
         print(
             f'JMH process benchmarks ({pathlib.Path(__file__).name}) error: {error.message}')
 

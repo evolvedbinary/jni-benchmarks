@@ -28,13 +28,14 @@
 
 import argparse
 from datetime import datetime
+from json.decoder import JSONDecodeError
 import pathlib
 import json
 import subprocess
 from typing import Dict
 
 
-class JMHRunnerError(Exception):
+class RunnerError(Exception):
     """Base class for exceptions in this module."""
 
     def __init__(self, message: str):
@@ -42,12 +43,23 @@ class JMHRunnerError(Exception):
 
 
 def error(message: str):
-    raise JMHRunnerError(message)
+    raise RunnerError(message)
+
+
+def uncomment(line: str) -> bool:
+    if line.strip().startswith('#'):
+        return False
+    return True
 
 
 def read_config_file(configFile: pathlib.Path):
-    with open(configFile) as json_file:
-        return json.load(json_file)
+    lines = [line.strip()
+             for line in configFile.open().readlines() if uncomment(line)]
+    try:
+        return json.loads('\n'.join(lines))
+    except JSONDecodeError as e:
+        error(
+            f'JSON config file {configFile} ({configFile.absolute()}) error {str(e)}')
 
 
 def optional(key: str, dict: Dict):
@@ -74,16 +86,20 @@ option_map = {'batchsize': 'bs',
 const_datetime_str = datetime.today().isoformat()
 
 
-def output_dir_path(config: Dict):
+def output_dir_path(config: Dict) -> pathlib.Path:
     path = pathlib.Path('.')
     path_str = optional('result.path', config)
     if path_str:
         path = pathlib.Path(path_str)
-        if not path.exists():
-            error(f'result.path: {path_str} does not exist')
-        if not path.is_dir():
-            error(f'result.path: {path_str} is not a directory')
-    return path
+    return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}'))
+
+
+def create_output_dir(config: Dict) -> None:
+    path = output_dir_path(config)
+    try:
+        path.mkdir(parents=True)
+    except FileExistsError:
+        error(f'Output directory for benchmark run ({path}) already exists')
 
 
 def output_log_file(config: Dict):
@@ -91,27 +107,9 @@ def output_log_file(config: Dict):
     return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.md'))
 
 
-def output_stdout_file(config: Dict):
-    path = output_dir_path(config)
-    return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.stdout'))
-
-
-def output_stderr_file(config: Dict):
-    path = output_dir_path(config)
-    return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.stderr'))
-
-
 def output_options(config: Dict) -> list:
-    path = pathlib.Path('.')
-    path_str = optional('result.path', config)
-    if path_str:
-        path = pathlib.Path(path_str)
-        if not path.exists():
-            error(f'result.path: {path_str} does not exist')
-        if not path.is_dir():
-            error(f'result.path: {path_str} is not a directory')
-    filepath = path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.csv'))
-    return ['-rff', str(filepath)]
+    path = output_dir_path(config)
+    return ['-rff', str(path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.csv')))]
 
 
 def build_jmh_command(config: Dict) -> list:
@@ -209,26 +207,25 @@ def exec_jmh_cmd(cmd: list, help_requested):
 def main():
     parser = argparse.ArgumentParser(description='Run configured jmh tests.')
     parser.add_argument(
-        '-c', '--config', help='A JSON configuration file for the JMH run', default='jmh.json')
+        '-c', '--config', help='A JSON configuration file for the JMH run', default='jmh_run.json')
 
     args = parser.parse_args()
     try:
         config_file = pathlib.Path(args.config)
         if not config_file.exists():
-            raise JMHRunnerError(
+            raise RunnerError(
                 f'The config file {config_file} does not exist')
         if not config_file.is_file():
-            raise JMHRunnerError(
+            raise RunnerError(
                 f'The config file {config_file} is not a text file')
         config = read_config_file(config_file)
         cmd_list = build_jmh_command(config)
 
+        create_output_dir(config)
         log_jmh_session(cmd_list, config, f'{config_file.resolve()}')
-        #outf = output_stdout_file(config).open(mode='w', encoding='UTF-8')
-        #errf = output_stderr_file(config).open(mode='w', encoding='UTF-8')
         exec_jmh_cmd(cmd_list, optional('help', config))
 
-    except JMHRunnerError as error:
+    except RunnerError as error:
         print(
             f'JMH pyrunner ({pathlib.Path(__file__).name}) error: {error.message}')
 

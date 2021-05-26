@@ -290,6 +290,55 @@ Multiplied by
 - Allocation at time of call
 - Result usage (e.g. a fast checksum of longs or bytes)
 
+## Results
+
+### Check out the repository
+
+We developed in the branch
+`https://github.com/alanpaxton/jni-benchmarks/tree/getvaluesimulation` So
+
+```
+$ git clone https://github.com/alanpaxton/jni-benchmarks
+$ cd jni-benchmarks
+$ mvn clean compile package
+```
+
+### How to run a test
+
+In the `jni-benchmarks` directory
+
+```
+$ mkdir results
+$ ./jmhrun.py
+```
+
+This should result in a short example benchmark being run, and producing a
+`jmh_<datestamp>.md` file and a `jmh_<datestamp>.csv` file in `./results`.
+
+- `JMH` tests are written in Java, `jmhrun.py` is a wrapper for invoking a JMH
+  benchmark/group of benchmarks in a configured and repeatable way.
+- You can look in the `jmh.json` file to see how the test is configured. This
+  configuration covers JMH benchmark parameters, JMH options, passing JVM
+  parameters etc.
+- The `jmh_<datestamp>.md` file is generated at the start of the run, and
+  documents the configuration it was invoked with.
+- You can use another configuration file to run a different test, without having
+  to rebuild the Java, or set it up in the IDE, although that of course is
+  possible.
+- We conventionally run bigger tests using
+  `./jmhrun.py --config jmh_full_run.json` but obviously you can have as many
+  different configurations sitting around as is useful to you.
+- The `jmh_<datestamp>.csv` is in JMH's CSV output format, and can be analysed
+  using `./jmhplot.py` (see next)
+
+### How to analyse a test
+
+Analysis is a separate step, based on the output CSV file `jmh_<datestamp>.csv`
+
+- `jmhplot.py --config jmh_plot.json --file <path>/<to>/jmh_<datestamp>.csv`
+  will create a series of plots as configured by the config file, and will save
+  these plots as siblings of the CSV file.
+
 ## TODO
 
 - Describe the allocated cache structure for the outside JNI calls; actually
