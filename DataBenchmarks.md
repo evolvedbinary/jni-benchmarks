@@ -292,6 +292,8 @@ Multiplied by
 
 ## Results
 
+## Running and Developing Tests
+
 ### Check out the repository
 
 We developed in the branch
@@ -333,11 +335,39 @@ This should result in a short example benchmark being run, and producing a
 
 ### How to analyse a test
 
-Analysis is a separate step, based on the output CSV file `jmh_<datestamp>.csv`
+Analysis is a separate step, based on the output CSV file `jmh_<datestamp>.csv`.
+The command
 
-- `jmhplot.py --config jmh_plot.json --file <path>/<to>/jmh_<datestamp>.csv`
-  will create a series of plots as configured by the config file, and will save
-  these plots as siblings of the CSV file.
+```
+jmhplot.py --config jmh_plot.json --file <path>/<to>/jmh_<datestamp>.csv
+```
+
+will create a series of plots (`.png`s) as configured by the config file, and
+will save these plots as siblings of the CSV file. It is set up to slice and
+dice in several dimensions.
+
+Typically, the plots will have the `valueSize` on the x-axis, and `time` on y,
+with a line for every benchmark. Plots are duplicated for each of the different
+values of the other parameters of the benchmark, so there will be a plot for
+`checksum=none`, a plot for `checksum=copyout` etc.
+
+- Look at `jmh_plot.json` to see what you can configure.
+
+### Development in IntelliJ
+
+`GetJNIBenchmark` can be run/debugged in IJ. This is a much quicker and more
+pleasant way of working than using command line all the time. Things I did to
+make this work include:
+
+- Import the maven project
+- `-Djava.library.path` in the run configuration
+- Set `.forks(0)` in the JMH options builder of the `main()` method, so that for
+  debugging JMH does not fork new VMs. That avoids setting up remote debugging.
+- Do a maven build beforehand, so that all the native (NAR) libraries that are
+  referenced, can be found.
+
+JMH documentation will tell you not to trust the results that come out of this,
+not least because you aren't forking new processes. Proceed with caution.
 
 ## TODO
 
