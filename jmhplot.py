@@ -193,11 +193,11 @@ def tuple_of_secondary_keys(params: BMParams) -> Tuple:
     return tuple(secondaryKeys)
 
 
-def plot_all_results(params: BMParams, resultSets: ResultSets, path, report_benchmarks: str, label: str) -> None:
+def plot_all_results(params: BMParams, resultSets: ResultSets, path, include_benchmarks: str, exclude_benchmarks: str, label: str) -> None:
     indexKeys = tuple_of_secondary_keys(params)
     for indexTuple, resultSet in resultSets.items():
         plot_result_set(indexKeys, indexTuple, resultSet,
-                        path, report_benchmarks, label)
+                        path, include_benchmarks, exclude_benchmarks, label)
 
 
 def plot_result_axis_errorbars(ax, resultSet: ResultSet) -> None:
@@ -256,41 +256,57 @@ def plot_result_axis_bars(ax, resultSet: ResultSet) -> None:
         bmIndex = bmIndex + 1
 
 
-def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path, report_benchmarks: str, label: str):
+def plot_result_set(indexKeys: Tuple, indexTuple: Tuple, resultSet: ResultSet, path: pathlib.Path, include_benchmarks: str, exclude_benchmarks: str, label: str):
     fig = plt.figure(num=None, figsize=(18, 12), dpi=80,
                      facecolor='w', edgecolor='k')
     ax = plt.subplot()
 
     plot_result_axis_bars(ax, resultSet)
 
-    plt.title(f'{str(indexKeys)}={str(indexTuple)} {report_benchmarks} _{label}')
+    plt.title(
+        f'{str(indexKeys)}={str(indexTuple)} include={include_benchmarks} exclude={exclude_benchmarks}')
     plt.xlabel("X")
     plt.ylabel("t (ns)")
     plt.legend(loc='lower right')
     plt.grid(b='True', which='both')
 
-    name = f'fig_{const_datetime_str}_{label}.png'
+    name = f'fig_{"_".join([str(t) for t in indexTuple])}_{label}.png'
 
     if path.is_file():
         path = path.parent()
     fig.savefig(path.joinpath(name))
 
 
-def filter_for_benchmarks(dataframe: DataFrame, report_benchmarks) -> DataFrame:
+alpha_pattern = re.compile(f'[A-Za-z0-9_\-+]')
 
-    if report_benchmarks is None:
-        return dataframe
 
-    pattern = re.compile(f'[A-Za-z0-9_\-+]')
-    for report_bm in report_benchmarks:
-        if pattern.match(report_bm) is None:
-            raise RunnerError(
-                f'The benchmark pattern {report_bm} has non-alphanumeric characters')
-    report_bms_translated = '|'.join(report_benchmarks)
+def check_benchmark_alpha(benchmark: str):
+    if alpha_pattern.match(benchmark) is None:
+        raise RunnerError(
+            f'The benchmark pattern {benchmark} has non-alphanumeric characters')
 
-    pattern = re.compile(f'\S*({report_bms_translated})\S*')
-    return dataframe[dataframe['Benchmark'].apply(
-        lambda x: pattern.match(x) is not None)]
+
+def filter_for_benchmarks(dataframe: DataFrame, include_benchmarks, exclude_benchmarks) -> DataFrame:
+
+    filteredframe = dataframe
+
+    if include_benchmarks is not None:
+        for include in include_benchmarks:
+            check_benchmark_alpha(include)
+        include_translated = '|'.join(include_benchmarks)
+        pattern = re.compile(f'\S*({include_translated})\S*')
+        filteredframe = filteredframe[filteredframe['Benchmark'].apply(
+            lambda x: pattern.match(x) is not None)]
+
+    if exclude_benchmarks is not None:
+        for exclude in exclude_benchmarks:
+            check_benchmark_alpha(exclude)
+        exclude_translated = '|'.join(exclude_benchmarks)
+        pattern = re.compile(f'\S*({exclude_translated})\S*')
+        filteredframe = filteredframe[filteredframe['Benchmark'].apply(
+            lambda x: pattern.match(x) is None)]
+
+    return filteredframe
 
 
 def filter_for_range(dataframe: DataFrame, xaxisparam: Dict) -> DataFrame:
@@ -318,7 +334,8 @@ def process_some_plots(path: pathlib.Path, plot: Dict) -> None:
     xaxisparam = required('xaxisparam', plot)
     primary_param_name = required('name', xaxisparam)
 
-    report_benchmarks = optional('report_patterns', plot)
+    include_benchmarks = optional('include_patterns', plot)
+    exclude_benchmarks = optional('exclude_patterns', plot)
     label = required('label', plot)
 
     dataframe = normalize_data_frame_from_path(path)
@@ -326,10 +343,11 @@ def process_some_plots(path: pathlib.Path, plot: Dict) -> None:
         raise RunnerError(
             f'0 results were read from the file(s) at {path} ({path.absolute})')
 
-    dataframe = filter_for_benchmarks(dataframe, report_benchmarks)
+    dataframe = filter_for_benchmarks(
+        dataframe, include_benchmarks, exclude_benchmarks)
     if len(dataframe) == 0:
         raise RunnerError(
-            f'0 results after filtering benchmarks {report_benchmarks}')
+            f'0 results after filtering benchmarks include: {include_benchmarks}, exclude: {exclude_benchmarks}')
 
     dataframe = filter_for_range(dataframe, xaxisparam)
     if len(dataframe) == 0:
@@ -339,7 +357,8 @@ def process_some_plots(path: pathlib.Path, plot: Dict) -> None:
     params: BMParams = split_params(
         extract_params(dataframe), primary_param_name)
     resultSets = extract_results_per_param(dataframe, params)
-    plot_all_results(params, resultSets, path, report_benchmarks, label)
+    plot_all_results(params, resultSets, path,
+                     include_benchmarks, exclude_benchmarks, label)
 
 
 def process_benchmarks(config: Dict) -> None:

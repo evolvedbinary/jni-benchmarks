@@ -6,8 +6,8 @@
                 "min": 1,
                 "max": 4096
             },
-            "label": "1..4096"
-            # defaults to report_patterns of all matching
+            "label": "allsmall"
+            # defaults to include_patterns of all matching
         },
         {
             "xaxisparam": {
@@ -15,58 +15,66 @@
                 "min": 1,
                 "max": 4096
             },
-            "report_patterns": ["Direct","Byte","Unsafe","Critical"],
-            "label": "x"
+            "exclude_patterns": ["Pooled"],
+            "label": "nopoolsmall"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize",
+                "min": 1024
+            },
+            "exclude_patterns": ["Pooled"],
+            "label": "nopoolbig"
         },
         {
             "xaxisparam": {
                 "name": "valueSize"
             },
-            "report_patterns": ["ByteArray"],
+            "include_patterns": ["ByteArray"],
             "label": "ba"
         },
         {
             "xaxisparam": {
                 "name": "valueSize"
             },
-            "report_patterns": ["ByteBuf"],
+            "include_patterns": ["ByteBuf"],
             "label": "bb"
         },
         {
             "xaxisparam": {
                 "name": "valueSize"
             },
-            "report_patterns": ["Direct"],
+            "include_patterns": ["Direct"],
             "label": "dir"
         },
         {
             "xaxisparam": {
                 "name": "valueSize"
             },
-            "report_patterns": ["Indirect"],
+            "include_patterns": ["Indirect"],
             "label": "ind"
         },
         {
             "xaxisparam": {
                 "name": "valueSize"
             },
-            "report_patterns": ["Critical"],
+            "include_patterns": ["Critical"],
             "label": "crit"
         },
         {
             "xaxisparam": {
                 "name": "valueSize"
             },
-            "report_patterns": ["GetElements"],
+            "include_patterns": ["GetElements"],
             "label": "getelems"
         },
         {
             "xaxisparam": {
                 "name": "valueSize"
             },
-            "report_patterns": ["SetRegion"],
+            "include_patterns": ["SetRegion"],
             "label": "setreg"
         }
     ],
-    "result.path": "./results/jmh_2021-05-26T11:04:13.171191"
+    "result.path": "./analysis/testplots"
 }
