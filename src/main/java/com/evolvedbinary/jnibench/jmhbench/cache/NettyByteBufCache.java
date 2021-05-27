@@ -35,6 +35,15 @@ public class NettyByteBufCache extends LinkedListAllocationCache<ByteBuf> {
     PooledByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
 
     @Override
+    protected long copyIn(ByteBuf byteBuf, byte fillByte) {
+
+        for (int i = 0; i < byteBuf.capacity(); i++) {
+            byteBuf.setByte(i, fillByte);
+        }
+        return fillByte;
+    }
+
+    @Override
     ByteBuf allocate(int valueSize) {
         ByteBuf byteBuf = allocator.directBuffer(valueSize);
         assert byteBuf.refCnt() == 1;

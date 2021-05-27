@@ -4,7 +4,7 @@
     "params": {
         "valueSize": [10, 50, 512, 1024, 4096, 8192, 16384, 32768, 65536],
         "cacheMB": [1],
-        "checksum": ["none"]
+        "checksum": ["none", "copyout"]
     },
     "options": {
         "batchsize": 1,

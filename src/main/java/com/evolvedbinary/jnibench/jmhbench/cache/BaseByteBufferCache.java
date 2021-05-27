@@ -41,6 +41,15 @@ public abstract class BaseByteBufferCache extends LinkedListAllocationCache<Byte
     }
 
     @Override
+    protected long copyIn(ByteBuffer item, byte fillByte) {
+
+        for (int i = 0; i < item.capacity(); i++) {
+            item.put(i, fillByte);
+        }
+        return fillByte;
+    }
+
+    @Override
     public int byteChecksum(ByteBuffer item) {
 
         if (item.remaining() != item.capacity()) {

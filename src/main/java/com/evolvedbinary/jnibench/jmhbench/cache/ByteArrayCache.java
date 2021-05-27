@@ -28,6 +28,7 @@ package com.evolvedbinary.jnibench.jmhbench.cache;
 
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.Arrays;
 
 public class ByteArrayCache extends LinkedListAllocationCache<byte[]> {
 
@@ -53,11 +54,17 @@ public class ByteArrayCache extends LinkedListAllocationCache<byte[]> {
     }
 
     @Override
+    protected long copyIn(byte[] item, byte fillByte) {
+        Arrays.fill(item, fillByte);
+        return fillByte;
+    }
+
+    @Override
     public int byteChecksum(byte[] item) {
 
         int sum = 0;
-        for (int i = 0; i < item.length; i++) {
-            sum += item[i];
+        for (byte b : item) {
+            sum += b;
         }
 
         return sum;

@@ -55,6 +55,16 @@ public class UnsafeBufferCache extends LinkedListAllocationCache<UnsafeBufferCac
     }
 
     @Override
+    protected long copyIn(UnsafeBuffer item, byte fillByte) {
+
+        long handle = item.handle;
+        for (int i = 0; i < item.size; i++) {
+            unsafe.putByte(handle++, fillByte);
+        }
+        return fillByte;
+    }
+
+    @Override
     public int longChecksum(UnsafeBuffer item) {
         long sum = 0;
         long handle = item.handle;

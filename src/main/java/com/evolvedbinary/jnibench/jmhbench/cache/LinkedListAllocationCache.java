@@ -26,7 +26,6 @@
  */
 package com.evolvedbinary.jnibench.jmhbench.cache;
 
-import com.evolvedbinary.jnibench.jmhbench.cache.AllocationCache;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.HashMap;
@@ -36,6 +35,7 @@ import java.util.Map;
 public abstract class LinkedListAllocationCache<T> implements AllocationCache<T> {
 
     private Checksum checksum;
+    private Prepare prepare;
     private Blackhole blackhole;
 
     @Override
@@ -63,6 +63,18 @@ public abstract class LinkedListAllocationCache<T> implements AllocationCache<T>
 
     public void setup(int valueSize, int valueOverhead, int cacheSize, Checksum checksum, Blackhole blackhole) {
         this.checksum = checksum;
+        this.prepare = Prepare.none;
+        this.blackhole = blackhole;
+
+        for (int totalBuffers = 0; totalBuffers < cacheSize; totalBuffers += valueSize + valueOverhead)
+        {
+            cacheBuffers.addLast(allocate(valueSize));
+        }
+    }
+
+    public void setup(int valueSize, int valueOverhead, int cacheSize, Prepare prepare, Blackhole blackhole) {
+        this.prepare = prepare;
+        this.checksum = Checksum.none;
         this.blackhole = blackhole;
 
         for (int totalBuffers = 0; totalBuffers < cacheSize; totalBuffers += valueSize + valueOverhead)
@@ -86,6 +98,8 @@ public abstract class LinkedListAllocationCache<T> implements AllocationCache<T>
 
     abstract protected byte[] copyOut(T item);
 
+    abstract protected long copyIn(T item, byte fillByte);
+
     public void checksumBuffer(T item) {
         switch (checksum) {
             case copyout:
@@ -100,6 +114,15 @@ public abstract class LinkedListAllocationCache<T> implements AllocationCache<T>
             case none:
                 break;
         }
+    }
 
+    public void prepareBuffer(T item, byte fillByte) {
+        switch(prepare) {
+            case copyin:
+                blackhole.consume(this.copyIn(item, fillByte));
+                break;
+            case none:
+                break;
+        }
     }
 }

@@ -35,9 +35,16 @@ public interface AllocationCache<T> {
         longsum,
     };
 
+    public enum Prepare {
+        none,
+        copyin
+    };
+
     T acquire();
 
     void release(T item);
 
     void checksumBuffer(T item);
+
+    void prepareBuffer(T item, byte fillByte);
 }

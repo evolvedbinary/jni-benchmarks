@@ -44,7 +44,21 @@ public class GetPutJNI {
             final long bufferHandle,
             final int valueLength);
 
+    public static native int putFromUnsafe(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final long bufferHandle,
+            final int valueLength);
+
     public static native int getIntoDirectByteBuffer(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int putFromDirectByteBuffer(
             final byte[] key,
             final int keyOffset,
             final int keyLength,
@@ -58,7 +72,21 @@ public class GetPutJNI {
             final ByteBuffer value,
             final int valueLength);
 
+    public static native int putFromIndirectByteBufferGetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
     public static native int getIntoIndirectByteBufferGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int putFromIndirectByteBufferGetElements(
             final byte[] key,
             final int keyOffset,
             final int keyLength,
@@ -72,7 +100,21 @@ public class GetPutJNI {
             final ByteBuffer value,
             final int valueLength);
 
+    public static native int putFromIndirectByteBufferGetCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
     public static native int getIntoByteArraySetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
+    public static native int putFromByteArrayGetRegion(
             final byte[] key,
             final int keyOffset,
             final int keyLength,
@@ -86,7 +128,21 @@ public class GetPutJNI {
             final byte[] value,
             final int valueLength);
 
+    public static native int putFromByteArrayGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
     public static native int getIntoByteArrayCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
+    public static native int putFromByteArrayCritical(
             final byte[] key,
             final int keyOffset,
             final int keyLength,

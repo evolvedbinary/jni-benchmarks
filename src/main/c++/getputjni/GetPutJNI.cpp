@@ -128,6 +128,28 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoUnsafe(JN
 }
 
 /*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    putFromUnsafe
+ * Signature: ([BIIJI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromUnsafe(JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jlong jval_unsafe_handle, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  void *buffer_memory = reinterpret_cast<void *>(jval_unsafe_handle);
+  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(cvalue.c_str(), buffer_memory, put_size);
+
+  return put_size;
+}
+
+/*
  * Class:     com_evolvedbinary_jnibench_common_GetPutJNI
  * Method:    getIntoDirectByteBuffer
  * Signature: ([BIILjava/nio/ByteBuffer;I)I
@@ -160,8 +182,40 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoDirectByt
 }
 
 /*
+ * Class:     com_evolvedbinary_jnibench_common_GetPutJNI
+ * Method:    putFromDirectByteBuffer
+ * Signature: ([BIILjava/nio/ByteBuffer;I)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromDirectByteBuffer(JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jobject jval_byte_buffer, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  char *byte_buffer = reinterpret_cast<char *>(env->GetDirectBufferAddress(jval_byte_buffer));
+  if (byte_buffer == nullptr)
+  {
+    std::cerr << "Invalid value argument (argument is not a valid direct ByteBuffer)" << std::endl;
+    return kError;
+  }
+  if (env->GetDirectBufferCapacity(jval_byte_buffer) < jval_len)
+  {
+    std::cerr << "Invalid value argument. Byte buffer capacity is less than requested length." << std::endl;
+    return kError;
+  }
+
+  memcpy(cvalue.c_str(), byte_buffer, jval_len);
+
+  return jval_len;
+}
+
+/*
  * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
- * Method:    getIntoByteArray
+ * Method:    getIntoByteArraySetRegion
  * Signature: ([BII[BI)I
  */
 jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArraySetRegion(JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
@@ -178,6 +232,27 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   env->SetByteArrayRegion(jval_byte_array, 0, get_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
 
   return get_size;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    putFromByteArrayGetRegion
+ * Signature: ([BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArrayGetRegion(JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  env->GetByteArrayRegion(jval_byte_array, 0, get_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+
+  return put_size;
 }
 
 /*
@@ -206,6 +281,30 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    putFromByteArrayGetElements
+ * Signature: ([BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArrayGetElements(JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  jboolean is_copy;
+  jbyte *array_elements = env->GetByteArrayElements(jval_byte_array, &is_copy);
+  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(cvalue.c_str(), array_elements, put_size);
+  env->ReleaseByteArrayElements(jval_byte_array, array_elements, JNI_ABORT);
+
+  return put_size;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
  * Method:    getIntoByteArrayCritical
  * Signature: ([BII[BI)I
  */
@@ -226,6 +325,30 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   env->ReleasePrimitiveArrayCritical(jval_byte_array, array_elements, JNI_ABORT);
 
   return get_size;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    putFromByteArrayCritical
+ * Signature: ([BII[BI)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArrayCritical(JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jbyteArray jval_byte_array, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  jboolean is_copy;
+  void *array_elements = env->GetPrimitiveArrayCritical(jval_byte_array, &is_copy);
+  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(cvalue.c_str(), array_elements, put_size);
+  env->ReleasePrimitiveArrayCritical(jval_byte_array, array_elements, JNI_ABORT);
+
+  return put_size;
 }
 
 /*
@@ -255,6 +378,35 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   env->SetByteArrayRegion(buffer_internal_byte_array, 0, get_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
 
   return get_size;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    putFromIndirectByteBufferGetRegion
+ * Signature: ([BIILjava/nio/ByteBuffer;I)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectByteBufferGetRegion(
+    JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jobject jval_byte_buffer, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
+  if (env->ExceptionCheck())
+  {
+    std::cerr << "Invalid call to object method. Byte buffer array." << std::endl;
+    return kError;
+  }
+
+  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  env->GetByteArrayRegion(buffer_internal_byte_array, 0, put_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+
+  return put_size;
 }
 
 /*
@@ -291,6 +443,38 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    putFromIndirectByteBufferGetElements
+ * Signature: ([BIILjava/nio/ByteBuffer;I)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectByteBufferGetElements(
+    JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jobject jval_byte_buffer, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
+  if (env->ExceptionCheck())
+  {
+    std::cerr << "Invalid call to object method. Byte buffer array." << std::endl;
+    return kError;
+  }
+
+  jboolean is_copy;
+  jbyte *array_elements = env->GetByteArrayElements(buffer_internal_byte_array, &is_copy);
+  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(cvalue.c_str(), array_elements, put_size);
+  env->ReleaseByteArrayElements(buffer_internal_byte_array, array_elements, JNI_ABORT);
+
+  return put_size;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
  * Method:    getIntoIndirectByteBufferGetCritical
  * Signature: ([BIILjava/nio/ByteBuffer;I)I
  */
@@ -319,4 +503,36 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   env->ReleasePrimitiveArrayCritical(buffer_internal_byte_array, array_elements, JNI_ABORT);
 
   return get_size;
+}
+
+/*
+ * Class:     com_evolvedbinary_jnibench_common_getputjni_GetPutJNI
+ * Method:    putFromIndirectByteBufferGetCritical
+ * Signature: ([BIILjava/nio/ByteBuffer;I)I
+ */
+jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectByteBufferGetCritical(
+    JNIEnv *env, jclass, jbyteArray jkey, jint jkey_off, jint jkey_len, jobject jval_byte_buffer, jint jval_len)
+{
+  const char *key = GetKey(env, jkey, jkey_off, jkey_len);
+  if (key == nullptr)
+  {
+    return kError;
+  }
+  std::string cvalue = GetByteArrayInternal(key);
+  delete[] key;
+
+  jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
+  if (env->ExceptionCheck())
+  {
+    std::cerr << "Invalid call to object method. Byte buffer array." << std::endl;
+    return kError;
+  }
+
+  jboolean is_copy;
+  void *array_elements = env->GetPrimitiveArrayCritical(buffer_internal_byte_array, &is_copy);
+  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
+  memcpy(cvalue.c_str(), array_elements, put_size);
+  env->ReleasePrimitiveArrayCritical(buffer_internal_byte_array, array_elements, JNI_ABORT);
+
+  return put_size;
 }
