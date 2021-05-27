@@ -37,7 +37,7 @@ public class NettyByteBufCache extends LinkedListAllocationCache<ByteBuf> {
     @Override
     ByteBuf allocate(int valueSize) {
         ByteBuf byteBuf = allocator.directBuffer(valueSize);
-        byteBuf.retain();
+        assert byteBuf.refCnt() == 1;
 
         return byteBuf;
     }

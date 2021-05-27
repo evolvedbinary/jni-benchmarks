@@ -216,9 +216,10 @@ public class GetJNIBenchmark {
     @Benchmark
     public void getIntoPooledNettyByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuf byteBuf = threadState.pooledByteBufAllocator.directBuffer(benchmarkState.valueSize);
-        byteBuf.retain();
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuf.memoryAddress(), benchmarkState.valueSize);
         //TODO checksumBuffer operation - we can use this for the "none" checksum in the meantime.
+
+        // Allocated buffer already has retain count of 1
         byteBuf.release();
     }
 
