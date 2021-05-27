@@ -28,6 +28,7 @@ package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.common.getputjni.GetPutJNI;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
+import com.evolvedbinary.jnibench.jmhbench.cache.*;
 import com.evolvedbinary.jnibench.jmhbench.common.*;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;

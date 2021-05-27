@@ -24,20 +24,21 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.jmhbench.common;
+package com.evolvedbinary.jnibench.jmhbench.cache;
 
-public interface AllocationCache<T> {
+import com.evolvedbinary.jnibench.jmhbench.cache.BaseByteBufferCache;
 
-    public enum Checksum {
-        none,
-        copyout,
-        bytesum,
-        longsum,
-    };
+import java.nio.ByteBuffer;
 
-    T acquire();
+public class IndirectByteBufferCache extends BaseByteBufferCache {
 
-    void release(T item);
+    @Override
+    ByteBuffer allocate(int valueSize) {
+        return ByteBuffer.allocate(valueSize);
+    }
 
-    void checksumBuffer(T item);
+    @Override
+    void free(ByteBuffer buffer) {
+        //automatically GC-ed
+    }
 }

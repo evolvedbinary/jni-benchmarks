@@ -24,13 +24,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.jmhbench.common;
+package com.evolvedbinary.jnibench.jmhbench.cache;
 
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
-public class UnsafeBufferCache extends LinkedListAllocationCache<UnsafeBufferCache.UnsafeBuffer>  {
+public class UnsafeBufferCache extends LinkedListAllocationCache<UnsafeBufferCache.UnsafeBuffer> {
 
     private static Unsafe unsafe;
 

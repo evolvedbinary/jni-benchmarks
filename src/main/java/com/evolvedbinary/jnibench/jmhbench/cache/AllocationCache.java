@@ -24,45 +24,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.jmhbench.common;
+package com.evolvedbinary.jnibench.jmhbench.cache;
 
-import java.nio.ByteBuffer;
-import java.nio.LongBuffer;
+public interface AllocationCache<T> {
 
-public abstract class BaseByteBufferCache extends LinkedListAllocationCache<ByteBuffer>  {
+    public enum Checksum {
+        none,
+        copyout,
+        bytesum,
+        longsum,
+    };
 
-    @Override
-    public byte[] copyOut(ByteBuffer item) {
+    T acquire();
 
-        byte[] array = byteArrayOfSize(item.capacity());
-        item.get(array);
+    void release(T item);
 
-        return array;
-    }
-
-    @Override
-    public int byteChecksum(ByteBuffer item) {
-
-        if (item.remaining() != item.capacity()) {
-            throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
-        }
-        int sum = 0;
-        while (item.remaining() > 0) {
-            sum += item.get();
-        }
-        return sum;
-    }
-
-    @Override
-    public int longChecksum(ByteBuffer item) {
-        if (item.remaining() != item.capacity()) {
-            throw new RuntimeException("Remaining: " + item.remaining() + " < capacity: " + item.capacity());
-        }
-        LongBuffer buffer = item.asLongBuffer();
-        long sum = 0;
-        while (buffer.remaining() > 0) {
-            sum += buffer.get();
-        }
-        return (int)sum;
-    }
+    void checksumBuffer(T item);
 }

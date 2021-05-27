@@ -24,19 +24,21 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.evolvedbinary.jnibench.jmhbench.common;
+package com.evolvedbinary.jnibench.jmhbench.cache;
+
+import com.evolvedbinary.jnibench.jmhbench.cache.BaseByteBufferCache;
 
 import java.nio.ByteBuffer;
 
-public class IndirectByteBufferCache extends BaseByteBufferCache  {
+public class DirectByteBufferCache extends BaseByteBufferCache {
 
     @Override
     ByteBuffer allocate(int valueSize) {
-        return ByteBuffer.allocate(valueSize);
+        return ByteBuffer.allocateDirect(valueSize);
     }
 
     @Override
     void free(ByteBuffer buffer) {
-        //automatically GC-ed
+        //we have no way to forcibly deallocate
     }
 }
