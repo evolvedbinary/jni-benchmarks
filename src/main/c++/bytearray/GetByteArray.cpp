@@ -46,7 +46,7 @@ static const std::string STR_64_KB = STR_32_KB + STR_32_KB;
 static const std::string STR_128_KB = STR_64_KB + STR_64_KB;
 static const std::string STR_256_KB = STR_128_KB + STR_128_KB;
 
-static const auto DB_MOCK = std::unordered_map<std::string, std::string>{
+static const auto DB_READ_MOCK = std::unordered_map<std::string, std::string>{
     {"testKeyWithReturnValueSize0000010Bytes", STR_10_B},
     {"testKeyWithReturnValueSize0000050Bytes", STR_50_B},
     {"testKeyWithReturnValueSize0000512Bytes", STR_512_B},
@@ -63,7 +63,49 @@ const std::string &GetByteArrayInternal(const char *key)
   std::string str(key, 38);
 
   //std::cerr << std::endl << "Getting " << str << std::endl << std::endl;
-  return DB_MOCK.at(str);
+  return DB_READ_MOCK.at(str);
+}
+
+struct WriteKey
+{
+  std::string key;
+  size_t length;
+
+  WriteKey(const std::string &key, size_t length) : key(key), length(length) {}
+};
+
+bool operator==(const WriteKey &lhs, const WriteKey &rhs)
+{
+  return lhs.key == rhs.key && lhs.length == rhs.length;
+}
+
+// custom specialization of std::hash can be injected in namespace std
+namespace std
+{
+  template <>
+  struct hash<WriteKey>
+  {
+    std::size_t operator()(WriteKey const &s) const noexcept
+    {
+      std::size_t h1 = std::hash<std::string>{}(s.key);
+      std::size_t h2 = std::hash<size_t>{}(s.length);
+      return h1 ^ (h2 << 1); // or use boost::hash_combine
+    }
+  };
+}
+
+static auto DB_WRITE_MOCK = std::unordered_map<WriteKey, char *>();
+
+char *GetByteArrayInternalForWrite(const char *key, size_t size)
+{
+  auto writeKey = WriteKey(key, size);
+  auto it = DB_WRITE_MOCK.find(writeKey);
+  if (it == DB_WRITE_MOCK.end())
+  {
+    DB_WRITE_MOCK[writeKey] = new char[size];
+    it = DB_WRITE_MOCK.find(writeKey);
+  }
+  return it->second;
 }
 
 jclass g_jbyte_buffer_clazz;

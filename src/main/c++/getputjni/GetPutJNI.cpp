@@ -36,6 +36,7 @@
  * Turn these into header and factor methods (at least) out from GetByteArray.cpp
  */
 extern const std::string &GetByteArrayInternal(const char *key);
+extern char *GetByteArrayInternalForWrite(const char *key, size_t len);
 
 extern jclass g_jbyte_buffer_clazz;
 extern jmethodID g_jbyte_buffer_array_mid;
@@ -139,14 +140,13 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromUnsafe(JN
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
   void *buffer_memory = reinterpret_cast<void *>(jval_unsafe_handle);
-  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  memcpy(cvalue.c_str(), buffer_memory, put_size);
+  memcpy(db_buf, buffer_memory, jval_len);
 
-  return put_size;
+  return jval_len;
 }
 
 /*
@@ -193,7 +193,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromDirectByt
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
   char *byte_buffer = reinterpret_cast<char *>(env->GetDirectBufferAddress(jval_byte_buffer));
@@ -208,7 +208,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromDirectByt
     return kError;
   }
 
-  memcpy(cvalue.c_str(), byte_buffer, jval_len);
+  memcpy(db_buf, byte_buffer, jval_len);
 
   return jval_len;
 }
@@ -246,13 +246,12 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArray
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
-  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  env->GetByteArrayRegion(jval_byte_array, 0, get_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+  env->GetByteArrayRegion(jval_byte_array, 0, jval_len, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(db_buf)));
 
-  return put_size;
+  return jval_len;
 }
 
 /*
@@ -291,16 +290,15 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArray
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
   jboolean is_copy;
   jbyte *array_elements = env->GetByteArrayElements(jval_byte_array, &is_copy);
-  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  memcpy(cvalue.c_str(), array_elements, put_size);
+  memcpy(db_buf, array_elements, jval_len);
   env->ReleaseByteArrayElements(jval_byte_array, array_elements, JNI_ABORT);
 
-  return put_size;
+  return jval_len;
 }
 
 /*
@@ -339,16 +337,15 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArray
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
   jboolean is_copy;
   void *array_elements = env->GetPrimitiveArrayCritical(jval_byte_array, &is_copy);
-  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  memcpy(cvalue.c_str(), array_elements, put_size);
+  memcpy(db_buf, array_elements, jval_len);
   env->ReleasePrimitiveArrayCritical(jval_byte_array, array_elements, JNI_ABORT);
 
-  return put_size;
+  return jval_len;
 }
 
 /*
@@ -393,7 +390,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -403,10 +400,9 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
     return kError;
   }
 
-  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  env->GetByteArrayRegion(buffer_internal_byte_array, 0, put_size, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(cvalue.c_str())));
+  env->GetByteArrayRegion(buffer_internal_byte_array, 0, jval_len, reinterpret_cast<jbyte *>(db_buf));
 
-  return put_size;
+  return jval_len;
 }
 
 /*
@@ -454,7 +450,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -466,11 +462,10 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
 
   jboolean is_copy;
   jbyte *array_elements = env->GetByteArrayElements(buffer_internal_byte_array, &is_copy);
-  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  memcpy(cvalue.c_str(), array_elements, put_size);
+  memcpy(db_buf, array_elements, jval_len);
   env->ReleaseByteArrayElements(buffer_internal_byte_array, array_elements, JNI_ABORT);
 
-  return put_size;
+  return jval_len;
 }
 
 /*
@@ -518,7 +513,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -530,9 +525,8 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
 
   jboolean is_copy;
   void *array_elements = env->GetPrimitiveArrayCritical(buffer_internal_byte_array, &is_copy);
-  size_t put_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
-  memcpy(cvalue.c_str(), array_elements, put_size);
+  memcpy(db_buf, array_elements, jval_len);
   env->ReleasePrimitiveArrayCritical(buffer_internal_byte_array, array_elements, JNI_ABORT);
 
-  return put_size;
+  return jval_len;
 }

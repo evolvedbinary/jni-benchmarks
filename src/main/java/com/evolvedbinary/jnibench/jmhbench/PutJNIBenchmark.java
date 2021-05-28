@@ -324,7 +324,7 @@ public class PutJNIBenchmark {
         Options opt = new OptionsBuilder()
                 .forks(0)
                 .param("preparation", "none", "copyin")
-                .param("valueSize", "50", "4096", "16384", "65536")
+                .param("valueSize", "50", "1024", "4096", "16384", "65536", "262144")
                 .param("cacheMB", "4")
                 .warmupIterations(10)
                 .measurementIterations(50)
