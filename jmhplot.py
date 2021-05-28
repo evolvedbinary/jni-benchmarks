@@ -373,18 +373,8 @@ def process_benchmarks(config: Dict) -> None:
 # Benchmark	Mode	Threads	Samples	Score	Score Error (99.9%)	Unit	Param: valueSize
 
 
-argDirectory = '/Users/alan/swProjects/evolvedBinary/jni-benchmarks/analysis/run5mac'
-argParam = 'valueSize'
-# or a subset of these to show the ones we want
-reportBenchmarks = 'Direct,Byte,Unsafe,Critical'
-reportBenchmarks = 'Buffer'
-reportBenchmarks = ''
-
-argRange = '1<4097'
-argRange = '4096<'
-
 # Example usage:
-# python process_byte_array_benchmarks_results.py -p results_dir/ --param-name "Param: valueSize" --chart-title "Performance comparison of getting byte array with {} bytes via JNI"
+# ./jmhplot.py -c jmh_plot.json -f analysis/testplots
 
 
 def main():
