@@ -201,7 +201,11 @@ public class PutJNIBenchmark {
         ByteBuffer byteBuffer = threadState.directByteBufferCache.acquire();
         byteBuffer.clear();
         threadState.directByteBufferCache.prepareBuffer(byteBuffer, benchmarkState.fillByte);
-        GetPutJNI.putFromDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        int size = GetPutJNI.putFromDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.directByteBufferCache.release(byteBuffer);
     }
 
@@ -210,6 +214,10 @@ public class PutJNIBenchmark {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
         threadState.unsafeBufferCache.prepareBuffer(unsafeBuffer, benchmarkState.fillByte);
         int size = GetPutJNI.putFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }
 
@@ -219,7 +227,10 @@ public class PutJNIBenchmark {
         //TODO prepareBuffer operation - we can use this for the "none" checksum in the meantime.
 
         int size = GetPutJNI.putFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuf.memoryAddress(), benchmarkState.valueSize);
-
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         // Allocated buffer already has retain count of 1
         byteBuf.release();
     }
@@ -229,6 +240,10 @@ public class PutJNIBenchmark {
         ByteBuf byteBuf = threadState.nettyByteBufCache.acquire();
         threadState.nettyByteBufCache.prepareBuffer(byteBuf, benchmarkState.fillByte);
         int size = GetPutJNI.putFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuf.memoryAddress(), benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.nettyByteBufCache.release(byteBuf);
     }
 
@@ -237,6 +252,10 @@ public class PutJNIBenchmark {
         byte[] array = threadState.byteArrayCache.acquire();
         threadState.byteArrayCache.prepareBuffer(array, benchmarkState.fillByte);
         int size = GetPutJNI.putFromByteArrayGetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.byteArrayCache.release(array);
     }
 
@@ -245,6 +264,10 @@ public class PutJNIBenchmark {
         byte[] array = threadState.byteArrayCache.acquire();
         threadState.byteArrayCache.prepareBuffer(array, benchmarkState.fillByte);
         int size = GetPutJNI.putFromByteArrayGetElements(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.byteArrayCache.release(array);
     }
 
@@ -253,6 +276,10 @@ public class PutJNIBenchmark {
         byte[] array = threadState.byteArrayCache.acquire();
         threadState.byteArrayCache.prepareBuffer(array, benchmarkState.fillByte);
         int size = GetPutJNI.putFromByteArrayCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.byteArrayCache.release(array);
     }
 
@@ -265,7 +292,11 @@ public class PutJNIBenchmark {
         ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
         byteBuffer.clear();
         threadState.indirectByteBufferCache.prepareBuffer(byteBuffer, benchmarkState.fillByte);
-        GetPutJNI.putFromIndirectByteBufferGetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        int size = GetPutJNI.putFromIndirectByteBufferGetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.indirectByteBufferCache.release(byteBuffer);
     }
 
@@ -275,6 +306,10 @@ public class PutJNIBenchmark {
         byteBuffer.clear();
         threadState.indirectByteBufferCache.prepareBuffer(byteBuffer, benchmarkState.fillByte);
         int size = GetPutJNI.putFromIndirectByteBufferGetElements(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.indirectByteBufferCache.release(byteBuffer);
     }
 
@@ -284,6 +319,10 @@ public class PutJNIBenchmark {
         byteBuffer.clear();
         threadState.indirectByteBufferCache.prepareBuffer(byteBuffer, benchmarkState.fillByte);
         int size = GetPutJNI.putFromIndirectByteBufferGetCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+        blackhole.consume(size);
+        if (size < benchmarkState.valueSize) {
+            throw new RuntimeException("Put actual " + size + ", requested " + benchmarkState.valueSize);
+        }
         threadState.indirectByteBufferCache.release(byteBuffer);
     }
 
@@ -323,6 +362,7 @@ public class PutJNIBenchmark {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss.SSS");
         Options opt = new OptionsBuilder()
                 .forks(0)
+                .shouldFailOnError(true)
                 .param("preparation", "none", "copyin")
                 .param("valueSize", "50", "1024", "4096", "16384", "65536", "262144")
                 .param("cacheMB", "4")
