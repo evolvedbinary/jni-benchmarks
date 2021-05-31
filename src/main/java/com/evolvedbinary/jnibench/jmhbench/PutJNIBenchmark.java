@@ -137,7 +137,7 @@ public class PutJNIBenchmark {
                 case "putFromDirectByteBuffer":
                     directByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.writePreparation, blackhole);
                     break;
-                case "putFromIndirectByteBufferSetRegion":
+                case "putFromIndirectByteBufferGetRegion":
                 case "putFromIndirectByteBufferGetElements":
                 case "putFromIndirectByteBufferGetCritical":
                     indirectByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.writePreparation, blackhole);
@@ -147,7 +147,7 @@ public class PutJNIBenchmark {
                 case "putFromUnsafe":
                     unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.writePreparation, blackhole);
                     break;
-                case "putFromByteArraySetRegion":
+                case "putFromByteArrayGetRegion":
                 case "putFromByteArrayGetElements":
                 case "putFromByteArrayCritical":
                     byteArrayCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.writePreparation, blackhole);
@@ -169,7 +169,7 @@ public class PutJNIBenchmark {
                 case "putFromDirectByteBuffer":
                     directByteBufferCache.tearDown();
                     break;
-                case "putFromIndirectByteBufferSetRegion":
+                case "putFromIndirectByteBufferGetRegion":
                 case "putFromIndirectByteBufferGetElements":
                 case "putFromIndirectByteBufferGetCritical":
                     indirectByteBufferCache.tearDown();
@@ -179,7 +179,7 @@ public class PutJNIBenchmark {
                 case "putFromUnsafe":
                     unsafeBufferCache.tearDown();
                     break;
-                case "putFromByteArraySetRegion":
+                case "putFromByteArrayGetRegion":
                 case "putFromByteArrayGetElements":
                 case "putFromByteArrayCritical":
                     byteArrayCache.tearDown();
@@ -248,7 +248,7 @@ public class PutJNIBenchmark {
     }
 
     @Benchmark
-    public void putFromByteArraySetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+    public void putFromByteArrayGetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         byte[] array = threadState.byteArrayCache.acquire();
         threadState.byteArrayCache.prepareBuffer(array, benchmarkState.fillByte);
         int size = GetPutJNI.putFromByteArrayGetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array, benchmarkState.valueSize);
@@ -288,7 +288,7 @@ public class PutJNIBenchmark {
     //But why shouldn't we just expect the same performance as byte[] ?
     //Start with one instance (one that seems good in the byte[] case), and check for surprises...
     @Benchmark
-    public void putFromIndirectByteBufferSetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+    public void putFromIndirectByteBufferGetRegion(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
         byteBuffer.clear();
         threadState.indirectByteBufferCache.prepareBuffer(byteBuffer, benchmarkState.fillByte);
