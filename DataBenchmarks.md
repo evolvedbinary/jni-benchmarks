@@ -266,31 +266,280 @@ be "written" with increasing integers.
 
 ## Test Methods
 
-An initial list of the methods we want to test; more to be added.
+We have tested `get()` methods extensively, and the results seeem credible based
+on what we are testing and how we theorise that the performance works.
 
 ```java
+    public static native ByteBuffer getIntoDirectByteBufferFromUnsafe(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final long bufferHandle,
+            final int valueLength);
 
-int getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer, benchmarkState.valueSize);
+    public static native int getIntoUnsafe(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final long bufferHandle,
+            final int valueLength);
 
-ByteBuffer getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+    public static native int getIntoDirectByteBuffer(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
 
-int getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+    public static native int getIntoIndirectByteBufferSetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
 
-int getIntoByteArraySetByteArrayRegion()
+    public static native int getIntoIndirectByteBufferGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
 
-int getIntoByteArrayGetPrimitiveArrayCritical()
+    public static native int getIntoIndirectByteBufferGetCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
 
-int getIntoByteArrayGetByteArrayElements()
+    public static native int getIntoByteArraySetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
 
+    public static native int getIntoByteArrayGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
+    public static native int getIntoByteArrayCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+}
 ```
 
-Multiplied by
+Our testing of `put()` has been less complete than that of `get()`, but we can
+stll draw some conclusions.
 
-- `put()` operations
-- Allocation at time of call
-- Result usage (e.g. a fast checksum of longs or bytes)
+```java
+    public static native int putFromUnsafe(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final long bufferHandle,
+            final int valueLength);
+
+    public static native int putFromDirectByteBuffer(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int putFromIndirectByteBufferGetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int putFromIndirectByteBufferGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int putFromIndirectByteBufferGetCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final ByteBuffer value,
+            final int valueLength);
+
+    public static native int putFromByteArrayGetRegion(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
+    public static native int putFromByteArrayGetElements(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+
+    public static native int putFromByteArrayCritical(
+            final byte[] key,
+            final int keyOffset,
+            final int keyLength,
+            final byte[] value,
+            final int valueLength);
+```
+
+All the test methods we benchmark are accessed via JNI headers in
+`com.evolvedbinary.jnibench.common.getputjni.GetPutJNI.java` and implemented in
+`GetPutJNI.cpp`.
 
 ## Results
+
+### Organisation
+
+The directory `./analysis` has been added to the repository; within each
+directory you will find the `.md` and the `.csv` file for a run controlled by
+`./jmhrun.py`. So the get benchmarking run we are discussing here is recorded in
+`./analysis/get_benchmarks`. The directory also contains a set of plots, which
+can be regenerated:
+
+```
+$ cd .../jni-benchmarks
+$ ./jmhplot.py --config jmh_plot.json --file analysis/get_benchmarks
+```
+
+#### Allocation
+
+For these benchmarks, allocation has been excluded from the benchmark costs by
+pre-allocating a quantity of buffers of the appropriate kind as part of the test
+setup. Each run of the benchmark grabs an existing buffer from the pre-allocated
+FIFO list which has been set up, and returns it afterwards. We ran a small test
+to confirm that the request and return cycle is of insignficant cost compared to
+the benchmark API call.
+
+### GetJNIBenchmark
+
+These benchmarks are distilled to be a measure of
+
+- Carry key across the JNI boundary
+- Look key up in C++
+- Get the resulting value into the supplied buffer
+- Carry the result back across the JNI boundary
+
+Comparing all the benchmarks as the data size tends large, the conclusions we
+can draw are:
+
+- `GetElements` methods for transferring data from C++ to Java are consistently
+  less efficient than other methods.
+- Indirect byte buffers are pointless; they are just an overhead on plain
+  `byte[]` and the JNI-side only allows them to be accessed via their
+  encapsulated `byte[]`.
+- `SetRegion` and `GetCritical` mechanisms for copying data into a `byte[]` are
+  of very comparable performance; presumably the behaviour behind the scenes of
+  `SetRegion` is very similar to that of declaring a critical region, doing a
+  `memcpy()` and releasing the critical region.
+- Getting into a raw memory buffer, passed as an address (the `handle` of an
+  `Unsafe` or of a netty `ByteBuf`) is of similar cost to the more efficient
+  `byte[]` operations.
+- Getting into a direct `nio.ByteBuffer` is of similar cost again; while the
+  ByteBuffer is passed over JNI as an ordinary Java object, JNI has a specific
+  method for getting hold of the address of the direct buffer, and this done the
+  `get()` cost is effectively that of the `memcpy()`.
+
+![Raw JNI Get](./analysis/get_benchmarks/fig_1024_1_none_nopoolbig.png).
+
+At small(er) data sizes, we can see whether other factors are important.
+
+- Indirect byte buffers are the most significant overhead here. Again, we can
+  conclude that we want to discount them entirely.
+- At the lowest data sizes, netty `ByteBuf`s and unsafe memory are marginally
+  more efficient than `byte[]`s or (slightly less efficient) direct
+  `nio.Bytebuffer`s. This may perhaps be explained by even the small cost of
+  entering the JNI model in some fashion on the C++ side simply to acquire a
+  direct buffer address. The margins (nanoseconds) here are extremely small.
+
+![Raw JNI Get](./analysis/get_benchmarks/fig_1024_1_none_nopoolsmall.png).
+
+#### Post processing the results
+
+Our benchmark model for post-processing is to transfer the results into a
+`byte[]`. Where the result is already a `byte[]` this may seem like an unfair
+extra cost, but the aim is to model the least cost processing step for any kind
+of result.
+
+- Copying into a `byte[]` using the bulk methods supported by `byte[]`,
+  `nio.ByteBuffer` are comparable.
+- Accessing the contents of an `Unsafe` buffer using the supplied unsafe methods
+  is very inefficient. These methods do not seem optimized for this use case.
+- Accessing the contents of a netty `ByteBuf` is extremely fast. I'm not even
+  sure that there is a cost beyond that of the initial fetch, and I'm suspicious
+  that a copy is not happening. But interestingly, `ByteBuf` has a special
+  interface (a `ByteProcessor`) for processing the contents of a `ByteBuf`, and
+  that may be highly optimized, as per the stated aims of the netty system.
+
+![Copy out JNI Get](./analysis/get_benchmarks/fig_1024_1_copyout_nopoolbig.png).
+
+#### Conclusion
+
+Performance analysis shows that for `get()`, fetching into allocated `byte[]` is
+just as efficient as any other mechanism. Copying out or otherwise using the
+result is straightforward and efficient. Using `byte[]` avoids the manual memory
+management required with direct `nio.ByteBuffer`s, which extra work does not
+appear to provide any gain. A C++ implementation using the `GetRegion` JNI
+method is probably to be preferred to using `GetCritical` because while their
+performance is equal, `GetRegion` abstracts slightly further the operations we
+want to use.
+
+The `ByteBuf` class provided by netty is intriguing, and its `ByteProcessor`
+mechanism needs investigated further; either it is extremely efficient or I have
+done something wrong in using it; probably the latter.
+
+Vitally, whatever JNI transfer mechanism is chosen, the buffer allocation
+mechanism and pattern is crucial to achieving good performance. We experimented
+with making use of netty's pooled allocator part of the benchmark, and the
+difference of `getIntoPooledNettyByteBuf`, using the allocator, compared to
+`getIntoNettyByteBuf` using the same pre-allocate on setup as every other
+benchmark, is significant.
+
+![Pooled allocation effect on JNI Get](./analysis/get_benchmarks/fig_1024_1_none_allsmall.png).
+
+### PutJNIBenchmark
+
+These benchmarks are distilled to be a measure of
+
+- Carry key across the JNI boundary
+- Carry data across he JNI boundary
+- Look up slot for key up in C++
+- Copy the data into the buffer slot
+- Return over the JNI boundary
+
+Comparing the put benchmarks we see a serious divergence between
+`GetElements`-based operations, and others. It is much more pronounced than for
+`get()`, and the large gap is not immediately explicable.
+
+- Is the benchmark not doing something it should ? This seems possible, given it
+  is newly written, and we should add some validation that operations are really
+  happening.
+- Within the clusters of results, we still see the same trends as before.
+- The netty buffers `ByteBuf` and `Unsafe` memory are the most efficient sources
+  of data, but they are not significantly faster than using a simple `byte[]`
+  with a `SetRegion` JNI call, and for the simplicity and generality of the
+  interface a `byte[]` should be preferred.
+
+![Raw JNI Put](./analysis/put_benchmarks/fig_1024_1_17_none_allbig.png).
+
+Analysing for smaller data values, as for `get()` we see that netty `ByteBuf`
+and `Unsafe` memory are the most efficient. Again the benefit over simple
+`byte[]` use
+
+![Raw JNI Put, Small data sizes](./analysis/put_benchmarks/fig_1024_1_17_none_allsmall.png).
 
 ## Running and Developing Tests
 

@@ -3,6 +3,13 @@
         {
             "xaxisparam": {
                 "name": "valueSize",
+                "min": 1024
+            },
+            "label": "allbig"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize",
                 "min": 1,
                 "max": 4096
             },
