@@ -481,13 +481,10 @@ of result.
   `nio.ByteBuffer` are comparable.
 - Accessing the contents of an `Unsafe` buffer using the supplied unsafe methods
   is very inefficient. These methods do not seem optimized for this use case.
-- Accessing the contents of a netty `ByteBuf` is extremely fast. I'm not even
-  sure that there is a cost beyond that of the initial fetch, and I'm suspicious
-  that a copy is not happening. But interestingly, `ByteBuf` has a special
-  interface (a `ByteProcessor`) for processing the contents of a `ByteBuf`, and
-  that may be highly optimized, as per the stated aims of the netty system.
+- Accessing the contents of a netty `ByteBuf` (awaiting results - not as fast as
+  hoped)
 
-![Copy out JNI Get](./analysis/get_benchmarks/fig_1024_1_copyout_nopoolbig.png).
+![Copy out JNI Get - TODO - replace the plots](./analysis/get_benchmarks/fig_1024_1_copyout_nopoolbig.png).
 
 #### Conclusion
 
@@ -499,10 +496,6 @@ appear to provide any gain. A C++ implementation using the `GetRegion` JNI
 method is probably to be preferred to using `GetCritical` because while their
 performance is equal, `GetRegion` abstracts slightly further the operations we
 want to use.
-
-The `ByteBuf` class provided by netty is intriguing, and its `ByteProcessor`
-mechanism needs investigated further; either it is extremely efficient or I have
-done something wrong in using it; probably the latter.
 
 Vitally, whatever JNI transfer mechanism is chosen, the buffer allocation
 mechanism and pattern is crucial to achieving good performance. We experimented

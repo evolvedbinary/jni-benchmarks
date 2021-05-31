@@ -1,0 +1,19 @@
+{
+    "benchmark": "GetJNIBenchmark",
+    "jvmargs": ["Xmx4G", "XX:ErrorFile=./results/hs_err_pid%p.log", "XX:+HeapDumpOnOutOfMemoryError"],
+    "params": {
+        "valueSize": [50, 1024, 4096, 16384],
+        "cacheMB": [1],
+        "checksum": ["none", "copyout"]
+    },
+    "options": {
+        "batchsize": 1,
+        "warmupiterations": 5,
+        "warmuptime": "10ms",
+        "iterations": 5,
+        "time": "50ms"
+    },
+    "result.path": "./results",
+    "java.library.path": "target/jni-benchmarks-1.0.1-SNAPSHOT-application/jni-benchmarks-1.0.1-SNAPSHOT/lib",
+    "jar": "target/jni-benchmarks-1.0.1-SNAPSHOT-benchmarks.nar"
+}

@@ -129,6 +129,8 @@ public class GetJNIBenchmark {
             switch (benchmarkState.caller.benchmarkMethod) {
                 case "getIntoPooledNettyByteBuf":
                     pooledByteBufAllocator = PooledByteBufAllocator.DEFAULT;
+                    //create a 0-sized cache so that we can use it to do checksum
+                    nettyByteBufCache.setup(valueSize, 0/*cacheSize*/, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
                 case "getIntoNettyByteBuf":
                     nettyByteBufCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
@@ -216,9 +218,11 @@ public class GetJNIBenchmark {
     @Benchmark
     public void getIntoPooledNettyByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuf byteBuf = threadState.pooledByteBufAllocator.directBuffer(benchmarkState.valueSize);
+        byteBuf.readerIndex(0);
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuf.memoryAddress(), benchmarkState.valueSize);
-        //TODO checksumBuffer operation - we can use this for the "none" checksum in the meantime.
-
+        byteBuf.writerIndex(size);
+        //Use 0-sized cache which we created specially to do checksumBuffer operation
+        threadState.nettyByteBufCache.checksumBuffer(byteBuf);
         // Allocated buffer already has retain count of 1
         byteBuf.release();
     }
