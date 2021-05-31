@@ -26,11 +26,16 @@
  */
 package com.evolvedbinary.jnibench.jmhbench.cache;
 
+import com.evolvedbinary.jnibench.jmhbench.GetJNIBenchmark;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ByteProcessor;
 
+import java.util.logging.Logger;
+
 public class NettyByteBufCache extends LinkedListAllocationCache<ByteBuf> {
+
+    private static final Logger LOG = Logger.getLogger(NettyByteBufCache.class.getName());
 
     PooledByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
 

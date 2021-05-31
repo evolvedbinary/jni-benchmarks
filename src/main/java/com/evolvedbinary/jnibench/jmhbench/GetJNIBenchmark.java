@@ -226,7 +226,9 @@ public class GetJNIBenchmark {
     @Benchmark
     public void getIntoNettyByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         ByteBuf byteBuf = threadState.nettyByteBufCache.acquire();
+        byteBuf.readerIndex(0);
         int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuf.memoryAddress(), benchmarkState.valueSize);
+        byteBuf.writerIndex(size);
         threadState.nettyByteBufCache.checksumBuffer(byteBuf);
         threadState.nettyByteBufCache.release(byteBuf);
     }
