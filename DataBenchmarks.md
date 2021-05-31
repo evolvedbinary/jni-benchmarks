@@ -436,6 +436,9 @@ These benchmarks are distilled to be a measure of
 Comparing all the benchmarks as the data size tends large, the conclusions we
 can draw are:
 
+- Benchmarks ran for a duration of order 6 hours on an otherwise unloaded VM,
+  the error bars are small and we can have strong confidence in the values
+  derived and plotted.
 - `GetElements` methods for transferring data from C++ to Java are consistently
   less efficient than other methods.
 - Indirect byte buffers are pointless; they are just an overhead on plain
@@ -537,11 +540,31 @@ Comparing the put benchmarks we see a serious divergence between
 
 Analysing for smaller data values, as for `get()` we see that netty `ByteBuf`
 and `Unsafe` memory are the most efficient. Again the benefit over simple
-`byte[]` use
+`byte[]` use is very marginal, surely not worth the complexity.
 
 ![Raw JNI Put, Small data sizes](./analysis/put_benchmarks/fig_1024_1_17_none_allsmall.png).
 
+#### Pre processing the data
+
+The `put()` equivalent of post-processing is pre-processing, and we choose to do
+this by filling the buffer with a constant value as efficiently as we can.
+
+TBD
+
+### Further Work
+
+As we have argued above, we have fairly robust results for `get()`, with the
+exception of copying out for netty `ByteBuf`s. Our results for `put()` are more
+questionable, but do seem to confirm certain aspects of the `get()` results.
+
+- Check/confirm/refute `get()` into netty `ByteBuf` copyout results.
+- Check/confirm/refute `put()` results for operations other than
+  `GetElements`-based ones.
+
 ## Running and Developing Tests
+
+This is by way of an Appendix, and describes how to recreate the results, and
+run modified benchmarks, as easily as possible.
 
 ### Check out the repository
 
