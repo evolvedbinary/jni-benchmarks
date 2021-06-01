@@ -71,7 +71,7 @@ struct WriteKey
   std::string key;
   size_t length;
 
-  WriteKey(const std::string &key, size_t length) : key(key), length(length)
+  WriteKey(const std::string &key, size_t length) : key(key, 38), length(length)
   {
   }
 };
@@ -100,18 +100,12 @@ static auto DB_WRITE_MOCK = std::unordered_map<WriteKey, char *>();
 
 char *GetByteArrayInternalForWrite(const char *key, size_t size)
 {
-  std::cout << "DB[" << DB_WRITE_MOCK.size() << "|" << key << "," << strlen(key) << "]";
   auto writeKey = WriteKey(key, size);
   auto it = DB_WRITE_MOCK.find(writeKey);
   if (it == DB_WRITE_MOCK.end())
   {
-    std::cout << "DB not found";
     DB_WRITE_MOCK[writeKey] = new char[size];
     it = DB_WRITE_MOCK.find(writeKey);
-  }
-  else
-  {
-    std::cout << "DB found";
   }
   return it->second;
 }
