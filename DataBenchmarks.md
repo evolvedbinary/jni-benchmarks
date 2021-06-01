@@ -480,9 +480,11 @@ of result.
 - Copying into a `byte[]` using the bulk methods supported by `byte[]`,
   `nio.ByteBuffer` are comparable.
 - Accessing the contents of an `Unsafe` buffer using the supplied unsafe methods
-  is very inefficient. These methods do not seem optimized for this use case.
-- Accessing the contents of a netty `ByteBuf` (awaiting results - not as fast as
-  hoped)
+  is inefficient. The access is effectively byte by byte, or at best word by
+  word, in Java.
+- Accessing the contents of a netty `ByteBuf` is similarly inefficient; again
+  the access is presumably byte by byte, or at best word by word, using normal
+  Java mechanisms.
 
 ![Copy out JNI Get - TODO - replace the plots](./analysis/get_benchmarks/fig_1024_1_copyout_nopoolbig.png).
 
@@ -503,6 +505,11 @@ with making use of netty's pooled allocator part of the benchmark, and the
 difference of `getIntoPooledNettyByteBuf`, using the allocator, compared to
 `getIntoNettyByteBuf` using the same pre-allocate on setup as every other
 benchmark, is significant.
+
+Equally importantly, transfer of data to or from buffers should where possible
+be done in bulk, using array copy or buffer copy mechanisms. Thought should
+perhaps be given to supporting common transformations in the underlying C++
+layer.
 
 ![Pooled allocation effect on JNI Get](./analysis/get_benchmarks/fig_1024_1_none_allsmall.png).
 
@@ -533,7 +540,8 @@ Comparing the put benchmarks we see a serious divergence between
 
 Analysing for smaller data values, as for `get()` we see that netty `ByteBuf`
 and `Unsafe` memory are the most efficient. Again the benefit over simple
-`byte[]` use is very marginal, surely not worth the complexity.
+`byte[]` use is very marginal, and may not be worth the complexity in all but a
+few cases.
 
 ![Raw JNI Put, Small data sizes](./analysis/put_benchmarks/fig_1024_1_17_none_allsmall.png).
 
@@ -542,7 +550,7 @@ and `Unsafe` memory are the most efficient. Again the benefit over simple
 The `put()` equivalent of post-processing is pre-processing, and we choose to do
 this by filling the buffer with a constant value as efficiently as we can.
 
-TBD
+-
 
 ### Further Work
 
