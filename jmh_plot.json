@@ -1,0 +1,87 @@
+{
+    "plots": [
+        {
+            "xaxisparam": {
+                "name": "valueSize",
+                "min": 1024
+            },
+            "label": "allbig"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize",
+                "min": 1,
+                "max": 4096
+            },
+            "label": "allsmall"
+            # defaults to include_patterns of all matching
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize",
+                "min": 1,
+                "max": 4096
+            },
+            "exclude_patterns": ["Pooled"],
+            "label": "nopoolsmall"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize",
+                "min": 1024
+            },
+            "exclude_patterns": ["Pooled"],
+            "label": "nopoolbig"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
+            "include_patterns": ["ByteArray"],
+            "label": "ba"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
+            "include_patterns": ["ByteBuf"],
+            "label": "bb"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
+            "include_patterns": ["Direct"],
+            "label": "dir"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
+            "include_patterns": ["Indirect"],
+            "label": "ind"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
+            "include_patterns": ["Critical"],
+            "label": "crit"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
+            "include_patterns": ["GetElements"],
+            "label": "getelems"
+        },
+        {
+            "xaxisparam": {
+                "name": "valueSize"
+            },
+            "include_patterns": ["SetRegion"],
+            "label": "setreg"
+        }
+    ],
+    "result.path": "./analysis/testplots"
+}

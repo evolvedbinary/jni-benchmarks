@@ -3,18 +3,28 @@
 [![Build Status](https://travis-ci.com/evolvedbinary/jni-benchmarks.svg?branch=main)](https://travis-ci.com/evolvedbinary/jni-benchmarks)
 [![License](https://img.shields.io/badge/license-BSD%203-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-We provide the code for a small set of benchmarks to compare various approaches to solving common JNI use-cases and then present the results.
+We provide the code for a small set of benchmarks to compare various approaches
+to solving common JNI use-cases and then present the results.
 
 The benchmarks at present are:
-* [com.evolvedbinary.jnibench.common.call](tree/main/src/main/java/com/evolvedbinary/jnibench/common/call) - Benchmarks for [Creating Objects with JNI](#jni-object-creation-benchmarks) [(results)](#object-creation-results).
-* [com.evolvedbinary.jnibench.common.array](tree/main/src/main/java/com/evolvedbinary/jnibench/common/array) - Benchmarks for [Passing Arrays with JNI](#jni-array-passing-benchmarks) [(results)](#array-passing-results).
+
+- [com.evolvedbinary.jnibench.common.call](tree/main/src/main/java/com/evolvedbinary/jnibench/common/call) -
+  Benchmarks for [Creating Objects with JNI](#jni-object-creation-benchmarks)
+  [(results)](#object-creation-results).
+- [com.evolvedbinary.jnibench.common.array](tree/main/src/main/java/com/evolvedbinary/jnibench/common/array) -
+  Benchmarks for [Passing Arrays with JNI](#jni-array-passing-benchmarks)
+  [(results)](#array-passing-results).
 
 ## JNI Object Creation Benchmarks
 
-The code contrasts three different approaches to constructing a Java Object that wraps a C++ object (which it has to construct). Such a scenario is common when writing a Java API wrapper for an existing C++ project.
+The code contrasts three different approaches to constructing a Java Object that
+wraps a C++ object (which it has to construct). Such a scenario is common when
+writing a Java API wrapper for an existing C++ project.
 
 ### Scenario 1 - By Call
-From Java we call a JNI C++ member function to construct the C++ object and return a `jlong` which represents the memory pointer to the C++ object.
+
+From Java we call a JNI C++ member function to construct the C++ object and
+return a `jlong` which represents the memory pointer to the C++ object.
 
 ```Java
 public class FooByCall extends NativeBackedObject {
@@ -36,9 +46,9 @@ jlong Java_com_evolvedbinary_jni_consbench_FooByCall_newFoo(JNIEnv* env, jobject
 }
 ```
 
-
 ### Scenario 2 - By Call, Static
-Similar to *Scenario 1*, except that we use a static call to a JNI C++ function.
+
+Similar to _Scenario 1_, except that we use a static call to a JNI C++ function.
 
 ```java
 public class FooByCallStatic extends NativeBackedObject {
@@ -59,9 +69,11 @@ jlong Java_com_evolvedbinary_jni_consbench_FooByCallStatic_newFoo(JNIEnv* env, j
 }
 ```
 
-
 ### Scenario 3 - By Call, Invoke
-Similar to *Scenario 1*, however instead of returning a `jlong` pointer, we instead in C++ find the `_nativeHandle` member of the calling Java object, and then directly set the `long` field from C++.
+
+Similar to _Scenario 1_, however instead of returning a `jlong` pointer, we
+instead in C++ find the `_nativeHandle` member of the calling Java object, and
+then directly set the `long` field from C++.
 
 ```java
 public class FooByCallInvoke extends NativeBackedObject {
@@ -128,11 +140,15 @@ class FooByCallInvokeJni : public FooJniClass<consbench::Foo*, FooByCallInvokeJn
 ```
 
 ### 3 Scenario 4, 5, and 6
-Scenarios 4, 5, and 6 are similar to 1, 2, and 3 respectively, except that the Java classes have been marked as `final`.
 
+Scenarios 4, 5, and 6 are similar to 1, 2, and 3 respectively, except that the
+Java classes have been marked as `final`.
 
 ### Object Creation Results
-Test machine: MacBook Pro 15-inch 2019: 2.4 GHz 8-Core Intel Core i9 / 32 GB 2400 MHz DDR4. OS X 10.15.2 / Oracle JDK 8.
+
+Test machine: MacBook Pro 15-inch 2019: 2.4 GHz 8-Core Intel Core i9 / 32 GB
+2400 MHz DDR4. OS X 10.15.2 / Oracle JDK 8.
+
 ```bash
 $ java -version
 java version "1.8.0_221"
@@ -147,28 +163,38 @@ Target: x86_64-apple-darwin19.2.0
 Thread model: posix
 ```
 
-The `com.evolvedbinary.jnibench.consbench.Benchmark` class already calls each scenario 1,000,000 times, so for the benchmark we repeated this 100 times and plotted the results.
+The `com.evolvedbinary.jnibench.consbench.Benchmark` class already calls each
+scenario 1,000,000 times, so for the benchmark we repeated this 100 times and
+plotted the results.
 
 ![Image of JNI Object Creation Benchmark Results](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/main/benchmark-results.png)
 
 ### Object Creation Conclusions
-The difference between the non-final (Scenarios 1 - 3) and the final (Scenarios 4 - 6) class versions is so small that
-it could easily be accounted for by system noise.
 
-Scenario 2 and 5 - By Call, Static, appear to have the lowest JNI overhead for constructing C++ objects from Java.
+The difference between the non-final (Scenarios 1 - 3) and the final (Scenarios
+4 - 6) class versions is so small that it could easily be accounted for by
+system noise.
 
+Scenario 2 and 5 - By Call, Static, appear to have the lowest JNI overhead for
+constructing C++ objects from Java.
 
 ## JNI Array Passing Benchmarks
 
-The code contrasts several different approaches to passing an array of complex objects from C++ into Java. This can be done as either 2 independent arrays (one for each complex object property), or as an array of tuple objects holding the values. Allocation can be done in either C++ or Java. Such a scenario is common when writing a Java API wrapper for an existing C++ project.
-NOTE: The C++ JNI code includes appropriate error checking, as the code has to be correct as well as performant! 
+The code contrasts several different approaches to passing an array of complex
+objects from C++ into Java. This can be done as either 2 independent arrays (one
+for each complex object property), or as an array of tuple objects holding the
+values. Allocation can be done in either C++ or Java. Such a scenario is common
+when writing a Java API wrapper for an existing C++ project. NOTE: The C++ JNI
+code includes appropriate error checking, as the code has to be correct as well
+as performant!
 
 The complex object in Java looks like:
+
 ```java
 public class FooObject {
   final String name;
   final long value;
-  
+
   public FooObject(final String name, final long value) {
     this.name = name;
     this.value = value;
@@ -177,6 +203,7 @@ public class FooObject {
 ```
 
 The complex object in C++ looks like:
+
 ```C++
 class FooObject {
   public:
@@ -191,10 +218,15 @@ class FooObject {
 };
 ```
 
-The goal is to benchmark different approaches for returning Arrays/Lists of the C++ FooObject to Java.  
+The goal is to benchmark different approaches for returning Arrays/Lists of the
+C++ FooObject to Java.
 
 ### Scenario 1 - Allocate Complex Object array in Java, Fill in C++
-We allocate a Java array in Java, and then in C++ we create Java complex objects and add them to the array. We then return to Java and wrap the array in an ArrayList.
+
+We allocate a Java array in Java, and then in C++ we create Java complex objects
+and add them to the array. We then return to Java and wrap the array in an
+ArrayList.
+
 ```java
 public class AllocateInJavaGetArray implements JniListSupplier<FooObject> {
   public List<FooObject> getObjectList(final NativeObjectArray<FooObject> nativeObjectArray) {
@@ -248,7 +280,10 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArray_getArra
 ```
 
 ### Scenario 2 - Allocate Complex Object array and fill with mutable objects in Java, mutate the objects in C++
-We allocate a Java array in Java, and fill it with mutable complex java objects. In C++ we then update the mutable objects, then returning to Java, where we wrap the array in an ArrayList.
+
+We allocate a Java array in Java, and fill it with mutable complex java objects.
+In C++ we then update the mutable objects, then returning to Java, where we wrap
+the array in an ArrayList.
 
 ```java
 public class AllocateInJavaGetMutableArray implements JniListSupplier<FooObject> {
@@ -340,9 +375,12 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray_
 ```
 
 ### Scenario 3 - Allocate 2 arrays in Java, Fill in C++, copy to Complex Object Array in Java
-In Java we allocate 2 arrays, one for each property of the complex object of which we ultimately want to return an array of.
-We then pass those 2 arrays to C++ via JNI. In C++ we populate those two arrays, and return them to Java. Back in Java we create
-an array of complex objects based on the values of those two arrays.
+
+In Java we allocate 2 arrays, one for each property of the complex object of
+which we ultimately want to return an array of. We then pass those 2 arrays to
+C++ via JNI. In C++ we populate those two arrays, and return them to Java. Back
+in Java we create an array of complex objects based on the values of those two
+arrays.
 
 ```java
 public class AllocateInJavaGet2DArray implements JniListSupplier<FooObject> {
@@ -364,7 +402,7 @@ public class AllocateInJavaGet2DArray implements JniListSupplier<FooObject> {
   private static native void getArrays(final long handle,
       final String[] paths, final long[] targetSizes);
 }
-````
+```
 
 ```C++
 jlong Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGet2DArray_getArraySize
@@ -405,8 +443,11 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGet2DArray_getAr
   env->ReleaseLongArrayElements(value_array, value_array_ptr, 0);
 }
 ```
+
 ### Scenario 4 - Allocate Complex Object Array in C++, Fill in C++
-In C++ we allocate a Java array, and then we create Java complex objects and add them to the array. We then return to Java and wrap the array in an ArrayList.
+
+In C++ we allocate a Java array, and then we create Java complex objects and add
+them to the array. We then return to Java and wrap the array in an ArrayList.
 
 ```java
 public class AllocateInCppGetArray implements JniListSupplier<FooObject> {
@@ -460,9 +501,11 @@ jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGetArray_
 ```
 
 ### Scenario 5 - Allocate 2 arrays in C++, Fill in C++, copy to Complex Object Array in Java
-In C++ we allocate 2 Java arrays, one for each property of the complex object of which we ultimately want to return an array of.
-We then populate those 2 arrays, and return them to Java. Back in Java we create
-an array of complex objects based on the values of those two arrays.
+
+In C++ we allocate 2 Java arrays, one for each property of the complex object of
+which we ultimately want to return an array of. We then populate those 2 arrays,
+and return them to Java. Back in Java we create an array of complex objects
+based on the values of those two arrays.
 
 ```java
 public class AllocateInCppGet2DArray implements JniListSupplier<FooObject> {
@@ -588,13 +631,17 @@ jobjectArray Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGet2DArra
 ```
 
 ### Scenario 6 - Allocate 2 arrays in C++, Fill in C++, copy to custom List (backed by 2 arrays) in Java
-This is an extended version of Scenario 5, where the resultant 2 arrays are wrapped in a custom list. This scenario
-is concerned with reducing the number of data copies that are needed in Scenario 3. The C++ code is the same as that in Scenario 3, for the Java code see:
+
+This is an extended version of Scenario 5, where the resultant 2 arrays are
+wrapped in a custom list. This scenario is concerned with reducing the number of
+data copies that are needed in Scenario 3. The C++ code is the same as that in
+Scenario 3, for the Java code see:
 [AllocateInJavaGetArrayList.java](https://github.com/evolvedbinary/jni-benchmarks/blob/main/src/main/java/com/evolvedbinary/jnibench/common/array/AllocateInCppGet2DArrayListWrapper.java).
 
-
 ### Scenario 7 - Allocate ArrayList in Java, and fill with Complex Object in C++
-This is similar to Scenario 1, but operates directly with a `java.util.ArrayList` instead of an array.
+
+This is similar to Scenario 1, but operates directly with a
+`java.util.ArrayList` instead of an array.
 
 ```java
 public class AllocateInJavaGetArrayList implements JniListSupplier<FooObject> {
@@ -650,10 +697,12 @@ void Java_com_evolvedbinary_jnibench_common_array_AllocateInJavaGetArrayList_get
     }
   }
 }
-``` 
+```
 
 ### Scenario 8 - Allocate ArrayList in C++, and fill with Complex Object in C++
-This is similar to Scenario 4, but operates directly with a `java.util.ArrayList` instead of an array.
+
+This is similar to Scenario 4, but operates directly with a
+`java.util.ArrayList` instead of an array.
 
 ```java
 public class AllocateInCppGetArrayList implements JniListSupplier<FooObject> {
@@ -725,7 +774,10 @@ jobject Java_com_evolvedbinary_jnibench_common_array_AllocateInCppGetArrayList_g
 ```
 
 ### Array Passing Results
-Test machine: MacBook Pro 15-inch 2019: 2.4 GHz 8-Core Intel Core i9 / 32 GB 2400 MHz DDR4. OS X 10.15.2 / Liberica OpenJDK 8.
+
+Test machine: MacBook Pro 15-inch 2019: 2.4 GHz 8-Core Intel Core i9 / 32 GB
+2400 MHz DDR4. OS X 10.15.2 / Liberica OpenJDK 8.
+
 ```bash
 $ java -version
 openjdk version "1.8.0_252"
@@ -740,46 +792,61 @@ Target: x86_64-apple-darwin19.6.0
 Thread model: posix
 ```
 
-The `com.evolvedbinary.jnibench.consbench.Benchmark` class already calls each scenario 1,000,000 times, so for the benchmark we repeated this 100 times and plotted the results.
+The `com.evolvedbinary.jnibench.consbench.Benchmark` class already calls each
+scenario 1,000,000 times, so for the benchmark we repeated this 100 times and
+plotted the results.
 
 ![Image of JNI Array Passing Benchmark Results when size is 2](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/main/jni-arrays-size-2.png)
 ![Image of JNI Array Passing Benchmark Results when size is 20](https://raw.githubusercontent.com/evolvedbinary/jni-benchmarks/main/jni-arrays-size-20.png)
 
 ### Array Passing Conclusions
-The fastest approach appears to be by performing most of the allocations in Java, and then passing arrays of simple types between C++ and Java.
-For the array/list of complex objects to be returned from C++ to Java,
-allocating one array in Java for each of the complex objects property's,
-and then populating those arrays in C++ seems to be the most performant approach (see `AllocatedInJavaGet2DArray.java`).
+
+The fastest approach appears to be by performing most of the allocations in
+Java, and then passing arrays of simple types between C++ and Java. For the
+array/list of complex objects to be returned from C++ to Java, allocating one
+array in Java for each of the complex objects property's, and then populating
+those arrays in C++ seems to be the most performant approach (see
+`AllocatedInJavaGet2DArray.java`).
 
 # Reproducing
-If you want to run the code yourself, you need to have Java 8, Maven 3, and a C++ compiler that supports the C++ 11 standard. You can then simply run:
+
+If you want to run the code yourself, you need to have Java 8, Maven 3, and a
+C++ compiler that supports the C++ 11 standard. You can then simply run:
 
 ```bash
 $ mvn clean compile package
 ```
 
-In the `target/` sub-directory, you will then find both a `jni-benchmarks-1.0.0-SNAPSHOT-application` folder
-and a `jni-benchmarks-1.0.0-SNAPSHOT-application.zip` file, you can use either of these.
-They both contain bash scripts in their `bin/` sub-folders for Mac, Linux, Unix and batch scripts for Windows.
-These scripts will run a single iteration of the benchmark.
+In the `target/` sub-directory, you will then find both a
+`jni-benchmarks-1.0.0-SNAPSHOT-application` folder and a
+`jni-benchmarks-1.0.0-SNAPSHOT-application.zip` file, you can use either of
+these. They both contain bash scripts in their `bin/` sub-folders for Mac,
+Linux, Unix and batch scripts for Windows. These scripts will run a single
+iteration of the benchmark.
 
-If you want to run multiple iterations and get a CSV file of the results, you can use `benchmark-100.sh`
-and/or `benchmark-100-with-close.sh`, or `array-benchmark-100.sh`. 
+If you want to run multiple iterations and get a CSV file of the results, you
+can use `benchmark-100.sh` and/or `benchmark-100-with-close.sh`, or
+`array-benchmark-100.sh`.
 
 ## JMH support
-We have support for running the tests via JMH, see `jmh-benchmarks.sh`. You can also pass `--help`
-to the script to see JMH options.
+
+We have support for running the tests via JMH, see `jmh-benchmarks.sh`. You can
+also pass `--help` to the script to see JMH options.
 
 ### Byte array benchmarks
-There are two benchmarks, which are currently available only via JMH: ByteArrayFromNativeBenchmark and ByteArrayToNativeBenchmark.
-They can be run multiple times using `jmh-benchmarks-parametrized.sh` with:
+
+There are two benchmarks, which are currently available only via JMH:
+ByteArrayFromNativeBenchmark and ByteArrayToNativeBenchmark. They can be run
+multiple times using `jmh-benchmarks-parametrized.sh` with:
 
 ```bash
 ./jmh-benchmarks-parametrized.sh -i 10 -b ByteArrayToNativeBenchmark -o results/ -f csv
 ```
 
-Above command will run JMH with ByteArrayToNativeBenchmark benchmarks 10 times and store result in CSV files in 'results' directory.
-You can also pass `--help` to the script to see additional JMH options that can be passed.
+Above command will run JMH with ByteArrayToNativeBenchmark benchmarks 10 times
+and store result in CSV files in 'results' directory. You can also pass `--help`
+to the script to see additional JMH options that can be passed.
+
 <p>
 Results can then be plotted using `process_byte_array_benchmarks_results.py` script.
 For results of ByteArrayToNativeBenchmark benchmarks:
