@@ -14,6 +14,9 @@ The benchmarks at present are:
 - [com.evolvedbinary.jnibench.common.array](tree/main/src/main/java/com/evolvedbinary/jnibench/common/array) -
   Benchmarks for [Passing Arrays with JNI](#jni-array-passing-benchmarks)
   [(results)](#array-passing-results).
+  
+## JNI Data Transfer Benchmarks
+For benchmarks on JNI Data Transfer see - https://github.com/evolvedbinary/jni-benchmarks/blob/main/DataBenchmarks.md
 
 ## JNI Object Creation Benchmarks
 
