@@ -1,0 +1,23 @@
+version: 2.1
+
+jobs:
+  build-and-test:
+    parameters:
+      jdk:
+        type: string
+    docker:
+      - image: cimg/openjdk:<< parameters.jdk >>
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: mvn -B -DskipTests clean package
+
+workflows:
+  build:
+    jobs:
+      - build-and-test:
+          matrix:
+            parameters:
+              jdk: ["8.0", "11.0", "17.0", "21.0"]

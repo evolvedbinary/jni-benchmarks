@@ -1,6 +1,6 @@
 # JNI Benchmarks
 
-[![Build Status](https://travis-ci.com/evolvedbinary/jni-benchmarks.svg?branch=main)](https://travis-ci.com/evolvedbinary/jni-benchmarks)
+[![Build Status](https://dl.circleci.com/status-badge/img/gh/evolvedbinary/jni-benchmarks/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/evolvedbinary/jni-benchmarks/tree/main)
 [![License](https://img.shields.io/badge/license-BSD%203-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 We provide the code for a small set of benchmarks to compare various approaches
