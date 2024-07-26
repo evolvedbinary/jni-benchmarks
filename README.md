@@ -53,15 +53,12 @@ multiple times using `jmh-benchmarks-parametrized.sh` with:
 ./jmh-benchmarks-parametrized.sh -i 10 -b ByteArrayToNativeBenchmark -o results/ -f csv
 ```
 
-Above command will run JMH with ByteArrayToNativeBenchmark benchmarks 10 times
-and store result in CSV files in 'results' directory. You can also pass `--help`
-to the script to see additional JMH options that can be passed.
+The above command will run JMH with `ByteArrayToNativeBenchmark` benchmarks `10` times and store result in CSV files in `results` directory. You can also pass `--help` to the script to see additional JMH options that can be used.
 
-<p>
-Results can then be plotted using `process_byte_array_benchmarks_results.py` script.
-For results of ByteArrayToNativeBenchmark benchmarks:
+Results can then be plotted using the `process_byte_array_benchmarks_results.py` script. For example, to produce results for the `ByteArrayToNativeBenchmark` benchmarks, you can run:
 ```bash
 python3 process_byte_array_benchmarks_results.py -p results/ --param-name "Param: keySize" --chart-title "Performance comparison of passing byte array with {} bytes via JNI"
 ```
-Command line parameter `p` expects path to directory with JMH result CSV files from running benchmarks with `jmh-benchmarks-parametrized.sh`.
-The `{}` in `chart-title` parameter will be replaced by value from `param-name` column.
+
+Command line parameter `p` expects a path to the directory with the JMH result CSV files from running the benchmarks with `jmh-benchmarks-parametrized.sh`.
+The `{}` in the `chart-title` parameter will be replaced by the value from the `param-name` column.
