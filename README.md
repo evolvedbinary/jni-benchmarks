@@ -16,7 +16,7 @@ The benchmarks at present are:
   Benchmarks for [Passing Arrays with JNI](ArrayPassingBenchmarks.md)
   [(results)](ArrayPassingBenchmarks.md#array-passing-results).
 
-3. [com.evolvedbinary.jnibench.common.bytearray](tree/main/src/main/java/com/evolvedbinary/jnibench/common/bytearray), and [com.evolvedbinary.jnibench.common.getputjni](tree/main/src/main/java/com/evolvedbinary/jnibench/common/getputjni) - Benchmarks for [JNI Data Transfer](DataBenchmarks.md)
+3. [com.evolvedbinary.jnibench.common.bytearray](tree/main/src/main/java/com/evolvedbinary/jnibench/common/bytearray), and [com.evolvedbinary.jnibench.common.getputjni](tree/main/src/main/java/com/evolvedbinary/jnibench/common/getputjni) - Benchmarks for [JNI Data Transfer](DataBenchmarks.md).
 
 # Reproducing
 
@@ -62,3 +62,7 @@ python3 process_byte_array_benchmarks_results.py -p results/ --param-name "Param
 
 Command line parameter `p` expects a path to the directory with the JMH result CSV files from running the benchmarks with `jmh-benchmarks-parametrized.sh`.
 The `{}` in the `chart-title` parameter will be replaced by the value from the `param-name` column.
+
+# Other Resources
+1. Java Foreign Interface prototype and performance results in RocksJava (i.e. Panama) - https://rocksdb.org/blog/2024/02/20/foreign-function-interface.html
+2. RocksJava API Performance Improvements - https://rocksdb.org/blog/2023/11/06/java-jni-benchmarks.html
