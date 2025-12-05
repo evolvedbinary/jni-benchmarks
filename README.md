@@ -28,8 +28,8 @@ $ mvn clean compile package
 ```
 
 In the `target/` sub-directory, you will then find both a
-`jni-benchmarks-1.0.0-SNAPSHOT-application` folder and a
-`jni-benchmarks-1.0.0-SNAPSHOT-application.zip` file, you can use either of
+`jni-benchmarks-1.0.1-SNAPSHOT-application` folder and a
+`jni-benchmarks-1.0.1-SNAPSHOT-application.zip` file, you can use either of
 these. They both contain bash scripts in their `bin/` sub-folders for Mac,
 Linux, Unix and batch scripts for Windows. These scripts will run a single
 iteration of the benchmark.
