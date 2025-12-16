@@ -83,6 +83,7 @@
                     <target>${java.target.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArgs>
+                        <arg>-proc:full</arg>
                         <arg>-h</arg>
                         <arg>${project.build.directory}/nar/javah-include</arg>
                     </compilerArgs>
