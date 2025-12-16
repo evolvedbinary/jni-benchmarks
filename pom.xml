@@ -82,6 +82,10 @@
                     <source>${java.source.version}</source>
                     <target>${java.target.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <arg>-h</arg>
+                        <arg>${project.build.directory}/nar/javah-include</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
@@ -103,6 +107,9 @@
                             <option>-O3</option>
                         </options>
                     </cpp>
+                    <javah>
+                        <skip>true</skip>
+                    </javah>
                 </configuration>
             </plugin>
 
