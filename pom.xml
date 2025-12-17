@@ -45,8 +45,6 @@
     </licenses>
 
     <properties>
-        <java.source.version>25</java.source.version>
-        <java.target.version>25</java.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <jmh.version>1.36</jmh.version>
@@ -82,11 +80,6 @@
                     <source>${java.source.version}</source>
                     <target>${java.target.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
-                    <compilerArgs>
-                        <arg>-proc:full</arg>
-                        <arg>-h</arg>
-                        <arg>${project.build.directory}/nar/javah-include</arg>
-                    </compilerArgs>
                 </configuration>
             </plugin>
 
@@ -108,9 +101,6 @@
                             <option>-O3</option>
                         </options>
                     </cpp>
-                    <javah>
-                        <skip>true</skip>
-                    </javah>
                 </configuration>
             </plugin>
 
@@ -238,4 +228,82 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>java1.8</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <java.source.version>1.8</java.source.version>
+                <java.target.version>1.8</java.target.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>java21</id>
+            <activation>
+                <jdk>21</jdk>
+            </activation>
+            <properties>
+                <java.source.version>21</java.source.version>
+                <java.target.version>21</java.target.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-proc:full</arg>
+                                <arg>-h</arg>
+                                <arg>${project.build.directory}/nar/javah-include</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.maven-nar</groupId>
+                        <artifactId>nar-maven-plugin</artifactId>
+                        <configuration>
+                            <javah>
+                                <skip>true</skip>
+                            </javah>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>java25</id>
+            <activation>
+                <jdk>25</jdk>
+            </activation>
+            <properties>
+                <java.source.version>25</java.source.version>
+                <java.target.version>25</java.target.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-proc:full</arg>
+                                <arg>-h</arg>
+                                <arg>${project.build.directory}/nar/javah-include</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.maven-nar</groupId>
+                        <artifactId>nar-maven-plugin</artifactId>
+                        <configuration>
+                            <javah>
+                                <skip>true</skip>
+                            </javah>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
