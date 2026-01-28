@@ -37,7 +37,7 @@ public class MemorySegmentCache extends LinkedListAllocationCache<MemorySegment>
   private final Arena arena;
 
   public MemorySegmentCache() {
-    arena = Arena.ofShared();
+    arena = Arena.ofConfined();
   }
 
 
