@@ -32,15 +32,7 @@
 
 #include "com_evolvedbinary_jnibench_common_getputjni_GetPutJNI.h"
 
-/*
- * Turn these into header and factor methods (at least) out from GetByteArray.cpp
- */
-extern const std::string &GetByteArrayInternal(const char *key);
-extern char *GetByteArrayInternalForWrite(const char *key, size_t len);
-
-extern jclass g_jbyte_buffer_clazz;
-extern jmethodID g_jbyte_buffer_array_mid;
-extern jmethodID g_jbyte_buffer_allocate_mid;
+#include "Portal.h"
 
 //
 // Common shortcut code for reading the value from the "fake database"
@@ -74,7 +66,7 @@ jobject Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoDirect
   {
     return nullptr;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   return nullptr;
@@ -94,7 +86,7 @@ jobject Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoDirect
   {
     return nullptr;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   void *buffer_memory = reinterpret_cast<void *>(jval_unsafe_handle);
@@ -118,7 +110,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoUnsafe(JN
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   void *buffer_memory = reinterpret_cast<void *>(jval_unsafe_handle);
@@ -140,7 +132,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromUnsafe(JN
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   void *buffer_memory = reinterpret_cast<void *>(jval_unsafe_handle);
@@ -161,7 +153,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoDirectByt
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   char *byte_buffer = reinterpret_cast<char *>(env->GetDirectBufferAddress(jval_byte_buffer));
@@ -193,7 +185,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromDirectByt
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   char *byte_buffer = reinterpret_cast<char *>(env->GetDirectBufferAddress(jval_byte_buffer));
@@ -225,7 +217,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   size_t get_size = std::min(static_cast<size_t>(jval_len), cvalue.size());
@@ -246,7 +238,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArray
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   env->GetByteArrayRegion(jval_byte_array, 0, jval_len, const_cast<jbyte *>(reinterpret_cast<const jbyte *>(db_buf)));
@@ -266,7 +258,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   jboolean is_copy;
@@ -290,7 +282,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArray
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   jboolean is_copy;
@@ -313,7 +305,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoByteArray
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   jboolean is_copy;
@@ -337,7 +329,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromByteArray
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   jboolean is_copy;
@@ -361,7 +353,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -377,17 +369,18 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   return get_size;
 }
 
-extern "C" int getIntoMemorySegment(const char* key, char* dest, int dest_len) {
-    std::string value = GetByteArrayInternal(key);
-    int size = std::min((int)value.size(), dest_len);
-    memcpy(dest, value.c_str(), size);
-    return size;
+extern "C" int getIntoMemorySegment(const char* key, int key_len, char* dest, int dest_len) {
+  const std::string& value = GetByteArrayInternalWithLength(key, static_cast<size_t>(key_len));
+  const auto size = static_cast<int>(std::min(value.size(), static_cast<size_t>(dest_len)));
+  memcpy(dest, value.data(), static_cast<size_t>(size));
+  return size;
 }
 
-extern "C" int putFromMemorySegment(const char* key, const char* src, int src_len) {
-    char *db_buf = GetByteArrayInternalForWrite(key, src_len);
-    memcpy(db_buf, src, src_len);
-    return src_len;
+extern "C" int putFromMemorySegment(const char* key, int key_len, const char* src, int src_len) {
+  char* db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(key_len),
+                                                        static_cast<size_t>(src_len));
+  memcpy(db_buf, src, static_cast<size_t>(src_len));
+  return src_len;
 }
 
 /*
@@ -403,7 +396,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -431,7 +424,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -463,7 +456,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -494,7 +487,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_getIntoIndirectB
   {
     return kError;
   }
-  std::string cvalue = GetByteArrayInternal(key);
+  std::string cvalue = GetByteArrayInternalWithLength(key, static_cast<size_t>(jkey_len));
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
@@ -526,7 +519,7 @@ jint Java_com_evolvedbinary_jnibench_common_getputjni_GetPutJNI_putFromIndirectB
   {
     return kError;
   }
-  char *db_buf = GetByteArrayInternalForWrite(key, jval_len);
+  char *db_buf = GetByteArrayInternalForWriteWithLength(key, static_cast<size_t>(jkey_len), static_cast<size_t>(jval_len));
   delete[] key;
 
   jbyteArray buffer_internal_byte_array = static_cast<jbyteArray>(env->CallObjectMethod(jval_byte_buffer, g_jbyte_buffer_array_mid));
