@@ -56,7 +56,8 @@ public class PutJNIBenchmarkJava25 extends PutJNIBenchmark {
                                                                                           ValueLayout.JAVA_INT,
                                                                                           ValueLayout.ADDRESS,
                                                                                           ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT)))
+                                                                                          ValueLayout.JAVA_INT),
+                                                                                      Linker.Option.critical(false)))
                                                  .orElseThrow();
 
   }

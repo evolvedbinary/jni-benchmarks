@@ -56,7 +56,8 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
                                                                                           ValueLayout.JAVA_INT,
                                                                                           ValueLayout.ADDRESS,
                                                                                           ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT)))
+                                                                                          ValueLayout.JAVA_INT),
+                                                                                      Linker.Option.critical(false)))
                                                  .orElseThrow();
 
   }
