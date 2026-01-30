@@ -55,8 +55,10 @@ public class PutJNIBenchmarkJava25 extends PutJNIBenchmark {
                                                                                       FunctionDescriptor.of(
                                                                                           ValueLayout.JAVA_INT,
                                                                                           ValueLayout.ADDRESS,
+                                                                                          ValueLayout.JAVA_INT,
                                                                                           ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT)))
+                                                                                          ValueLayout.JAVA_INT),
+                                                                                      Linker.Option.critical(false)))
                                                  .orElseThrow();
 
   }
@@ -117,6 +119,7 @@ public class PutJNIBenchmarkJava25 extends PutJNIBenchmark {
     try {
       final var size = (int) PUT_FROM_MEMORY_SEGMENT_HANDLE.invokeExact(
           benchmarkState.keyMemorySegment, // Pre-allocated segment for key
+          benchmarkState.keyBytes.length,
           segment,
           benchmarkState.valueSize
       );
