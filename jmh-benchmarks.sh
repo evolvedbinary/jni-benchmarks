@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-java -Djava.library.path=target/jni-benchmarks-1.0.0-SNAPSHOT-application/jni-benchmarks-1.0.0-SNAPSHOT/lib -jar target/jni-benchmarks-1.0.0-SNAPSHOT-benchmarks.nar $@ -rf csv
+version=1.0.1
+java -Djava.library.path=target/jni-benchmarks-${version}-SNAPSHOT-application/jni-benchmarks-${version}-SNAPSHOT/lib -jar target/jni-benchmarks-${version}-SNAPSHOT-benchmarks.nar $@ -rf csv

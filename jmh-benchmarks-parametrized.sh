@@ -41,9 +41,11 @@ esac
 done
 set -- "${POSITIONAL[@]}"
 
+# --enable-preview is needed to run Java21 FFM
+version=1.0.1
 for i in `seq 1 $ITERATIONS`;
 do
   echo -en "\rBenchmark run $i/$ITERATIONS"
   TIMESTAMP=$(date +"%s")
-  java -Djava.library.path=target/jni-benchmarks-1.0.0-SNAPSHOT-application/jni-benchmarks-1.0.0-SNAPSHOT/lib -jar target/jni-benchmarks-1.0.0-SNAPSHOT-benchmarks.nar ${BENCHMARK} -rff ${OUTPUT_DIRECTORY}/${BENCHMARK}_${TIMESTAMP}.${FILE_FORMAT} ${POSITIONAL}
+  java --enable-preview -Djava.library.path=target/jni-benchmarks-${version}-SNAPSHOT-application/jni-benchmarks-${version}-SNAPSHOT/lib -jar target/jni-benchmarks-${version}-SNAPSHOT-benchmarks.nar ${BENCHMARK} -rff ${OUTPUT_DIRECTORY}/${BENCHMARK}_${TIMESTAMP}.${FILE_FORMAT} ${POSITIONAL}
 done;
