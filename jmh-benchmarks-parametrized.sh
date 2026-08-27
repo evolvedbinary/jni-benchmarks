@@ -47,5 +47,5 @@ for i in `seq 1 $ITERATIONS`;
 do
   echo -en "\rBenchmark run $i/$ITERATIONS"
   TIMESTAMP=$(date +"%s")
-  java --enable-preview -Djava.library.path=target/jni-benchmarks-${version}-SNAPSHOT-application/jni-benchmarks-${version}-SNAPSHOT/lib -jar target/jni-benchmarks-${version}-SNAPSHOT-benchmarks.nar ${BENCHMARK} -rff ${OUTPUT_DIRECTORY}/${BENCHMARK}_${TIMESTAMP}.${FILE_FORMAT} ${POSITIONAL}
+  java --enable-preview --enable-native-access=ALL-UNNAMED -Djava.library.path=target/jni-benchmarks-${version}-SNAPSHOT-application/jni-benchmarks-${version}-SNAPSHOT/lib -jar target/jni-benchmarks-${version}-SNAPSHOT-benchmarks.nar ${BENCHMARK} -rff ${OUTPUT_DIRECTORY}/${BENCHMARK}_${TIMESTAMP}.${FILE_FORMAT} ${POSITIONAL}
 done;
