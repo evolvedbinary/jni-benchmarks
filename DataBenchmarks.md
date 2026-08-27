@@ -105,7 +105,7 @@ consistent. Current tests mix allocation types:
 
 In testing multiple JNI transfer options, we need to consistently use the same
 allocation patterns so that they do not impact the JNI measurements, and so that
-when we d owant to compare allocation patterns we can do that clearly in
+when we do want to compare allocation patterns we can do that clearly in
 isolation.
 
 #### `get()` Allocation
