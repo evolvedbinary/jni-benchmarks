@@ -41,7 +41,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
 
-public class GetFFMBenchmarkJava25 extends GetJNIBenchmark {
+public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
   private static final MethodHandle GET_INTO_MEMORY_SEGMENT_HANDLE;
 
   static {
@@ -62,7 +62,7 @@ public class GetFFMBenchmarkJava25 extends GetJNIBenchmark {
   }
 
   @State(Scope.Benchmark)
-  public static class GetJNIBenchmarkStateJava25 extends GetJNIBenchmarkState {
+  public static class GetJNIBenchmarkStateJava25 extends GetNativeBenchmarkState {
     private Arena arena;
     private MemorySegment keyMemorySegment;
 
@@ -90,7 +90,7 @@ public class GetFFMBenchmarkJava25 extends GetJNIBenchmark {
     public void setup(final GetJNIBenchmarkStateJava25 benchmarkState, final Blackhole blackhole) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         System.err.println("getIntoMemorySegment() setup() in GetJNIThreadStateJava25");
-        memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetJNIBenchmarkState.MB,
+        memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetNativeBenchmarkState.MB,
                                  benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
       } else {
         throw new RuntimeException(

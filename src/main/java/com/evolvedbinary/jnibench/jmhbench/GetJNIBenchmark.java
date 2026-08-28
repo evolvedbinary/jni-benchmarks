@@ -27,100 +27,27 @@
 package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.common.getputjni.GetPutJNI;
-import com.evolvedbinary.jnibench.consbench.NarSystem;
-import com.evolvedbinary.jnibench.jmhbench.cache.AllocationCache;
-import com.evolvedbinary.jnibench.jmhbench.cache.ByteArrayCache;
-import com.evolvedbinary.jnibench.jmhbench.cache.DirectByteBufferCache;
-import com.evolvedbinary.jnibench.jmhbench.cache.IndirectByteBufferCache;
-import com.evolvedbinary.jnibench.jmhbench.cache.NettyByteBufCache;
-import com.evolvedbinary.jnibench.jmhbench.cache.UnsafeBufferCache;
-import com.evolvedbinary.jnibench.jmhbench.common.JMHCaller;
+import com.evolvedbinary.jnibench.jmhbench.cache.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-/**
- * Benchmark getting byte arrays from native methods.
- */
-@BenchmarkMode(Mode.SampleTime)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
-@Warmup(iterations = 20, time = 100, timeUnit = TimeUnit.NANOSECONDS)
-@Measurement(iterations = 200, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
-public class GetJNIBenchmark {
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-  private static final Logger LOG = Logger.getLogger(GetJNIBenchmark.class.getName());
-
-  static {
-    NarSystem.loadLibrary();
-  }
+public class GetJNIBenchmark extends GetNativeBenchmarkBase {
 
   @State(Scope.Benchmark)
-  public static class GetJNIBenchmarkState {
-
-    @Param({
-        "10",
-        "50",
-        "128",
-        "512",
-        "1024",
-        "4096",
-        "8192",
-        "16384",
-        "32768",
-        "65536",
-        "131072"})
-    int valueSize;
-
-    @Param({"4", "16"})
-    int cacheMB;
-    final static int MB = 1024 * 1024;
-    @Param({"1024"})
-    int cacheEntryOverhead;
-
-    @Param({"none", "copyout", "bytesum", "longsum"})
-    String checksum;
-    AllocationCache.Checksum readChecksum;
-
-    String keyBase;
-    byte[] keyBytes;
-
-    JMHCaller caller;
-
-    protected final JMHCaller getCaller() {
-      return caller;
-    }
-
-    @Setup
-    public void setup() {
-      this.caller = JMHCaller.fromStack();
-      keyBase = "testKeyWithReturnValueSize" + String.format("%07d", valueSize) + "Bytes";
-
-      keyBytes = keyBase.getBytes();
-      readChecksum = AllocationCache.Checksum.valueOf(checksum);
-    }
+  public static class GetJNIBenchmarkState extends GetNativeBenchmarkState {
   }
 
-  @State(Scope.Thread)
+    @State(Scope.Thread)
   public static class GetJNIThreadState {
 
     private DirectByteBufferCache directByteBufferCache = new DirectByteBufferCache();
@@ -133,7 +60,7 @@ public class GetJNIBenchmark {
     @Setup
     public void setup(GetJNIBenchmarkState benchmarkState, Blackhole blackhole) {
       int valueSize = benchmarkState.valueSize;
-      int cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
+      int cacheSize = benchmarkState.cacheMB * GetNativeBenchmarkState.MB;
 
       switch (benchmarkState.caller.benchmarkMethod) {
         case "getIntoPooledNettyByteBuf":

@@ -28,6 +28,7 @@ package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.jmhbench.GetFFMBenchmarkJava21.GetJNIBenchmarkStateJava21;
 import com.evolvedbinary.jnibench.jmhbench.GetFFMBenchmarkJava21.GetJNIThreadStateJava21;
+import com.evolvedbinary.jnibench.jmhbench.GetNativeBenchmarkBase.GetNativeBenchmarkState;
 import com.evolvedbinary.jnibench.jmhbench.cache.MemorySegmentCache;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -43,7 +44,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
 
-public class GetFFMBenchmarkJava21 extends GetJNIBenchmark {
+public class GetFFMBenchmarkJava21 extends GetNativeBenchmarkBase {
   private static final MethodHandle GET_INTO_MEMORY_SEGMENT_HANDLE;
 
   static {
@@ -64,7 +65,7 @@ public class GetFFMBenchmarkJava21 extends GetJNIBenchmark {
   }
 
   @State(Scope.Benchmark)
-  public static class GetJNIBenchmarkStateJava21 extends GetJNIBenchmarkState {
+  public static class GetJNIBenchmarkStateJava21 extends GetNativeBenchmarkState {
     private Arena arena;
     private MemorySegment keyMemorySegment;
 
@@ -91,7 +92,7 @@ public class GetFFMBenchmarkJava21 extends GetJNIBenchmark {
     @Setup
     public void setup(final GetJNIBenchmarkStateJava21 benchmarkState, final Blackhole blackhole) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
-        memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetJNIBenchmarkState.MB,
+        memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetNativeBenchmarkState.MB,
                                  benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
       } else {
         throw new RuntimeException(
