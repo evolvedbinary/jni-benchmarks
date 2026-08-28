@@ -26,8 +26,8 @@
  */
 package com.evolvedbinary.jnibench.jmhbench;
 
-import com.evolvedbinary.jnibench.jmhbench.GetJNIBenchmarkJava21.GetJNIBenchmarkStateJava21;
-import com.evolvedbinary.jnibench.jmhbench.GetJNIBenchmarkJava21.GetJNIThreadStateJava21;
+import com.evolvedbinary.jnibench.jmhbench.GetFFMBenchmarkJava21.GetJNIBenchmarkStateJava21;
+import com.evolvedbinary.jnibench.jmhbench.GetFFMBenchmarkJava21.GetJNIThreadStateJava21;
 import com.evolvedbinary.jnibench.jmhbench.cache.MemorySegmentCache;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -43,7 +43,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
 
-public class GetJNIBenchmarkJava21 extends GetJNIBenchmark {
+public class GetFFMBenchmarkJava21 extends GetJNIBenchmark {
   private static final MethodHandle GET_INTO_MEMORY_SEGMENT_HANDLE;
 
   static {
