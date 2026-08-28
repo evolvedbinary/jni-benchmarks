@@ -191,6 +191,8 @@ def get_system_info() -> str:
 def build_jmh_command(config: Dict) -> list:
 
     cmd = ["java"]
+    cmd.append(f'--enable-preview')
+    cmd.append(f'--enable-native-access=ALL-UNNAMED')
     jvm_args = optional('jvmargs', config)
     if jvm_args:
         if not type(jvm_args) is list:
