@@ -66,8 +66,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 20, time = 100, timeUnit = TimeUnit.NANOSECONDS)
 @Measurement(iterations = 200, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
-//@Warmup(iterations = 100, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
-//@Measurement(iterations = 500, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
 public class GetJNIBenchmark {
 
   private static final Logger LOG = Logger.getLogger(GetJNIBenchmark.class.getName());
