@@ -3,7 +3,7 @@
     "benchmark": "GetJNIBenchmark.getIntoNettyByteBuf|GetJNIBenchmark.getIntoByteArraySetRegion|GetJNIBenchmark.getIntoDirectByteBuffer|GetFFMBenchmarkJava25.getIntoMemorySegment",
     "jvmargs": ["Xmx24G", "XX:+HeapDumpOnOutOfMemoryError"],
     "params": {
-        "valueSize": [50, 4096],
+        "valueSize": [50, 4096, 16384],
         "cacheMB": [1],
         "checksum": ["none"]
     },
