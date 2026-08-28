@@ -48,7 +48,7 @@ public class MemorySegmentCache extends LinkedListAllocationCache<MemorySegment>
 
   @Override
   void free(final MemorySegment buffer) {
-    // Nothing to do here, as we override taerdown() directly.
+    // Nothing to do here, as we override teardown() directly.
   }
 
   @Override
