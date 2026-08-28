@@ -147,8 +147,9 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
                                       Blackhole blackhole) {
     ByteBuffer byteBuffer = threadState.directByteBufferCache.acquire();
     byteBuffer.clear();
-    GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer,
+    int size = GetPutJNI.getIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer,
                                       benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.directByteBufferCache.checksumBuffer(byteBuffer);
     threadState.directByteBufferCache.release(byteBuffer);
   }
@@ -158,6 +159,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
     UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
     int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle,
                                        benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.unsafeBufferCache.checksumBuffer(unsafeBuffer);
     threadState.unsafeBufferCache.release(unsafeBuffer);
   }
@@ -169,6 +171,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
     byteBuf.readerIndex(0);
     int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length,
                                        byteBuf.memoryAddress(), benchmarkState.valueSize);
+    blackhole.consume(size);
     byteBuf.writerIndex(size);
     //Use 0-sized cache which we created specially to do checksumBuffer operation
     threadState.nettyByteBufCache.checksumBuffer(byteBuf);
@@ -194,6 +197,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
     byte[] array = threadState.byteArrayCache.acquire();
     int size = GetPutJNI.getIntoByteArraySetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array,
                                                    benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.byteArrayCache.checksumBuffer(array);
     threadState.byteArrayCache.release(array);
   }
@@ -204,6 +208,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
     byte[] array = threadState.byteArrayCache.acquire();
     int size = GetPutJNI.getIntoByteArrayGetElements(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array,
                                                      benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.byteArrayCache.checksumBuffer(array);
     threadState.byteArrayCache.release(array);
   }
@@ -214,6 +219,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
     byte[] array = threadState.byteArrayCache.acquire();
     int size = GetPutJNI.getIntoByteArrayCritical(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, array,
                                                   benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.byteArrayCache.checksumBuffer(array);
     threadState.byteArrayCache.release(array);
   }
@@ -227,8 +233,9 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
                                                  Blackhole blackhole) {
     ByteBuffer byteBuffer = threadState.indirectByteBufferCache.acquire();
     byteBuffer.clear();
-    GetPutJNI.getIntoIndirectByteBufferSetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer,
+    int size = GetPutJNI.getIntoIndirectByteBufferSetRegion(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, byteBuffer,
                                                  benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.indirectByteBufferCache.checksumBuffer(byteBuffer);
     threadState.indirectByteBufferCache.release(byteBuffer);
   }
@@ -241,6 +248,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
     int size = GetPutJNI.getIntoIndirectByteBufferGetElements(benchmarkState.keyBytes, 0,
                                                               benchmarkState.keyBytes.length, byteBuffer,
                                                               benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.indirectByteBufferCache.checksumBuffer(byteBuffer);
     threadState.indirectByteBufferCache.release(byteBuffer);
   }
@@ -253,6 +261,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
     int size = GetPutJNI.getIntoIndirectByteBufferGetCritical(benchmarkState.keyBytes, 0,
                                                               benchmarkState.keyBytes.length, byteBuffer,
                                                               benchmarkState.valueSize);
+    blackhole.consume(size);
     threadState.indirectByteBufferCache.checksumBuffer(byteBuffer);
     threadState.indirectByteBufferCache.release(byteBuffer);
   }
@@ -275,8 +284,9 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
    * <p>
    * You will need this in the VM args of the run configuration,
    * in order for NAR to find at runtime the native lib it has built:
+   * version=1.0.1
    * <p>
-   * -Djava.library.path=PATH_TO_REPO/target/jni-benchmarks-1.0.0-SNAPSHOT-application/jni-benchmarks-1.0.0-SNAPSHOT/lib
+   * -Djava.library.path=PATH_TO_REPO/target/jni-benchmarks-${version}-SNAPSHOT-application/jni-benchmarks-${version}-SNAPSHOT/lib
    * <p>
    * The parameters we set here configure for debugging,
    * typically we want a much shorter runs than is needed for accurate benchmarking
