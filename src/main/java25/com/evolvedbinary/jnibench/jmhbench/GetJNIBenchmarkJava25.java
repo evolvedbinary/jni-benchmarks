@@ -83,16 +83,18 @@ public class GetJNIBenchmarkJava25 extends GetJNIBenchmark {
   }
 
   @State(Scope.Thread)
-  public static class GetJNIThreadStateJava25 extends GetJNIThreadState {
+  public static class GetJNIThreadStateJava25 {
     private MemorySegmentCache memorySegmentCache = new MemorySegmentCache();
 
     @Setup
     public void setup(final GetJNIBenchmarkStateJava25 benchmarkState, final Blackhole blackhole) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
+        System.err.println("getIntoMemorySegment() setup() in GetJNIThreadStateJava25");
         memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetJNIBenchmarkState.MB,
                                  benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
       } else {
-        super.setup(benchmarkState, blackhole);
+        throw new RuntimeException(
+                "Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
       }
     }
 
@@ -101,7 +103,8 @@ public class GetJNIBenchmarkJava25 extends GetJNIBenchmark {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         memorySegmentCache.tearDown();
       } else {
-        super.tearDown(benchmarkState);
+        throw new RuntimeException(
+                "Don't know how to tearDown() for benchmark: " + benchmarkState.caller.benchmarkMethod);
       }
     }
   }

@@ -130,13 +130,10 @@ public class GetJNIBenchmark {
     private PooledByteBufAllocator pooledByteBufAllocator;
     private NettyByteBufCache nettyByteBufCache = new NettyByteBufCache();
 
-    int valueSize;
-    int cacheSize;
-
     @Setup
     public void setup(GetJNIBenchmarkState benchmarkState, Blackhole blackhole) {
-      valueSize = benchmarkState.valueSize;
-      cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
+      int valueSize = benchmarkState.valueSize;
+      int cacheSize = benchmarkState.cacheMB * GetJNIBenchmarkState.MB;
 
       switch (benchmarkState.caller.benchmarkMethod) {
         case "getIntoPooledNettyByteBuf":

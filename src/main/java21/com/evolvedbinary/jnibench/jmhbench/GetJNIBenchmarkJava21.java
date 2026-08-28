@@ -26,6 +26,8 @@
  */
 package com.evolvedbinary.jnibench.jmhbench;
 
+import com.evolvedbinary.jnibench.jmhbench.GetJNIBenchmarkJava21.GetJNIBenchmarkStateJava21;
+import com.evolvedbinary.jnibench.jmhbench.GetJNIBenchmarkJava21.GetJNIThreadStateJava21;
 import com.evolvedbinary.jnibench.jmhbench.cache.MemorySegmentCache;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -83,7 +85,7 @@ public class GetJNIBenchmarkJava21 extends GetJNIBenchmark {
   }
 
   @State(Scope.Thread)
-  public static class GetJNIThreadStateJava21 extends GetJNIThreadState {
+  public static class GetJNIThreadStateJava21 {
     private MemorySegmentCache memorySegmentCache = new MemorySegmentCache();
 
     @Setup
@@ -92,7 +94,8 @@ public class GetJNIBenchmarkJava21 extends GetJNIBenchmark {
         memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetJNIBenchmarkState.MB,
                                  benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
       } else {
-        super.setup(benchmarkState, blackhole);
+        throw new RuntimeException(
+                "Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
       }
     }
 
@@ -101,7 +104,8 @@ public class GetJNIBenchmarkJava21 extends GetJNIBenchmark {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         memorySegmentCache.tearDown();
       } else {
-        super.tearDown(benchmarkState);
+        throw new RuntimeException(
+                "Don't know how to tearDown() for benchmark: " + benchmarkState.caller.benchmarkMethod);
       }
     }
   }
