@@ -1,6 +1,6 @@
 {
     "help": false,
-    "benchmark": "GetJNIBenchmark",
+    "benchmark": "GetJNIBenchmark.getIntoNettyByteBuf|GetJNIBenchmark.getIntoDirectByteBuffer",
     "jvmargs": ["Xmx24G", "XX:+HeapDumpOnOutOfMemoryError"],
     "params": {
         "valueSize": [50, 4096],
