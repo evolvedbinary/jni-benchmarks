@@ -33,7 +33,9 @@
 
 #include "com_evolvedbinary_jnibench_common_bytearray_GetByteArray.h"
 
-#include "Portal.h"
+#include "JNIBench.h"
+#include "Array.h"
+#include "Call.h"
 
 static const std::string STR_10_B = "pkDHTxmMR1";
 static const std::string STR_50_B = "pkDHTxmMR18N2l9k88EmLgN7cCCTt9rWksb1fEBw397vi5Ug1Y";
