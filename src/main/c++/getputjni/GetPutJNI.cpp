@@ -32,7 +32,7 @@
 
 #include "com_evolvedbinary_jnibench_common_getputjni_GetPutJNI.h"
 
-#include "Portal.h"
+#include "Call.h"
 
 //
 // Common shortcut code for reading the value from the "fake database"

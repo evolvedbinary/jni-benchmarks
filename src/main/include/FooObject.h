@@ -24,6 +24,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef FOO_OBJECT_H_
+#define FOO_OBJECT_H_
+
 #include <string>
 
 namespace jnibench {
@@ -41,3 +44,5 @@ class FooObject {
 };
 
 } // namespace jnibench
+
+#endif // FOO_OBJECT
