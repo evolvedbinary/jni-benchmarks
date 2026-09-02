@@ -7,13 +7,13 @@
         "cacheMB": [1],
         "checksum": ["none"]
     },
-    # "flags": ["lprof"],
+    "flags": {"prof" : "async:libPath=/opt/homebrew/lib/libasyncProfiler.dylib"},
     "options": {
         "batchsize": 2,
-        "warmupiterations": 1,
-        "warmuptime": "10us",
-        "iterations": 1,
-        "time": "10us"
+        "warmupiterations": 5,
+        "warmuptime": "10s",
+        "iterations": 5,
+        "time": "10s"
     },
     "result.path": "./results",
     "java.library.path": "target/jni-benchmarks-1.0.1-SNAPSHOT-application/jni-benchmarks-1.0.1-SNAPSHOT/lib",
