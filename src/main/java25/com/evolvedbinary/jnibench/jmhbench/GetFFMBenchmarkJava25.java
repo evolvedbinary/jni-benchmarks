@@ -65,27 +65,15 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
 
   @State(Scope.Benchmark)
   public static class GetJNIBenchmarkStateJava25 extends GetNativeBenchmarkState {
-    private Arena arena;
-    private MemorySegment keyMemorySegment;
 
-    @Setup
-    public void setupJava25() {
-      super.setup();
-      arena = Arena.ofShared();
-      keyMemorySegment = arena.allocateFrom(ValueLayout.JAVA_BYTE, keyBytes);
-
-    }
-
-    @TearDown
-    public void tearDown() {
-      if (arena != null) {
-        arena.close();
-      }
-    }
   }
 
   @State(Scope.Thread)
   public static class GetJNIThreadStateJava25 {
+
+    private Arena keyArena;
+    private MemorySegment keyMemorySegment;
+
     private MemorySegmentCache memorySegmentCache = new MemorySegmentCache();
 
     @Setup
@@ -98,12 +86,19 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
         throw new RuntimeException(
                 "Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
       }
+
+      keyArena = Arena.ofConfined();
+      keyMemorySegment = keyArena.allocateFrom(ValueLayout.JAVA_BYTE, benchmarkState.keyBytes);
     }
 
     @TearDown
     public void tearDown(final GetJNIBenchmarkStateJava25 benchmarkState) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         memorySegmentCache.tearDown();
+
+        if (keyArena != null) {
+          keyArena.close();
+        }
       } else {
         throw new RuntimeException(
                 "Don't know how to tearDown() for benchmark: " + benchmarkState.caller.benchmarkMethod);
@@ -118,7 +113,7 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
 
     try {
       final var size = (int) GET_INTO_MEMORY_SEGMENT_HANDLE.invokeExact(
-          benchmarkState.keyMemorySegment, // Pre-allocated segment for key
+          threadState.keyMemorySegment, // Pre-allocated segment for key
           benchmarkState.keyBytes.length,
           segment,
           benchmarkState.valueSize
