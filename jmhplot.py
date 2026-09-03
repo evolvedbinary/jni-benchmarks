@@ -1,4 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "matplotlib>=3.11.1",
+#     "numpy>=2.5.2",
+#     "pandas>=3.0.5",
+# ]
+# ///
+
 #
 # Copyright © 2016, Evolved Binary Ltd
 # All rights reserved.
@@ -295,7 +304,7 @@ def plot_result_set(xaxisparam:Dict, indexKeys: Tuple, indexTuple: Tuple, result
     fig.savefig(path.joinpath(name), bbox_inches='tight')
 
 
-alpha_pattern = re.compile(f'[A-Za-z0-9_\-+]')
+alpha_pattern = re.compile(r'[A-Za-z0-9_\-+]')
 
 
 def check_benchmark_alpha(benchmark: str):
@@ -312,7 +321,7 @@ def filter_for_benchmarks(dataframe: DataFrame, include_benchmarks, exclude_benc
         for include in include_benchmarks:
             check_benchmark_alpha(include)
         include_translated = '|'.join(include_benchmarks)
-        pattern = re.compile(f'\S*({include_translated})\S*')
+        pattern = re.compile(r'\S*({include_translated})\S*')
         filteredframe = filteredframe[filteredframe['Benchmark'].apply(
             lambda x: pattern.match(x) is not None)]
 
@@ -320,7 +329,7 @@ def filter_for_benchmarks(dataframe: DataFrame, include_benchmarks, exclude_benc
         for exclude in exclude_benchmarks:
             check_benchmark_alpha(exclude)
         exclude_translated = '|'.join(exclude_benchmarks)
-        pattern = re.compile(f'\S*({exclude_translated})\S*')
+        pattern = re.compile(r'\S*({exclude_translated})\S*')
         filteredframe = filteredframe[filteredframe['Benchmark'].apply(
             lambda x: pattern.match(x) is None)]
 
