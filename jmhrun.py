@@ -219,13 +219,14 @@ def build_jmh_command(config: Dict) -> list:
     if flags:
         if type(flags) is dict:
             for flag_key, flag_qualifier in flags.items():
-                cmd.append(f'-{flag_key} {flag_qualifier}')
+                cmd.append(f'-{flag_key}')
+                cmd.append(f'{flag_qualifier}')
         elif type(flags) is list:
             for flag_value in flags:
                 cmd.append(f'-{flag_value}')
         else:
             error('Flags field must be a list of flags, or a dictionary of flags and qualifiers')   
-
+ 
     benchmark = required('benchmark', config)
     cmd.append(str(benchmark))
 
