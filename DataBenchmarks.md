@@ -1,3 +1,19 @@
+
+# Plan (Data Transfer Benchmarks)
+
+Goal is to update the data transfer benchmarks to accurately compare JNI and FFM. This is designed to feed into building an efficient RocksDB FFM API.
+
+* Benchmarks were initially designed to compare various options in use of JNI.
+* A new benchmark has since been added to do the same thing using FFM, so that this can be compared against JNI.
+* There are initial results for the `get()` benchmark which show that the FFM version is significantly better performing, once warmup effects are past, than any JNI option.
+* There are a few things about the benchmark that we would like to refine/check to conivince ourselves that the results are robust
+  1. In the `get()` benchmark, we appear to repeatedly request the value for the same key (`(key-size-16,value)`). It would be safer to have the mock database hold several values for variants of each key (`(key-size-16-k1,value1),(key-size-16-k2,value2)`) to enforce paranoia about any cacheing. Keys to be requested would be pre-calculated as a randomly generated list.
+  2. The FFM benchmark has keys already in memory segments. It might be considered more of a like-for-like comparison to copy the key from a Java structure (a `byte[]`). So we will make a variant that does this.
+* We have been working in Java 25. It is reputed that FFM had major performance surgery in 24, so we should compare the performance of an earlier version, for completeness.
+* We are comparing FFM against a subset of the JNI benchmarks, which were selected because previous benchmark work showed them to be the fastest in most situations. We see no need to compare 57 varieties of JNI.
+* We want to complete the equivalent `put()` benchmark. The obvious benchmark would be to append the supplied `put(key,value)` to the end of a fairly large circular buffer which ultimately goes to nowhere.
+* When this batch of work is complete, we can move on to write a proposal for the RocksDB FFM API.
+
 # Data Transfer Benchmarks
 
 We have designed these **data transfer** benchmarks to simulate the bi-directional
