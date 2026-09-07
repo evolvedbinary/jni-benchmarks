@@ -14,6 +14,21 @@ Goal is to update the data transfer benchmarks to accurately compare JNI and FFM
 * We want to complete the equivalent `put()` benchmark. The obvious benchmark would be to append the supplied `put(key,value)` to the end of a fairly large circular buffer which ultimately goes to nowhere.
 * When this batch of work is complete, we can move on to write a proposal for the RocksDB FFM API.
 
+## Analysis of Raimund's Results
+
+Looking at Raimund's graphs.
+
+### Get Benchmarks
+
+* For small value sizes, FFM is significantly better than any of the JNI alternatives.
+* For larger value sizes, FFM is as good as the best JNI alternatives.
+* The difference between Java 21 and Java 25 is not noticeable; the result holds for both.
+* The obvious conclusion is that FFM is more optimized for the transition between Java and Native contexts. When the data values are larger, the bulk data copying cost overwhelms the cost of the context transition.
+* Copying costs are similar to the JNI copying costs.
+
+My (MacOS) runs of the get benchmarks suggest an even bigger difference. Or is this an artefact of the biggest
+sizes I'm asking for being smaller ?
+
 # Data Transfer Benchmarks
 
 We have designed these **data transfer** benchmarks to simulate the bi-directional
