@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "gitpython>=3.1.62",
+# ]
+# ///
+
 #
 # Copyright © 2016, Evolved Binary Ltd
 # All rights reserved.
@@ -34,7 +41,7 @@ import json
 import subprocess
 import platform
 from typing import Dict
-
+import git
 
 class RunnerError(Exception):
     """Base class for exceptions in this module."""
@@ -112,6 +119,11 @@ def output_options(config: Dict) -> list:
     path = output_dir_path(config)
     return ['-rff', str(path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.csv')))]
 
+def get_git_commit() -> str:
+    #path = pathlib.Path('.')
+    #repo = Repo(path)
+    repo = git.Repo(search_parent_directories=True)
+    return ' '.join([repo.head.object.hexsha,repo.head.name,repo.active_branch.name])
 
 def get_system_info() -> str:
     try:
@@ -191,6 +203,8 @@ def get_system_info() -> str:
 def build_jmh_command(config: Dict) -> list:
 
     cmd = ["java"]
+    cmd.append(f'--enable-preview')
+    cmd.append(f'--enable-native-access=ALL-UNNAMED')
     jvm_args = optional('jvmargs', config)
     if jvm_args:
         if not type(jvm_args) is list:
@@ -207,8 +221,22 @@ def build_jmh_command(config: Dict) -> list:
     help = optional('help', config)
     if help:
         cmd.append('-h')
+
+    flags = optional('flags', config)
+    if flags:
+        if type(flags) is dict:
+            for flag_key, flag_qualifier in flags.items():
+                cmd.append(f'-{flag_key}')
+                cmd.append(f'{flag_qualifier}')
+        elif type(flags) is list:
+            for flag_value in flags:
+                cmd.append(f'-{flag_value}')
+        else:
+            error('Flags field must be a list of flags, or a dictionary of flags and qualifiers')   
+ 
     benchmark = required('benchmark', config)
     cmd.append(str(benchmark))
+
     params = optional('params', config)
     if params:
         if not type(params) is dict:
@@ -225,13 +253,6 @@ def build_jmh_command(config: Dict) -> list:
                 cmd.append(f'{key}={str(value)}')
             else:
                 error(f'field {key} does not have a string or list value')
-
-    flags = optional('flags', config)
-    if flags:
-        if not type(flags) is list:
-            error('Flags field must be a list of flags')
-        for flag_value in flags:
-            cmd.append(f'-{flag_value}')
 
     options = optional('options', config)
     if options:
@@ -267,12 +288,12 @@ def log_jmh_session(cmd: list, config: Dict, config_file: str):
         log.write('\n')
         log.writelines(line + '\n' for line in
                        ['```', '#### Command', 'The java command executed to run the tests', '```', ' '.join(cmd), '```'])
-
-    # Save system info
-    system_info_file = output_dir_path(config).joinpath('system_info.json')
-    with system_info_file.open(mode='w', encoding='UTF-8') as f:
-        json.dump({"system_info": get_system_info()}, f, indent=4)
-
+        # Save system info
+        log.writelines(line + '\n' for line in
+                               ['#### System Info', get_system_info()])
+        # Record the current git commit hash
+        log.writelines(line + '\n' for line in
+                               ['#### Git Commit', get_git_commit()])
 
 def exec_jmh_cmd(cmd: list, help_requested):
     cmd_str = ' '.join(cmd)
