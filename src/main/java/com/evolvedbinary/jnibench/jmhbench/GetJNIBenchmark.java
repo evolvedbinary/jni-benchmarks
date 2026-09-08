@@ -173,6 +173,10 @@ public class GetJNIBenchmark {
           byteArrayCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum,
                                blackhole);
           break;
+        case "getIntoMemorySegment":
+          // should have been set up in superclass.
+          // I think it's a misunderstanding about when setup methods are called.
+          break;
         default:
           throw new RuntimeException(
               "Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
@@ -206,6 +210,10 @@ public class GetJNIBenchmark {
         case "getIntoByteArrayGetElements":
         case "getIntoByteArrayCritical":
           byteArrayCache.tearDown();
+          break;
+        case "getIntoMemorySegment":
+          // should have been torn down in superclass.
+          // I think it's a misunderstanding about when setup methods are called.
           break;
         default:
           throw new RuntimeException(
