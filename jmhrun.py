@@ -1,7 +1,9 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.14"
-# dependencies = []
+# dependencies = [
+#     "gitpython>=3.1.62",
+# ]
 # ///
 
 #
@@ -39,7 +41,7 @@ import json
 import subprocess
 import platform
 from typing import Dict
-
+import git
 
 class RunnerError(Exception):
     """Base class for exceptions in this module."""
@@ -117,6 +119,11 @@ def output_options(config: Dict) -> list:
     path = output_dir_path(config)
     return ['-rff', str(path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.csv')))]
 
+def get_git_commit() -> str:
+    #path = pathlib.Path('.')
+    #repo = Repo(path)
+    repo = git.Repo(search_parent_directories=True)
+    return ' '.join([repo.head.object.hexsha,repo.head.name,repo.active_branch.name])
 
 def get_system_info() -> str:
     try:
@@ -281,12 +288,12 @@ def log_jmh_session(cmd: list, config: Dict, config_file: str):
         log.write('\n')
         log.writelines(line + '\n' for line in
                        ['```', '#### Command', 'The java command executed to run the tests', '```', ' '.join(cmd), '```'])
-
-    # Save system info
-    system_info_file = output_dir_path(config).joinpath('system_info.json')
-    with system_info_file.open(mode='w', encoding='UTF-8') as f:
-        json.dump({"system_info": get_system_info()}, f, indent=4)
-
+        # Save system info
+        log.writelines(line + '\n' for line in
+                               ['#### System Info', get_system_info()])
+        # Record the current git commit hash
+        log.writelines(line + '\n' for line in
+                               ['#### Git Commit', get_git_commit()])
 
 def exec_jmh_cmd(cmd: list, help_requested):
     cmd_str = ' '.join(cmd)
