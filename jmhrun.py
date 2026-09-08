@@ -123,7 +123,12 @@ def get_git_commit() -> str:
     #path = pathlib.Path('.')
     #repo = Repo(path)
     repo = git.Repo(search_parent_directories=True)
-    return ' '.join([repo.head.object.hexsha,repo.head.name,repo.active_branch.name])
+    active = '(No active branch)'
+    try:
+        active = repo.active_branch.name
+    except TypeError:
+        pass
+    return ' '.join([repo.head.object.hexsha,repo.head.name,active])
 
 def get_system_info() -> str:
     try:
