@@ -1,4 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "matplotlib>=3.11.1",
+#     "numpy>=2.5.2",
+#     "pandas>=3.0.5",
+# ]
+# ///
+
 #
 # Copyright © 2016, Evolved Binary Ltd
 # All rights reserved.
@@ -41,6 +50,8 @@ from pandas.core.frame import DataFrame
 import re
 from sys import maxsize
 import json
+import warnings
+from enum import Enum
 
 # Types
 Params = NewType('Params', dict[str, str])
@@ -52,7 +63,7 @@ ResultSets = NewType('ResultSets', dict[Tuple, ResultSet])
 
 const_datetime_str = datetime.today().isoformat()
 
-
+class PlotResult(Enum): EMPTY = 1; PLOT = 2
 class RunnerError(Exception):
     """Base class for exceptions in this module."""
 
@@ -295,7 +306,7 @@ def plot_result_set(xaxisparam:Dict, indexKeys: Tuple, indexTuple: Tuple, result
     fig.savefig(path.joinpath(name), bbox_inches='tight')
 
 
-alpha_pattern = re.compile(f'[A-Za-z0-9_\-+]')
+alpha_pattern = re.compile(r'[A-Za-z0-9_\-+]')
 
 
 def check_benchmark_alpha(benchmark: str):
@@ -312,7 +323,7 @@ def filter_for_benchmarks(dataframe: DataFrame, include_benchmarks, exclude_benc
         for include in include_benchmarks:
             check_benchmark_alpha(include)
         include_translated = '|'.join(include_benchmarks)
-        pattern = re.compile(f'\S*({include_translated})\S*')
+        pattern = re.compile(r'\S*({include_translated})\S*')
         filteredframe = filteredframe[filteredframe['Benchmark'].apply(
             lambda x: pattern.match(x) is not None)]
 
@@ -320,7 +331,7 @@ def filter_for_benchmarks(dataframe: DataFrame, include_benchmarks, exclude_benc
         for exclude in exclude_benchmarks:
             check_benchmark_alpha(exclude)
         exclude_translated = '|'.join(exclude_benchmarks)
-        pattern = re.compile(f'\S*({exclude_translated})\S*')
+        pattern = re.compile(r'\S*({exclude_translated})\S*')
         filteredframe = filteredframe[filteredframe['Benchmark'].apply(
             lambda x: pattern.match(x) is None)]
 
@@ -355,7 +366,7 @@ def default_if_none(optional_string, default_value: str) -> str:
     return default_value if optional_string is None else optional_string
 
 
-def process_some_plots(path: pathlib.Path, plot: Dict) -> None:
+def process_some_plots(path: pathlib.Path, plot: Dict) -> PlotResult:
 
     xaxisparam = required('xaxisparam', plot)
     primary_param_name = required('name', xaxisparam)
@@ -387,24 +398,26 @@ def process_some_plots(path: pathlib.Path, plot: Dict) -> None:
     dataframe = normalize_data_frame_from_path(path)
     if len(dataframe) == 0:
         raise RunnerError(
-            f'0 results were read from the file(s) at {path} ({path.absolute})')
+            f"0 results were read from the file(s) at {path} ({path.absolute})")
 
     dataframe = filter_for_benchmarks(
         dataframe, include_benchmarks, exclude_benchmarks)
     if len(dataframe) == 0:
-        raise RunnerError(
-            f'0 results after filtering benchmarks include: {include_benchmarks}, exclude: {exclude_benchmarks}')
+        warnings.warn(f"0 results after filtering benchmarks include: {include_benchmarks}, exclude: {exclude_benchmarks}")
+        return PlotResult.EMPTY
 
     dataframe = filter_for_range(dataframe, xaxisparam)
     if len(dataframe) == 0:
-        raise RunnerError(
-            f'0 results after filtering range {xaxisparam}')
+        warnings.warn(
+            f"0 results after filtering range {xaxisparam}")
+        return PlotResult.EMPTY
 
     params: BMParams = split_params(
         extract_params(dataframe), primary_param_name)
     resultSets = extract_results_per_param(dataframe, params)
     plot_all_results(params, xaxisparam, resultSets, path,
                      include_benchmarks, exclude_benchmarks, label, value_size_title, system_info)
+    return PlotResult.PLOT
 
 
 def process_benchmarks(config: Dict) -> None:
@@ -412,8 +425,15 @@ def process_benchmarks(config: Dict) -> None:
     if not path.exists():
         raise RunnerError(f'The plot directory/file {path} does not exist')
 
+    plotCount: int = 0
     for plot in required('plots', config):
-        process_some_plots(path, plot)
+        plotted = process_some_plots(path, plot)
+        if plotted is PlotResult.PLOT:
+            plotCount = plotCount + 1
+    if plotCount == 0:
+        raise RunnerError(f'0 plots were generated')
+    else:
+        warnings.warn(f'{plotCount} plots were generated.')
 
 # Columns:
 # Benchmark	Mode	Threads	Samples	Score	Score Error (99.9%)	Unit	Param: valueSize
