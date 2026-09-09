@@ -114,10 +114,13 @@ def output_log_file(config: Dict):
     path = output_dir_path(config)
     return path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.md'))
 
-
 def output_options(config: Dict) -> list:
     path = output_dir_path(config)
     return ['-rff', str(path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.csv')))]
+
+def plot_options(config: Dict) -> list:
+    path = output_dir_path(config)
+    return ['--file', str(path.joinpath(pathlib.Path(f'jmh_{const_datetime_str}.csv')))]
 
 def get_git_commit() -> str:
     #path = pathlib.Path('.')
@@ -308,13 +311,24 @@ def exec_jmh_cmd(cmd: list, help_requested):
         print(f'Execute: {cmd_str}')
     proc = subprocess.run(cmd, start_new_session=True)
 
-    # subprocess.run(cmd)
-
+def possibly_exec_plot_cmd(cmd: list, plot_arg, options):
+    if plot_arg is None:
+        return
+    
+    cmd.append('--config')
+    cmd.append(plot_arg)
+    for option in options:
+        cmd.append(option)
+    cmd_str = ' '.join(cmd)
+    print(f'Execute plot command: {cmd_str}')
+    proc = subprocess.run(cmd, start_new_session=True)
 
 def main():
     parser = argparse.ArgumentParser(description='Run configured jmh tests.')
     parser.add_argument(
         '-c', '--config', help='A JSON configuration file for the JMH run', default='jmh_run.json')
+    parser.add_argument(
+        '-p', '--plot', help='A JSON configuration file for a followup plot run', nargs='?', const='jmh_plot.json')
 
     args = parser.parse_args()
     try:
@@ -331,6 +345,9 @@ def main():
         create_output_dir(config)
         log_jmh_session(cmd_list, config, f'{config_file.resolve()}')
         exec_jmh_cmd(cmd_list, optional('help', config))
+        csvfile = pathlib.Path(f'jmh_{const_datetime_str}.csv')
+        print(f'CSV file is {csvfile}')
+        possibly_exec_plot_cmd(['./jmhplot.py'], args.plot, plot_options(config))
 
     except RunnerError as error:
         print(
