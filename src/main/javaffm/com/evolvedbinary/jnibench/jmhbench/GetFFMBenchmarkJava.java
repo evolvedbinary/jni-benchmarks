@@ -50,17 +50,7 @@ public class GetFFMBenchmarkJava extends GetNativeBenchmarkBase {
     SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
 
     // 2. Find the symbol and create the Downcall Handle once
-    GET_INTO_MEMORY_SEGMENT_HANDLE = loaderLookup.find("getIntoMemorySegment")
-                                                 .map(symbol -> linker.downcallHandle(symbol,
-                                                                                      FunctionDescriptor.of(
-                                                                                          ValueLayout.JAVA_INT,
-                                                                                          ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT,
-                                                                                          ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT),
-                                                                                      Linker.Option.critical(false)))
-                                                 .orElseThrow();
-
+    GET_INTO_MEMORY_SEGMENT_HANDLE = FFMHelper.getIntoMemorySegment(linker, loaderLookup);
   }
 
   @State(Scope.Benchmark)
@@ -87,7 +77,7 @@ public class GetFFMBenchmarkJava extends GetNativeBenchmarkBase {
       }
 
       keyArena = Arena.ofConfined();
-      keyMemorySegment = keyArena.allocateFrom(ValueLayout.JAVA_BYTE, benchmarkState.keyBytes);
+      keyMemorySegment = FFMHelper.allocateFromArena(keyArena, ValueLayout.JAVA_BYTE, benchmarkState.keyBytes);
     }
 
     @TearDown
