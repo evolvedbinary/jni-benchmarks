@@ -34,7 +34,7 @@ extern jclass g_jbyte_buffer_clazz;
 extern jmethodID g_jbyte_buffer_array_mid;
 extern jmethodID g_jbyte_buffer_allocate_mid;
 
-const std::string &GetByteArrayInternalWithLength(const char *key, size_t key_len);
+const std::string &FindByteStringValueForKey(const char *key, size_t key_len);
 char *GetByteArrayInternalForWriteWithLength(const char *key, size_t key_len, size_t len);
 
 inline jbyteArray StringToJavaByteArray(JNIEnv *env, const std::string& str) {

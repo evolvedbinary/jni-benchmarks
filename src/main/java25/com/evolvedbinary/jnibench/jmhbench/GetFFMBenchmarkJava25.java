@@ -91,7 +91,6 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
     @Setup
     public void setup(final GetJNIBenchmarkStateJava25 benchmarkState, final Blackhole blackhole) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
-        System.err.println("getIntoMemorySegment() setup() in GetJNIThreadStateJava25");
         memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetNativeBenchmarkState.MB,
                                  benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
       } else {
