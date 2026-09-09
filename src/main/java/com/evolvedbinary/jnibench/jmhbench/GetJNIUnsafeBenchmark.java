@@ -131,7 +131,7 @@ public class GetJNIUnsafeBenchmark {
                 case "getIntoIndirectByteBufferGetCritical":
                     indirectByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
                     break;
-                case "getIntoDirectByteBufferFromUnsafe":
+                case "getFromUnsafeIntoDirectByteBuffer":
                 case "buffersOnlyDirectByteBufferFromUnsafe":
                 case "getIntoUnsafe":
                     unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
@@ -158,7 +158,7 @@ public class GetJNIUnsafeBenchmark {
                 case "getIntoIndirectByteBufferGetCritical":
                     indirectByteBufferCache.tearDown();
                     break;
-                case "getIntoDirectByteBufferFromUnsafe":
+                case "getFromUnsafeIntoDirectByteBuffer":
                 case "buffersOnlyDirectByteBufferFromUnsafe":
                 case "getIntoUnsafe":
                     unsafeBufferCache.tearDown();
@@ -175,9 +175,9 @@ public class GetJNIUnsafeBenchmark {
     }
 
     @Benchmark
-    public void getIntoDirectByteBufferFromUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
+    public void getFromUnsafeIntoDirectByteBuffer(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
         UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
-        ByteBuffer byteBuffer = GetPutJNI.getIntoDirectByteBufferFromUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
+        ByteBuffer byteBuffer = GetPutJNI.getFromUnsafeIntoDirectByteBuffer(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle, benchmarkState.valueSize);
         threadState.unsafeBufferCache.checksumBuffer(unsafeBuffer);
         threadState.unsafeBufferCache.release(unsafeBuffer);
     }

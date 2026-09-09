@@ -83,7 +83,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
           indirectByteBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead,
                                         benchmarkState.readChecksum, blackhole);
           break;
-        case "getIntoDirectByteBufferFromUnsafe":
+        case "getFromUnsafeIntoDirectByteBuffer":
         case "buffersOnlyDirectByteBufferFromUnsafe":
         case "getIntoUnsafe":
           unsafeBufferCache.setup(valueSize, cacheSize, benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum,
@@ -119,7 +119,7 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
         case "getIntoIndirectByteBufferGetCritical":
           indirectByteBufferCache.tearDown();
           break;
-        case "getIntoDirectByteBufferFromUnsafe":
+        case "getFromUnsafeIntoDirectByteBuffer":
         case "buffersOnlyDirectByteBufferFromUnsafe":
         case "getIntoUnsafe":
           unsafeBufferCache.tearDown();

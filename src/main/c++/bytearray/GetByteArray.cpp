@@ -68,7 +68,7 @@ static const std::string &GetByteArrayInternal(const char *key)
   return DB_READ_MOCK.at(str);
 }
 
-const std::string &GetByteArrayInternalWithLength(const char *key, size_t key_len)
+const std::string &FindByteStringValueForKey(const char *key, size_t key_len)
 {
   std::string str(key, key_len);
   return DB_READ_MOCK.at(str);
