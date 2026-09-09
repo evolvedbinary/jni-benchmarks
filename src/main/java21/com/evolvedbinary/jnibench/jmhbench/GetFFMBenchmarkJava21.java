@@ -65,7 +65,7 @@ public class GetFFMBenchmarkJava21 extends GetNativeBenchmarkBase {
   }
 
   @State(Scope.Benchmark)
-  public static class GetJNIBenchmarkStateJava21 extends GetNativeBenchmarkState {
+  public static class GetFFMBenchmarkStateJava21 extends GetNativeBenchmarkState {
     private Arena arena;
     private MemorySegment keyMemorySegment;
 
@@ -86,11 +86,11 @@ public class GetFFMBenchmarkJava21 extends GetNativeBenchmarkBase {
   }
 
   @State(Scope.Thread)
-  public static class GetJNIThreadStateJava21 {
+  public static class GetFFMThreadStateJava21 {
     private MemorySegmentCache memorySegmentCache = new MemorySegmentCache();
 
     @Setup
-    public void setup(final GetJNIBenchmarkStateJava21 benchmarkState, final Blackhole blackhole) {
+    public void setup(final GetFFMBenchmarkStateJava21 benchmarkState, final Blackhole blackhole) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetNativeBenchmarkState.MB,
                                  benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
@@ -101,7 +101,7 @@ public class GetFFMBenchmarkJava21 extends GetNativeBenchmarkBase {
     }
 
     @TearDown
-    public void tearDown(final GetJNIBenchmarkStateJava21 benchmarkState) {
+    public void tearDown(final GetFFMBenchmarkStateJava21 benchmarkState) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         memorySegmentCache.tearDown();
       } else {
@@ -112,7 +112,7 @@ public class GetFFMBenchmarkJava21 extends GetNativeBenchmarkBase {
   }
 
   @Benchmark
-  public void getIntoMemorySegment(GetJNIBenchmarkStateJava21 benchmarkState, GetJNIThreadStateJava21 threadState,
+  public void getIntoMemorySegment(GetFFMBenchmarkStateJava21 benchmarkState, GetFFMThreadStateJava21 threadState,
                                    Blackhole blackhole) {
     final var segment = threadState.memorySegmentCache.acquire();
 

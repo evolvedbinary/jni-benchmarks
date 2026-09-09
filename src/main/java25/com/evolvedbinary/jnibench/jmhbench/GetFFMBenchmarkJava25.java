@@ -64,12 +64,12 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
   }
 
   @State(Scope.Benchmark)
-  public static class GetJNIBenchmarkStateJava25 extends GetNativeBenchmarkState {
+  public static class GetFFMBenchmarkStateJava25 extends GetNativeBenchmarkState {
 
   }
 
   @State(Scope.Thread)
-  public static class GetJNIThreadStateJava25 {
+  public static class GetFFMThreadStateJava25 {
 
     private Arena keyArena;
     private MemorySegment keyMemorySegment;
@@ -77,7 +77,7 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
     private MemorySegmentCache memorySegmentCache = new MemorySegmentCache();
 
     @Setup
-    public void setup(final GetJNIBenchmarkStateJava25 benchmarkState, final Blackhole blackhole) {
+    public void setup(final GetFFMBenchmarkStateJava25 benchmarkState, final Blackhole blackhole) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         memorySegmentCache.setup(benchmarkState.valueSize, benchmarkState.cacheMB * GetNativeBenchmarkState.MB,
                                  benchmarkState.cacheEntryOverhead, benchmarkState.readChecksum, blackhole);
@@ -91,7 +91,7 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
     }
 
     @TearDown
-    public void tearDown(final GetJNIBenchmarkStateJava25 benchmarkState) {
+    public void tearDown(final GetFFMBenchmarkStateJava25 benchmarkState) {
       if ("getIntoMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod)) {
         memorySegmentCache.tearDown();
 
@@ -106,7 +106,7 @@ public class GetFFMBenchmarkJava25 extends GetNativeBenchmarkBase {
   }
 
   @Benchmark
-  public void getIntoMemorySegment(GetJNIBenchmarkStateJava25 benchmarkState, GetJNIThreadStateJava25 threadState,
+  public void getIntoMemorySegment(GetFFMBenchmarkStateJava25 benchmarkState, GetFFMThreadStateJava25 threadState,
                                    Blackhole blackhole) {
     final var segment = threadState.memorySegmentCache.acquire();
 
