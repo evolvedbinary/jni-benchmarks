@@ -41,7 +41,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
 
-public class GetFFMBenchmarkJava extends GetNativeBenchmarkBase {
+public class GetFFMBenchmark extends GetNativeBenchmarkBase {
   private static final MethodHandle GET_INTO_MEMORY_SEGMENT_HANDLE;
 
   static {
