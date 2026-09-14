@@ -26,6 +26,8 @@
  */
 package com.evolvedbinary.jnibench.jmhbench;
 
+import com.evolvedbinary.jnibench.jmhbench.cache.AllocationCache;
+import com.evolvedbinary.jnibench.jmhbench.cache.ByteArrayCache;
 import com.evolvedbinary.jnibench.jmhbench.PutFFMBenchmark.PutFFMBenchmarkState;
 import com.evolvedbinary.jnibench.jmhbench.PutFFMBenchmark.PutFFMThreadState;
 import com.evolvedbinary.jnibench.jmhbench.PutNativeBenchmarkBase.PutNativeBenchmarkState;
@@ -69,6 +71,8 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
 
     private final MemorySegmentCache memorySegmentCache = new MemorySegmentCache();
 
+    private final ByteArrayCache putSourceCache = new ByteArrayCache();
+
     @Setup
     public void setup(final PutFFMBenchmarkState benchmarkState, final Blackhole blackhole) {
 
@@ -77,6 +81,9 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
       if (isPutFromMemorySegment(benchmarkState)) {
         memorySegmentCache.setup(benchmarkState.valueSize, cacheSize, benchmarkState.cacheEntryOverhead,
                                  benchmarkState.writePreparation, blackhole);
+                                 System.err.println("Setup cache size " + cacheSize);
+        putSourceCache.setup(benchmarkState.valueSize, cacheSize, benchmarkState.cacheEntryOverhead,
+                                 AllocationCache.Prepare.none, blackhole);
       } else {
         throw new RuntimeException(
                 "Don't know how to setup() for benchmark: " + benchmarkState.caller.benchmarkMethod);
@@ -109,7 +116,7 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
   public void putFromMemorySegment(PutFFMBenchmarkState benchmarkState, PutFFMThreadState threadState,
                                    Blackhole blackhole) {
     final var segment = threadState.memorySegmentCache.acquire();
-    threadState.memorySegmentCache.prepareBuffer(segment, benchmarkState.fillByte);
+    threadState.memorySegmentCache.prepareBuffer(segment, threadState.putSourceCache);
 
     try {
       final var size = (int) PUT_FROM_MEMORY_SEGMENT_HANDLE.invokeExact(
