@@ -24,6 +24,19 @@ public class FFMHelper {
                                                  .orElseThrow();
     }
 
+
+    public static MethodHandle putFromMemorySegment(Linker linker, SymbolLookup loaderLookup) {
+        return loaderLookup.find("putFromMemorySegment")
+                                                 .map(symbol -> linker.downcallHandle(symbol,
+                                                                                      FunctionDescriptor.of(
+                                                                                          ValueLayout.JAVA_INT,
+                                                                                          ValueLayout.ADDRESS,
+                                                                                          ValueLayout.JAVA_INT,
+                                                                                          ValueLayout.ADDRESS,
+                                                                                          ValueLayout.JAVA_INT)))
+                                                 .orElseThrow();
+    }
+
     public static MemorySegment allocateFromArena(Arena arena, ValueLayout.OfByte valueLayout, byte[] bytes) {
         return arena.allocateArray(valueLayout, bytes);
     }
