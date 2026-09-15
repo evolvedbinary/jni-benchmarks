@@ -142,7 +142,24 @@ there are alternatives (read on).
 ```java
 java.lang.foreign.MemorySegment
 ```
-Initially 
+The [`MemorySegment`](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/foreign/MemorySegment.html) class was introduced as part of the [Foreign Function and Memory API](https://docs.oracle.com/en/java/javase/25/core/foreign-function-and-memory-api.html), which is described in [JEP 454](https://openjdk.org/jeps/454), known as *FFM*.
+
+> Introduce an API by which Java programs can interoperate with code and data outside of the Java runtime.
+> By efficiently invoking foreign functions (i.e., code outside the JVM),
+> and by safely accessing foreign memory
+> (i.e., memory not managed by the JVM),
+> the API enables Java programs to call native libraries and process native data
+> without the brittleness and danger of JNI.
+
+Using the facilities of *FFM*, native memory (outside the JVM) can be accessed in a controlled and
+efficient fashion within Java code as a `MemorySegment`, and `MemorySegment`s can be passed to
+arbitrary native methods linked using the `MethodHandle` concept. Method handles can be derived for
+the methods in a native API (automatically if necessary) and efficiently invoked, converting parameters
+between Java and native.
+
+We have added new benchmarks to the existing `Put` and `Get` benchmarks, `PutFFMBenchmark.putFromMemorySegment()` and `GetFFMBenchmark.getIntoMemorySegment()` respectively.
+These benchmarks call their respective `extern "C"` helpers to copy to and from the same simulated
+data maps already used by the various JNI benchmarks.
 
 ### Allocation
 
@@ -474,6 +491,21 @@ $ cd .../jni-benchmarks
 $ ./jmhplot.py --config jmh_plot.json --file analysis/get_benchmarks
 ```
 
+With the introduction of FFM benchmarks, we have added a `/.analysisWithFFM` directory.
+This has a number of subdirectories, containing the results of individual benchmark runs.
+Each result directory has a markdown file which records
+* the contents of the `--config` file
+* the `java` invocation generated from the configuration
+* the system configuration on which the benchmark was run
+* the current git commit head, as probed by the runner machinery; this will be correct as long as the tests are rebuilt `mvn clean package` before the run.
+It should then be possible to recreate any run by doing:
+```
+$ cd .../jni-benchmarks
+$ mvn clean package
+$ ./jmhrun.py --config <config-file> --plot
+```
+Plots are now generated according to `jmh_plot.json` in a single step at the end of a `./jmhrun` run.
+
 #### Allocation
 
 For these benchmarks, allocation has been excluded from the benchmark costs by
@@ -483,23 +515,44 @@ FIFO list which has been set up, and returns it afterwards. We ran a small test
 to confirm that the request and return cycle is of insignficant cost compared to
 the benchmark API call.
 
-### GetJNIBenchmark
+### GetFFMBenchmark and GetJNIBenchmark
 
 These benchmarks are distilled to be a measure of
 
-- Carry key across the JNI boundary
+- Carry key across the native boundary
 - Look key up in C++
 - Get the resulting value into the supplied buffer
-- Carry the result back across the JNI boundary
+- Carry the result back across the native boundary
 
-Comparing all the benchmarks as the data size tends large, the conclusions we
-can draw are:
+Comparing the benchmarks over a range of data sizes, we can see:
 
 - Benchmarks ran for a duration of order 6 hours on an otherwise unloaded VM,
   the error bars are small and we can have strong confidence in the values
   derived and plotted.
+- `FFM` methods appear to have significantly lower overhead than any JNI methods;
+  this is most noticeable when data sizes are small, where the graphs show significantly
+  better performance. This holds true over all the variants used under JNI,
+  and persists when we copy the result out into a `byte[]`.
+
+![Small Get](./analysisWithFFM/jmh_xeon_get_2026-09-09T19:12:25.183731/fig_1024_1_none_allsmall.png)
+![Small Get and copy out](./analysisWithFFM/jmh_xeon_get_2026-09-09T19:12:25.183731/fig_1024_1_copyout_allsmall.png)
+
+- For larger data values, `FFM` is more efficient than JNI methods except at data sizes `>= 64k`,
+  where so-called `Critical` JNI methods are somewhat better; these methods can be expected to be
+  fast under ideal (benchmark) situations, but have wider system fragility as they rely on suspending
+  garbage collection.
+
+![Large Get and copy out](./analysisWithFFM/jmh_xeon_get_2026-09-09T19:12:25.183731/fig_1024_1_copyout_allbig.png)
+
+The conclusion is that our `get()` benchmarks support the choice of FFM as the most efficient
+all-round mechanism for implementing a Java/Native API. 
+
+#### GetJNIBenchmark (Legacy)
+This discussion was relevant to choosing which JNI methods were best to implement an API
+when the choice was between various JNI variants. We leave it for reference.
+
 - `GetElements` methods for transferring data from C++ to Java are consistently
-  less efficient than other methods.
+  less efficient than other JNI methods.
 - Indirect byte buffers are pointless; they are just an overhead on plain
   `byte[]` and the JNI-side only allows them to be accessed via their
   encapsulated `byte[]`.
@@ -538,6 +591,8 @@ of result.
 
 - Copying into a `byte[]` using the bulk methods supported by `byte[]`,
   `nio.ByteBuffer` are comparable.
+- Copying FFM results into a `byte[]` using the bulk methods supported by `MemorySegment`
+  (`MemorySegment.copy()`) is also very efficient.
 - Accessing the contents of an `Unsafe` buffer using the supplied unsafe methods
   is inefficient. The access is effectively byte by byte, or at best word by
   word, in Java.
@@ -545,34 +600,7 @@ of result.
   the access is presumably byte by byte, or at best word by word, using normal
   Java mechanisms.
 
-![Copy out JNI Get - TODO - replace the plots](./analysis/get_benchmarks/fig_1024_1_copyout_nopoolbig.png).
-
-#### Conclusion
-
-Performance analysis shows that for `get()`, fetching into allocated `byte[]` is
-just as efficient as any other mechanism. Copying out or otherwise using the
-result is straightforward and efficient. Using `byte[]` avoids the manual memory
-management required with direct `nio.ByteBuffer`s, which extra work does not
-appear to provide any gain. A C++ implementation using the `GetRegion` JNI
-method is probably to be preferred to using `GetCritical` because while their
-performance is equal, `GetRegion` abstracts slightly further the operations we
-want to use.
-
-Vitally, whatever JNI transfer mechanism is chosen, the buffer allocation
-mechanism and pattern is crucial to achieving good performance. We experimented
-with making use of netty's pooled allocator part of the benchmark, and the
-difference of `getIntoPooledNettyByteBuf`, using the allocator, compared to
-`getIntoNettyByteBuf` using the same pre-allocate on setup as every other
-benchmark, is significant.
-
-Equally importantly, transfer of data to or from buffers should where possible
-be done in bulk, using array copy or buffer copy mechanisms. Thought should
-perhaps be given to supporting common transformations in the underlying C++
-layer.
-
-![Pooled allocation effect on JNI Get](./analysis/get_benchmarks/fig_1024_1_none_allsmall.png).
-
-### PutJNIBenchmark
+### PutFFMBenchmark and PutJNIBenchmark
 
 These benchmarks are distilled to be a measure of
 
@@ -603,6 +631,38 @@ and `Unsafe` memory are the most efficient. Again the benefit over simple
 few cases.
 
 ![Raw JNI Put, Small data sizes](./analysis/put_benchmarks/fig_1024_1_17_none_allsmall.png).
+
+#### Conclusion
+
+Performance analysis shows that for `get()`, fetching into an allocated `MemorySegment`
+is the most efficient way to carry data from native to Java. Allocation and garbage
+collection costs can be very large, and these must be dealt with before the context
+switch mechanism is addressed.
+
+In the `put()` case also, ***** HERE *****
+
+In the JNI case, fetching into an allocated `byte[]` is
+just as efficient as any other mechanism. Copying out or otherwise using the
+result is straightforward and efficient. Using `byte[]` avoids the manual memory
+management required with direct `nio.ByteBuffer`s, which extra work does not
+appear to provide any gain. A C++ implementation using the `GetRegion` JNI
+method is probably to be preferred to using `GetCritical` because while their
+performance is equal, `GetRegion` abstracts slightly further the operations we
+want to use.
+
+Vitally, whatever JNI transfer mechanism is chosen, the buffer allocation
+mechanism and pattern is crucial to achieving good performance. We experimented
+with making use of netty's pooled allocator part of the benchmark, and the
+difference of `getIntoPooledNettyByteBuf`, using the allocator, compared to
+`getIntoNettyByteBuf` using the same pre-allocate on setup as every other
+benchmark, is significant.
+
+Equally importantly, transfer of data to or from buffers should where possible
+be done in bulk, using array copy or buffer copy mechanisms. Thought should
+perhaps be given to supporting common transformations in the underlying C++
+layer.
+
+![Pooled allocation effect on JNI Get](./analysis/get_benchmarks/fig_1024_1_none_allsmall.png).
 
 #### Pre processing the data
 
