@@ -39,6 +39,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.util.List;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -47,7 +48,12 @@ import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
 
 public class PutFFMBenchmark extends PutNativeBenchmarkBase {
+
+  private final static List<String> supportedBenchmarks =
+  List.of("putFromMemorySegment", "putFromSegmentWrappingArray", "putFromMemorySegmentMarkedCritical");
+
   private static final MethodHandle PUT_FROM_MEMORY_SEGMENT_HANDLE;
+  private static final MethodHandle PUT_FROM_MEMORY_SEGMENT_HANDLE_CRITICAL;
 
   static {
     // 1. Initialize the Linker and Lookup
@@ -55,7 +61,8 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
     SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
 
     // 2. Find the symbol and create the Downcall Handle once
-    PUT_FROM_MEMORY_SEGMENT_HANDLE = FFMHelper.putFromMemorySegment(linker, loaderLookup);
+    PUT_FROM_MEMORY_SEGMENT_HANDLE = FFMHelper.putFromMemorySegment(linker, loaderLookup, false/*critical */);
+    PUT_FROM_MEMORY_SEGMENT_HANDLE_CRITICAL = FFMHelper.putFromMemorySegment(linker, loaderLookup, true/*critical */);
   }
 
   @State(Scope.Benchmark)
@@ -94,13 +101,14 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
     }
 
     private static boolean isPutFromMemorySegment(final PutFFMBenchmarkState benchmarkState) {
-      return "putFromMemorySegment".equals(benchmarkState.getCaller().benchmarkMethod);
+      return supportedBenchmarks.contains(benchmarkState.getCaller().benchmarkMethod);
     }
 
     @TearDown
     public void tearDown(final PutFFMBenchmarkState benchmarkState) {
       if (isPutFromMemorySegment(benchmarkState)) {
         memorySegmentCache.tearDown();
+        putSourceCache.tearDown();
 
         if (keyArena != null) {
           keyArena.close();
@@ -131,5 +139,50 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
     }
 
     threadState.memorySegmentCache.release(segment);
+  }
+
+  @Benchmark
+  public void putFromMemorySegmentMarkedCritical(PutFFMBenchmarkState benchmarkState, PutFFMThreadState threadState,
+                                   Blackhole blackhole) {
+    final var segment = threadState.memorySegmentCache.acquire();
+    threadState.memorySegmentCache.prepareBuffer(segment, threadState.putSourceCache);
+
+    try {
+      final var size = (int) PUT_FROM_MEMORY_SEGMENT_HANDLE_CRITICAL.invokeExact(
+          threadState.keyMemorySegment, // Pre-allocated segment for key
+          benchmarkState.keyBytes.length,
+          segment,
+          benchmarkState.valueSize
+      );
+      blackhole.consume(size);
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+
+    threadState.memorySegmentCache.release(segment);
+  }
+
+  @Benchmark
+  public void putFromSegmentWrappingArray(
+    PutFFMBenchmarkState benchmarkState,
+    PutFFMThreadState threadState,
+    Blackhole blackhole) {
+
+    final var bytes = threadState.putSourceCache.acquire();
+    final MemorySegment bytesAsSegment = MemorySegment.ofArray(bytes);
+    
+    try {
+      final var size = (int) PUT_FROM_MEMORY_SEGMENT_HANDLE_CRITICAL.invokeExact(
+          threadState.keyMemorySegment, // Pre-allocated segment for key
+          benchmarkState.keyBytes.length,
+          bytesAsSegment,
+          benchmarkState.valueSize
+      );
+      blackhole.consume(size);
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+
+    threadState.putSourceCache.release(bytes);
   }
 }

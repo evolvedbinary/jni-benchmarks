@@ -25,7 +25,7 @@ public class FFMHelper {
                                                  .orElseThrow();
     }
 
-    public static MethodHandle putFromMemorySegment(Linker linker, SymbolLookup loaderLookup) {
+    public static MethodHandle putFromMemorySegment(Linker linker, SymbolLookup loaderLookup, boolean critical) {
         return loaderLookup.find("putFromMemorySegment")
                                                  .map(symbol -> linker.downcallHandle(symbol,
                                                                                       FunctionDescriptor.of(
@@ -34,7 +34,7 @@ public class FFMHelper {
                                                                                           ValueLayout.JAVA_INT,
                                                                                           ValueLayout.ADDRESS,
                                                                                           ValueLayout.JAVA_INT),
-                                                                                      Linker.Option.critical(false)))
+                                                                                      Linker.Option.critical(critical)))
                                                  .orElseThrow();
     }
 
