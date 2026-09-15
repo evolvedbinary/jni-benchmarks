@@ -639,9 +639,10 @@ is the most efficient way to carry data from native to Java. Allocation and garb
 collection costs can be very large, and these must be dealt with before the context
 switch mechanism is addressed.
 
-In the `put()` case also, ***** HERE *****
+In the `put()` case, FFM and `MemorySegment`-based operations are again usually the
+most efficient.
 
-In the JNI case, fetching into an allocated `byte[]` is
+In the JNI case, `get()` into an allocated `byte[]` is
 just as efficient as any other mechanism. Copying out or otherwise using the
 result is straightforward and efficient. Using `byte[]` avoids the manual memory
 management required with direct `nio.ByteBuffer`s, which extra work does not
@@ -650,7 +651,8 @@ method is probably to be preferred to using `GetCritical` because while their
 performance is equal, `GetRegion` abstracts slightly further the operations we
 want to use.
 
-Vitally, whatever JNI transfer mechanism is chosen, the buffer allocation
+Vitally, whatever native transfer mechanism is chosen (FFM or any JNI variant),
+the buffer allocation
 mechanism and pattern is crucial to achieving good performance. We experimented
 with making use of netty's pooled allocator part of the benchmark, and the
 difference of `getIntoPooledNettyByteBuf`, using the allocator, compared to

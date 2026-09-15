@@ -14,7 +14,10 @@ import org.openjdk.jmh.runner.RunnerException;
 
 public class FFMHelper {
     
-    public static MethodHandle getIntoMemorySegment(Linker linker, SymbolLookup loaderLookup) {
+    public static MethodHandle getIntoMemorySegment(Linker linker, SymbolLookup loaderLookup, boolean critical) {
+        if (critical) {
+            throw new UnsupportedOperationException("Java21 does not support critical linker functions");
+        }
         return loaderLookup.find("getIntoMemorySegment")
                                                  .map(symbol -> linker.downcallHandle(symbol,
                                                                                       FunctionDescriptor.of(
@@ -29,7 +32,7 @@ public class FFMHelper {
 
     public static MethodHandle putFromMemorySegment(Linker linker, SymbolLookup loaderLookup, boolean critical) {
         if (critical) {
-            throw new RunnerException("Java21 does not support critical linker functions");
+            throw new UnsupportedOperationException("Java21 does not support critical linker functions");
         }
         return loaderLookup.find("putFromMemorySegment")
                                                  .map(symbol -> linker.downcallHandle(symbol,

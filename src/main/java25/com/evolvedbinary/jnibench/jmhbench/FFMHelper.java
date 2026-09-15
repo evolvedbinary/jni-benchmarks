@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class FFMHelper {
     
-    public static MethodHandle getIntoMemorySegment(Linker linker, SymbolLookup loaderLookup) {
+    public static MethodHandle getIntoMemorySegment(Linker linker, SymbolLookup loaderLookup, boolean critical) {
         return loaderLookup.find("getIntoMemorySegment")
                                                  .map(symbol -> linker.downcallHandle(symbol,
                                                                                       FunctionDescriptor.of(
@@ -21,7 +21,7 @@ public class FFMHelper {
                                                                                           ValueLayout.JAVA_INT,
                                                                                           ValueLayout.ADDRESS,
                                                                                           ValueLayout.JAVA_INT),
-                                                                                      Linker.Option.critical(false)))
+                                                                                      Linker.Option.critical(critical)))
                                                  .orElseThrow();
     }
 
