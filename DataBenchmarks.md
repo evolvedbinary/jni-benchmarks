@@ -1,34 +1,4 @@
 
-# Plan (Data Transfer Benchmarks)
-
-Goal is to update the data transfer benchmarks to accurately compare JNI and FFM. This is designed to feed into building an efficient RocksDB FFM API.
-
-* Benchmarks were initially designed to compare various options in use of JNI.
-* A new benchmark has since been added to do the same thing using FFM, so that this can be compared against JNI.
-* There are initial results for the `get()` benchmark which show that the FFM version is significantly better performing, once warmup effects are past, than any JNI option.
-* There are a few things about the benchmark that we would like to refine/check to conivince ourselves that the results are robust
-  1. In the `get()` benchmark, we appear to repeatedly request the value for the same key (`(key-size-16,value)`). It would be safer to have the mock database hold several values for variants of each key (`(key-size-16-k1,value1),(key-size-16-k2,value2)`) to enforce paranoia about any cacheing. Keys to be requested would be pre-calculated as a randomly generated list.
-  2. The FFM benchmark has keys already in memory segments. It might be considered more of a like-for-like comparison to copy the key from a Java structure (a `byte[]`). So we will make a variant that does this.
-* We have been working in Java 25. It is reputed that FFM had major performance surgery in 24, so we should compare the performance of an earlier version, for completeness.
-* We are comparing FFM against a subset of the JNI benchmarks, which were selected because previous benchmark work showed them to be the fastest in most situations. We see no need to compare 57 varieties of JNI.
-* We want to complete the equivalent `put()` benchmark. The obvious benchmark would be to append the supplied `put(key,value)` to the end of a fairly large circular buffer which ultimately goes to nowhere.
-* When this batch of work is complete, we can move on to write a proposal for the RocksDB FFM API.
-
-## Analysis of Raimund's Results
-
-Looking at Raimund's graphs.
-
-### Get Benchmarks
-
-* For small value sizes, FFM is significantly better than any of the JNI alternatives.
-* For larger value sizes, FFM is as good as the best JNI alternatives.
-* The difference between Java 21 and Java 25 is not noticeable; the result holds for both.
-* The obvious conclusion is that FFM is more optimized for the transition between Java and Native contexts. When the data values are larger, the bulk data copying cost overwhelms the cost of the context transition.
-* Copying costs are similar to the JNI copying costs.
-
-My (MacOS) runs of the get benchmarks suggest an even bigger difference. Or is this an artefact of the biggest
-sizes I'm asking for being smaller ?
-
 # Data Transfer Benchmarks
 
 We have designed these **data transfer** benchmarks to simulate the bi-directional
@@ -52,7 +22,7 @@ or locking the container for native access in slightly different ways.
 With the finalisation of the FFM project in Java, a completely new mechanism exists
 to support Java/Native interoperation, and this is the recommended mechanism for Java/Native
 interoperation going forward. Our goal in extending our benchmarks to support FFM is
-to benchmark using FFM to solve the same problems that we have previously solved with JNI.
+to compare using FFM to solve the same problems that we have previously solved with JNI.
 We hope to demonstrate that FFM is at least as efficient in solving the transfer problem
 as any of the variants of JNI.
 
@@ -604,13 +574,39 @@ of result.
 
 These benchmarks are distilled to be a measure of
 
-- Carry key across the JNI boundary
-- Carry data across he JNI boundary
+- Carry key across the native boundary
+- Carry data across the native boundary
 - Look up slot for key up in C++
 - Copy the data into the buffer slot
-- Return over the JNI boundary
+- Return over the native boundary
 
-Comparing the put benchmarks we see a serious divergence between
+- Benchmarks ran for a duration of order 6 hours on an otherwise unloaded VM,
+  the error bars are small and we can have strong confidence in the values
+  derived and plotted.
+- `FFM` methods appear to have significantly lower overhead than any JNI methods;
+  this is most noticeable when data sizes are small, where the graphs show significantly
+  better performance. This holds true over all the variants used under JNI,
+  and persists when we copy the result in from a `byte[]`.
+- These results mirror those of the `get()` benchmarks. This is not surprising.
+
+![Small Put](./analysisWithFFM/jmh_mac_put_2026-09-14T16:55:14.315571/fig_1024_1_17_none_allsmall.png)
+![Small Put with copy in](./analysisWithFFM/jmh_mac_put_2026-09-14T16:55:14.315571/fig_1024_1_17_copyin_allsmall.png)
+
+- For larger data values, `FFM` is, again mirroring `get()`, more efficient than JNI methods.
+  Again, the only (arguable) exception is the `Critical` JNI method, which is possibly marginally
+  faster under ideal (benchmark) situations; and as mentioned before has the drawback of suspending
+  garbage collection, which may create performance issues downstream.
+![Large Put](./analysisWithFFM/jmh_mac_put_2026-09-14T16:55:14.315571/fig_1024_1_17_none_allbig.png)
+NOTE that the pooled netty bytebuf result in the following graph does not have a copy in
+  mechanism implemented, and so this is not a reliable result.
+![Large Put and copy in](./analysisWithFFM/jmh_mac_put_2026-09-14T16:55:14.315571/fig_1024_1_17_copyin_allbig.png)
+
+The conclusion is that our `put()` benchmarks support the choice of FFM as the most efficient
+all-round mechanism for implementing a Java/Native API. 
+
+#### PutJNIBenchmark (Legacy)
+
+Comparing the put benchmarks shows a serious divergence between
 `GetElements`-based operations, and others. It is much more pronounced than for
 `get()`, and the large gap is not immediately explicable.
 
