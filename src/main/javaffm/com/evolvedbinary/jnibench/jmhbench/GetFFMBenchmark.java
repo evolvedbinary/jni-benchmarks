@@ -51,6 +51,7 @@ import org.openjdk.jmh.infra.Blackhole;
 public class GetFFMBenchmark extends GetNativeBenchmarkBase {
   private static final MethodHandle GET_INTO_MEMORY_SEGMENT_HANDLE;
   private static final MethodHandle GET_INTO_MEMORY_SEGMENT_HANDLE_CRITICAL;
+  private static final MethodHandle GET_INTO_MEMORY_SEGMENT_HANDLE_ALLOW_HEAP;
 
   static {
     // 1. Initialize the Linker and Lookup
@@ -58,8 +59,9 @@ public class GetFFMBenchmark extends GetNativeBenchmarkBase {
     SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
 
     // 2. Find the symbol and create the Downcall Handle once
-    GET_INTO_MEMORY_SEGMENT_HANDLE = FFMHelper.getIntoMemorySegment(linker, loaderLookup, false /*critical */);
-    GET_INTO_MEMORY_SEGMENT_HANDLE_CRITICAL = FFMHelper.getIntoMemorySegment(linker, loaderLookup, true /*critical */);
+    GET_INTO_MEMORY_SEGMENT_HANDLE = FFMHelper.getIntoMemorySegment(linker, loaderLookup, FFMMethodOption.NON_CRITICAL);
+    GET_INTO_MEMORY_SEGMENT_HANDLE_CRITICAL = FFMHelper.getIntoMemorySegment(linker, loaderLookup, FFMMethodOption.CRITICAL_AS_OPTIMIZATION);
+    GET_INTO_MEMORY_SEGMENT_HANDLE_ALLOW_HEAP = FFMHelper.getIntoMemorySegment(linker, loaderLookup, FFMMethodOption.ALLOW_HEAP);
   }
 
   @State(Scope.Benchmark)
@@ -160,7 +162,7 @@ public class GetFFMBenchmark extends GetNativeBenchmarkBase {
     final MemorySegment bytesAsSegment = MemorySegment.ofArray(bytes);
 
     try {
-      final var size = (int) GET_INTO_MEMORY_SEGMENT_HANDLE_CRITICAL.invokeExact(
+      final var size = (int) GET_INTO_MEMORY_SEGMENT_HANDLE_ALLOW_HEAP.invokeExact(
           threadState.keyMemorySegment, // Pre-allocated segment for key
           benchmarkState.keyBytes.length,
           bytesAsSegment,

@@ -13,36 +13,41 @@ import java.util.Optional;
 import org.openjdk.jmh.runner.RunnerException;
 
 public class FFMHelper {
-    
-    public static MethodHandle getIntoMemorySegment(Linker linker, SymbolLookup loaderLookup, boolean critical) {
-        if (critical) {
-            throw new UnsupportedOperationException("Java21 does not support critical linker functions");
-        }
+
+    public static MethodHandle getIntoMemorySegment(Linker linker, SymbolLookup loaderLookup,
+            FFMMethodOption fMethodOption) {
+        FunctionDescriptor fd = FunctionDescriptor.of(
+                ValueLayout.JAVA_INT,
+                ValueLayout.ADDRESS,
+                ValueLayout.JAVA_INT,
+                ValueLayout.ADDRESS,
+                ValueLayout.JAVA_INT);
+        Function<MemorySegment, MethodHandle> mapSymbol = switch (fMethodOption) {
+            case NON_CRITICAL -> symbol -> linker.downcallHandle(symbol, fd);
+            default -> throw new UnsupportedOperationException("Java21 does not support critical linker functions");
+        };
+
         return loaderLookup.find("getIntoMemorySegment")
-                                                 .map(symbol -> linker.downcallHandle(symbol,
-                                                                                      FunctionDescriptor.of(
-                                                                                          ValueLayout.JAVA_INT,
-                                                                                          ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT,
-                                                                                          ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT)))
-                                                 .orElseThrow();
+                .map(mapSymbol)
+                .orElseThrow();
     }
 
+    public static MethodHandle putFromMemorySegment(Linker linker, SymbolLookup loaderLookup,
+            FFMMethodOption fMethodOption) {
+        FunctionDescriptor fd = FunctionDescriptor.of(
+                ValueLayout.JAVA_INT,
+                ValueLayout.ADDRESS,
+                ValueLayout.JAVA_INT,
+                ValueLayout.ADDRESS,
+                ValueLayout.JAVA_INT);
+        Function<MemorySegment, MethodHandle> mapSymbol = switch (fMethodOption) {
+            case NON_CRITICAL -> symbol -> linker.downcallHandle(symbol, fd);
+            default -> throw new UnsupportedOperationException("Java21 does not support critical linker functions");
+        };
 
-    public static MethodHandle putFromMemorySegment(Linker linker, SymbolLookup loaderLookup, boolean critical) {
-        if (critical) {
-            throw new UnsupportedOperationException("Java21 does not support critical linker functions");
-        }
         return loaderLookup.find("putFromMemorySegment")
-                                                 .map(symbol -> linker.downcallHandle(symbol,
-                                                                                      FunctionDescriptor.of(
-                                                                                          ValueLayout.JAVA_INT,
-                                                                                          ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT,
-                                                                                          ValueLayout.ADDRESS,
-                                                                                          ValueLayout.JAVA_INT)))
-                                                 .orElseThrow();
+                .map(mapSymbol)
+                .orElseThrow();
     }
 
     public static MemorySegment allocateFromArena(Arena arena, ValueLayout.OfByte valueLayout, byte[] bytes) {
