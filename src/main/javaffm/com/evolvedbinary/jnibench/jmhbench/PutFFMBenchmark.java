@@ -50,7 +50,7 @@ import org.openjdk.jmh.infra.Blackhole;
 public class PutFFMBenchmark extends PutNativeBenchmarkBase {
 
   private final static List<String> supportedBenchmarks =
-  List.of("putFromMemorySegment", "putFromSegmentWrappingArray", "putFromMemorySegmentMarkedCritical");
+  List.of("putFromMemorySegmentOfArena", "putFromMemorySegmentWrappingArray", "putFromMemorySegmentMarkedCritical");
 
   private static final MethodHandle PUT_FROM_MEMORY_SEGMENT_HANDLE;
   private static final MethodHandle PUT_FROM_MEMORY_SEGMENT_HANDLE_CRITICAL;
@@ -121,7 +121,7 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
   }
 
   @Benchmark
-  public void putFromMemorySegment(PutFFMBenchmarkState benchmarkState, PutFFMThreadState threadState,
+  public void putFromMemorySegmentOfArena(PutFFMBenchmarkState benchmarkState, PutFFMThreadState threadState,
                                    Blackhole blackhole) {
     final var segment = threadState.memorySegmentCache.acquire();
     threadState.memorySegmentCache.prepareBuffer(segment, threadState.putSourceCache);
@@ -163,7 +163,7 @@ public class PutFFMBenchmark extends PutNativeBenchmarkBase {
   }
 
   @Benchmark
-  public void putFromSegmentWrappingArray(
+  public void putFromMemorySegmentWrappingArray(
     PutFFMBenchmarkState benchmarkState,
     PutFFMThreadState threadState,
     Blackhole blackhole) {

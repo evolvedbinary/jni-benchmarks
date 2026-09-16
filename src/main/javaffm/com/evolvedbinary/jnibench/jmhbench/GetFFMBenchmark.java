@@ -71,7 +71,7 @@ public class GetFFMBenchmark extends GetNativeBenchmarkBase {
   public static class GetFFMThreadStateJava {
 
     private final static List<String> supportedBenchmarks =
-    List.of("getIntoMemorySegment", "getIntoMemorySegmentWrappingArray", "getIntoMemorySegmentMarkedCritical");
+    List.of("getIntoMemorySegmentOfArena", "getIntoMemorySegmentWrappingArray", "getIntoMemorySegmentMarkedCritical");
 
     private Arena keyArena;
     private MemorySegment keyMemorySegment;
@@ -112,12 +112,33 @@ public class GetFFMBenchmark extends GetNativeBenchmarkBase {
   }
 
   @Benchmark
-  public void getIntoMemorySegment(GetFFMBenchmarkStateJava benchmarkState, GetFFMThreadStateJava threadState,
+  public void getIntoMemorySegmentOfArena(GetFFMBenchmarkStateJava benchmarkState, GetFFMThreadStateJava threadState,
                                    Blackhole blackhole) {
     final var segment = threadState.memorySegmentCache.acquire();
 
     try {
       final var size = (int) GET_INTO_MEMORY_SEGMENT_HANDLE.invokeExact(
+          threadState.keyMemorySegment, // Pre-allocated segment for key
+          benchmarkState.keyBytes.length,
+          segment,
+          benchmarkState.valueSize
+      );
+      blackhole.consume(size);
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+
+    threadState.memorySegmentCache.checksumBuffer(segment);
+    threadState.memorySegmentCache.release(segment);
+  }
+
+  @Benchmark
+  public void getIntoMemorySegmentMarkedCritical(GetFFMBenchmarkStateJava benchmarkState, GetFFMThreadStateJava threadState,
+                                   Blackhole blackhole) {
+    final var segment = threadState.memorySegmentCache.acquire();
+
+    try {
+      final var size = (int) GET_INTO_MEMORY_SEGMENT_HANDLE_CRITICAL.invokeExact(
           threadState.keyMemorySegment, // Pre-allocated segment for key
           benchmarkState.keyBytes.length,
           segment,
