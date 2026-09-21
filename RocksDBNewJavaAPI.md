@@ -15,4 +15,27 @@
 API, for the foreseeable future. In parallel, we will introduce an FFM-based API. This API will initially support
 only core functions, and will be considered experimental; it will be grown incrementally so that at a point,
 we will be able to deprecate and remove the JNI API.
+- It seems clear to me that this is what @adamretter describes as the *Parallel* approach , in his [Future Presentation](https://evolvedbinary.slides.com/adamretter/rocksjava-present-and-future).
 
+## Observations
+
+- FFM has potential performance advantages. It seems more efficient at crossing the native boundary than JNI. This is in terms of cost per Native method invocation.
+
+## Prototype
+
+See [Prototype Blog Post](https://rocksdb.org/blog/2024/02/20/foreign-function-interface.html).
+
+Implemented with the preview at Java 19, theory was to use the RocksDB `PinnableSlice`
+concept to return a reference to a result buffer without adding copy operations,
+when performing a `get()` operation.
+This resulted in comparable performance to the existing JNI-based implementation, when the copy-out
+was measured.
+
+## Random thoughts
+
+- Is the existing/new `C` API wrappable ?
+- How small can the new API be ? That's to say, can we implement a catch-all `multiGetCF()` which can be as efficient for the single value `get()` as implementing a `Get()` method ?
+- Does `jextract` have a place ? Perhaps it allows us to wrap a bigger API surface easily, as an alternative to the catch-all method solution ?
+- Do we implement a `MemorySegment`-based API, and if so, do we support heap segments ? If heap segments are used we need to test for heap vs native in order to access critical vs non-critical methods. 
+- What are the FFM performance improvements in Java 24 ? [JDK 24 Performance Improvements](https://inside.java/2025/03/19/performance-improvements-in-jdk24/)
+- Think about `Arena`s for allocation, specifically sliced arenas etc, see the FFM documentation.
