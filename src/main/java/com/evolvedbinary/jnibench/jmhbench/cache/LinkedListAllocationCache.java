@@ -28,6 +28,8 @@ package com.evolvedbinary.jnibench.jmhbench.cache;
 
 import org.openjdk.jmh.infra.Blackhole;
 
+import com.evolvedbinary.jnibench.jmhbench.cache.AllocationCache.Prepare;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -35,8 +37,8 @@ import java.util.Map;
 public abstract class LinkedListAllocationCache<T> implements AllocationCache<T> {
 
     private Checksum checksum;
-    private Prepare prepare;
-    private Blackhole blackhole;
+    protected Prepare prepare;
+    protected Blackhole blackhole;
 
     @Override
     public final T acquire() {

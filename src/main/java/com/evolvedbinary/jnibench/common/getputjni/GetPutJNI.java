@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 
 public class GetPutJNI {
 
-    public static native ByteBuffer getIntoDirectByteBufferFromUnsafe(
+    public static native ByteBuffer getFromUnsafeIntoDirectByteBuffer(
             final byte[] key,
             final int keyOffset,
             final int keyLength,

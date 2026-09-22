@@ -28,6 +28,7 @@ package com.evolvedbinary.jnibench.jmhbench;
 
 import com.evolvedbinary.jnibench.common.getputjni.GetPutJNI;
 import com.evolvedbinary.jnibench.consbench.NarSystem;
+import com.evolvedbinary.jnibench.jmhbench.PutNativeBenchmarkBase.PutNativeBenchmarkState;
 import com.evolvedbinary.jnibench.jmhbench.cache.AllocationCache;
 import com.evolvedbinary.jnibench.jmhbench.cache.ByteArrayCache;
 import com.evolvedbinary.jnibench.jmhbench.cache.DirectByteBufferCache;
@@ -68,7 +69,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Measurement(iterations = 200, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
 //@Warmup(iterations = 100, time = 1000, timeUnit = TimeUnit.NANOSECONDS)
 //@Measurement(iterations = 500, time = 2000, timeUnit = TimeUnit.NANOSECONDS)
-public class PutJNIBenchmark {
+public class PutJNIBenchmark extends PutNativeBenchmarkBase {
 
   private static final Logger LOG = Logger.getLogger(GetJNIBenchmark.class.getName());
 
@@ -77,54 +78,7 @@ public class PutJNIBenchmark {
   }
 
   @State(Scope.Benchmark)
-  public static class PutJNIBenchmarkState {
-
-    @Param({
-        "10",
-        "50",
-        "128",
-        "512",
-        "1024",
-        "4096",
-        "8192",
-        "16384",
-        "32768",
-        "65536",
-        "131072"})
-    int valueSize;
-
-    @Param({"4", "16"})
-    int cacheMB;
-    final static int MB = 1024 * 1024;
-    @Param({"1024"})
-    int cacheEntryOverhead;
-
-    @Param({"none", "copyin"})
-    String preparation;
-    AllocationCache.Prepare writePreparation;
-
-    @Param({"17"})
-    byte fillByte;
-
-    String keyBase;
-    byte[] keyBytes;
-
-    JMHCaller caller;
-
-    protected final JMHCaller getCaller() {
-      return caller;
-    }
-
-    @Setup
-    public void setup() {
-      this.caller = JMHCaller.fromStack();
-
-      keyBase = "testKeyWithReturnValueSize" + String.format("%07d", valueSize) + "Bytes";
-
-      keyBytes = keyBase.getBytes();
-
-      writePreparation = AllocationCache.Prepare.valueOf(preparation);
-    }
+  public static class PutJNIBenchmarkState extends PutNativeBenchmarkState {
   }
 
   @State(Scope.Thread)
@@ -137,13 +91,10 @@ public class PutJNIBenchmark {
     private final PooledByteBufAllocator pooledByteBufAllocator = PooledByteBufAllocator.DEFAULT;
     private final NettyByteBufCache nettyByteBufCache = new NettyByteBufCache();
 
-    int valueSize;
-    int cacheSize;
-
     @Setup
     public void setup(PutJNIBenchmarkState benchmarkState, Blackhole blackhole) {
-      valueSize = benchmarkState.valueSize;
-      cacheSize = benchmarkState.cacheMB * PutJNIBenchmarkState.MB;
+      int valueSize = benchmarkState.valueSize;
+      int cacheSize = benchmarkState.cacheMB * PutJNIBenchmarkState.MB;
 
       switch (benchmarkState.caller.benchmarkMethod) {
         case "putFromPooledNettyByteBuf":

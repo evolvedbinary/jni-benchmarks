@@ -29,7 +29,7 @@
 
 #include "com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray.h"
 #include "FooObject.h"
-#include "Portal.h"
+#include "Array.h"
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_array_AllocateInJavaGetMutableArray

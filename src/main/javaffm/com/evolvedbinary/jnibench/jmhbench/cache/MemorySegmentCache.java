@@ -31,13 +31,14 @@ import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class MemorySegmentCache extends LinkedListAllocationCache<MemorySegment> {
   private final Arena arena;
 
   public MemorySegmentCache() {
-    arena = Arena.ofShared();
+    arena = Arena.ofConfined();
   }
 
 
@@ -48,7 +49,7 @@ public class MemorySegmentCache extends LinkedListAllocationCache<MemorySegment>
 
   @Override
   void free(final MemorySegment buffer) {
-    // Nothing to do here, as we override taerdown() directly.
+    // Nothing to do here, as we override teardown() directly.
   }
 
   @Override
@@ -84,5 +85,25 @@ public class MemorySegmentCache extends LinkedListAllocationCache<MemorySegment>
     item.fill(fillByte);
 
     return fillByte;
+  }
+
+  // Make copyin do a full copy of a byte[] from another cache
+  public void prepareBuffer(final MemorySegment item, ByteArrayCache source) {
+    switch(prepare) {
+      case copyin:
+        this.copyIn(item, source);
+          break;
+        case none:
+          break;
+    }
+  }
+
+  static AtomicInteger count = new AtomicInteger();
+
+  private void copyIn(final MemorySegment item, ByteArrayCache source) {
+    byte[] sourceBytes = source.acquire();
+    MemorySegment sourceSegment = MemorySegment.ofArray(sourceBytes);
+    blackhole.consume(item.copyFrom(sourceSegment));
+    source.release(sourceBytes);
   }
 }

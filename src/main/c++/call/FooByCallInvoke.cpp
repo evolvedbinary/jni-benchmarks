@@ -27,7 +27,7 @@
 #include <jni.h>
 #include "com_evolvedbinary_jnibench_common_call_FooByCallInvoke.h"
 #include "Foo.h"
-#include "Portal.h"
+#include "JNIBench.h"
 
 /*
  * Class:     com_evolvedbinary_jnibench_common_FooByCallInvoke

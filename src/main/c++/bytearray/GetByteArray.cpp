@@ -33,7 +33,9 @@
 
 #include "com_evolvedbinary_jnibench_common_bytearray_GetByteArray.h"
 
-#include "Portal.h"
+#include "JNIBench.h"
+#include "Array.h"
+#include "Call.h"
 
 static const std::string STR_10_B = "pkDHTxmMR1";
 static const std::string STR_50_B = "pkDHTxmMR18N2l9k88EmLgN7cCCTt9rWksb1fEBw397vi5Ug1Y";
@@ -58,11 +60,17 @@ static const auto DB_READ_MOCK = std::unordered_map<std::string, std::string>{
     {"testKeyWithReturnValueSize0131072Bytes", STR_128_KB},
     {"testKeyWithReturnValueSize0262144Bytes", STR_256_KB}};
 
-const std::string &GetByteArrayInternal(const char *key)
+static const std::string &GetByteArrayInternal(const char *key)
 {
   std::string str(key, 38);
 
   //std::cerr << std::endl << "Getting " << str << std::endl << std::endl;
+  return DB_READ_MOCK.at(str);
+}
+
+const std::string &FindByteStringValueForKey(const char *key, size_t key_len)
+{
+  std::string str(key, key_len);
   return DB_READ_MOCK.at(str);
 }
 
@@ -71,7 +79,11 @@ struct WriteKey
   std::string key;
   size_t length;
 
-  WriteKey(const std::string &key, size_t length) : key(key, 38), length(length)
+  WriteKey(const std::string &key, size_t length) : key(key), length(length)
+  {
+  }
+
+  WriteKey(const char *key_ptr, size_t key_len, size_t length) : key(key_ptr, key_len), length(length)
   {
   }
 };
@@ -98,9 +110,21 @@ namespace std
 
 static auto DB_WRITE_MOCK = std::unordered_map<WriteKey, char *>();
 
-char *GetByteArrayInternalForWrite(const char *key, size_t size)
+static char *GetByteArrayInternalForWrite(const char *key, size_t size)
 {
-  auto writeKey = WriteKey(key, size);
+  auto writeKey = WriteKey(key, 38, size);
+  auto it = DB_WRITE_MOCK.find(writeKey);
+  if (it == DB_WRITE_MOCK.end())
+  {
+    DB_WRITE_MOCK[writeKey] = new char[size];
+    it = DB_WRITE_MOCK.find(writeKey);
+  }
+  return it->second;
+}
+
+char *GetByteArrayInternalForWriteWithLength(const char *key, size_t key_len, size_t size)
+{
+  auto writeKey = WriteKey(key, key_len, size);
   auto it = DB_WRITE_MOCK.find(writeKey);
   if (it == DB_WRITE_MOCK.end())
   {

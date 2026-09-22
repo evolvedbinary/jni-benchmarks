@@ -26,7 +26,7 @@
  */
 #include <assert.h>
 #include <jni.h>
-
+#include "FooObject.h"
 class JavaClass {
  public:
   /**
