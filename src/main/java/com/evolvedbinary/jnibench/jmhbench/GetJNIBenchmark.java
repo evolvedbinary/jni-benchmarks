@@ -155,16 +155,6 @@ public class GetJNIBenchmark extends GetNativeBenchmarkBase {
   }
 
   @Benchmark
-  public void getIntoUnsafe(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState, Blackhole blackhole) {
-    UnsafeBufferCache.UnsafeBuffer unsafeBuffer = threadState.unsafeBufferCache.acquire();
-    int size = GetPutJNI.getIntoUnsafe(benchmarkState.keyBytes, 0, benchmarkState.keyBytes.length, unsafeBuffer.handle,
-                                       benchmarkState.valueSize);
-    blackhole.consume(size);
-    threadState.unsafeBufferCache.checksumBuffer(unsafeBuffer);
-    threadState.unsafeBufferCache.release(unsafeBuffer);
-  }
-
-  @Benchmark
   public void getIntoPooledNettyByteBuf(GetJNIBenchmarkState benchmarkState, GetJNIThreadState threadState,
                                         Blackhole blackhole) {
     ByteBuf byteBuf = threadState.pooledByteBufAllocator.directBuffer(benchmarkState.valueSize);
