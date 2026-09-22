@@ -34,8 +34,20 @@ was measured.
 ## Random thoughts
 
 - Is the existing/new `C` API wrappable ?
+    - See `rocksdb_batched_multi_get_pinned_cf()` in `c_base.cc`
+    - The API does not seem to be AI-generated, but is auto-generated from configuration, by a script. This seems to be an eminently sensible way of doing it.
 - How small can the new API be ? That's to say, can we implement a catch-all `multiGetCF()` which can be as efficient for the single value `get()` as implementing a `Get()` method ?
 - Does `jextract` have a place ? Perhaps it allows us to wrap a bigger API surface easily, as an alternative to the catch-all method solution ?
 - Do we implement a `MemorySegment`-based API, and if so, do we support heap segments ? If heap segments are used we need to test for heap vs native in order to access critical vs non-critical methods. 
 - What are the FFM performance improvements in Java 24 ? [JDK 24 Performance Improvements](https://inside.java/2025/03/19/performance-improvements-in-jdk24/)
 - Think about `Arena`s for allocation, specifically sliced arenas etc, see the FFM documentation.
+- Look at existing clients, and how they use RocksJava. Kafka, and what else ?
+
+## jextract
+
+Having installed or built a recent version of `jextract`
+
+```bash
+$ cd $ROCKSDB_REPO_DIR
+$ jextract --include-dir ./include/rocksdb --output ./java/src/main/java --target-package org.rocksdb.generated --library rocksdb ./include/rocksdb/c.h
+```
