@@ -1,5 +1,5 @@
 /**
- * Copyright © 2016, Evolved Binary Ltd
+ * Copyright © 2016-2026, Evolved Binary Ltd
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 #include <assert.h>
 #include <jni.h>
-
+#include "Foo.h"
 namespace jnibench {
 
 // Native class template

@@ -9,14 +9,16 @@ to solving common JNI use-cases and then present the results.
 The benchmarks at present are:
 
 1. [com.evolvedbinary.jnibench.common.call](tree/main/src/main/java/com/evolvedbinary/jnibench/common/call) -
-  Benchmarks for [Creating Objects with JNI](ObjectCreationBenchmarks.md)
-  [(results)](ObjectCreationBenchmarks.md#object-creation-results).
+   Benchmarks for [Creating Objects with JNI](ObjectCreationBenchmarks.md)
+   [(results)](ObjectCreationBenchmarks.md#object-creation-results).
 
 2. [com.evolvedbinary.jnibench.common.array](tree/main/src/main/java/com/evolvedbinary/jnibench/common/array) -
-  Benchmarks for [Passing Arrays with JNI](ArrayPassingBenchmarks.md)
-  [(results)](ArrayPassingBenchmarks.md#array-passing-results).
+   Benchmarks for [Passing Arrays with JNI](ArrayPassingBenchmarks.md)
+   [(results)](ArrayPassingBenchmarks.md#array-passing-results).
 
-3. [com.evolvedbinary.jnibench.common.bytearray](tree/main/src/main/java/com/evolvedbinary/jnibench/common/bytearray), and [com.evolvedbinary.jnibench.common.getputjni](tree/main/src/main/java/com/evolvedbinary/jnibench/common/getputjni) - Benchmarks for [JNI Data Transfer](DataBenchmarks.md).
+3. [com.evolvedbinary.jnibench.common.bytearray](tree/main/src/main/java/com/evolvedbinary/jnibench/common/bytearray),
+   and [com.evolvedbinary.jnibench.common.getputjni](tree/main/src/main/java/com/evolvedbinary/jnibench/common/getputjni) -
+   Benchmarks for [JNI Data Transfer](DataBenchmarks.md).
 
 # Reproducing
 
@@ -40,29 +42,41 @@ can use `benchmark-100.sh` and/or `benchmark-100-with-close.sh`, or
 
 ## JMH support
 
-We have support for running the tests via JMH, see `jmh-benchmarks.sh`. You can
-also pass `--help` to the script to see JMH options.
-
 ### Byte array benchmarks
 
 There are two benchmarks, which are currently available only via JMH:
 ByteArrayFromNativeBenchmark and ByteArrayToNativeBenchmark. They can be run
-multiple times using `jmh-benchmarks-parametrized.sh` with:
+multiple times using `jmhrun.py` with:
 
 ```bash
-./jmh-benchmarks-parametrized.sh -i 10 -b ByteArrayToNativeBenchmark -o results/ -f csv
+python3 jmhrun.py -c jmh_tiny_array_from_native.json
 ```
 
-The above command will run JMH with `ByteArrayToNativeBenchmark` benchmarks `10` times and store result in CSV files in `results` directory. You can also pass `--help` to the script to see additional JMH options that can be used.
+The above command will run JMH with `ByteArrayFromNativeBenchmark` and store the result in CSV files in a subdirectory
+under `results` named via timestamp. You can also pass `--help` to the script to see additional JMH options that can be
+used.
 
-Results can then be plotted using the `process_byte_array_benchmarks_results.py` script. For example, to produce results for the `ByteArrayToNativeBenchmark` benchmarks, you can run:
+Results can then be plotted using the `jmhplot.py` script. For example, to produce results
+for the `ByteArrayFromNativeBenchmark` example above, you can run:
+
 ```bash
-python3 process_byte_array_benchmarks_results.py -p results/ --param-name "Param: keySize" --chart-title "Performance comparison of passing byte array with {} bytes via JNI"
+python3 jmhplot.py -f results/jmh_2026-01-29T12:11:26.472664
 ```
 
-Command line parameter `p` expects a path to the directory with the JMH result CSV files from running the benchmarks with `jmh-benchmarks-parametrized.sh`.
-The `{}` in the `chart-title` parameter will be replaced by the value from the `param-name` column.
+(Replace the `-f` parameter with the appropriate directory path.)
+
+Command line parameter `f` expects a path to the directory with the JMH result CSV files from running the benchmarks
+with `jmhrun.py`.
+Some benchmarks will require an additional parameter `-c` like this:
+
+```bash
+python3 jmhplot.py -f results/jmh_2026-01-29T12:11:26.472664 -c jmh_plot_iterator.json
+```
+
+The script creates the resulting graphs in the same directory as the one where it finds the CSV files.
 
 # Other Resources
-1. Java Foreign Interface prototype and performance results in RocksJava (i.e. Panama) - https://rocksdb.org/blog/2024/02/20/foreign-function-interface.html
+
+1. Java Foreign Interface prototype and performance results in RocksJava (i.e.
+   Panama) - https://rocksdb.org/blog/2024/02/20/foreign-function-interface.html
 2. RocksJava API Performance Improvements - https://rocksdb.org/blog/2023/11/06/java-jni-benchmarks.html
